@@ -1,9 +1,8 @@
 package sysmo.coviddata
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router._
 import org.scalajs.dom
 import org.scalajs.dom.Event
+import japgolly.scalajs.react.extra.router.{Router, BaseUrl}
 import router.RouterConfiguration
 
 

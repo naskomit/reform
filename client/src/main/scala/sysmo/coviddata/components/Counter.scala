@@ -1,6 +1,6 @@
 package sysmo.coviddata.components
 
-import japgolly.scalajs.react.callback.Callback
+import japgolly.scalajs.react.callback.{Callback, CallbackTo}
 import japgolly.scalajs.react.vdom.html_<^._
 
 object Counter {

@@ -1,4 +1,4 @@
-package sysmo.coviddata
+package sysmo.coviddata.layouts
 
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
 import japgolly.scalajs.react.vdom.html_<^._
