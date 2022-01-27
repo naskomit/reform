@@ -4,6 +4,7 @@
 
 # Home page
 GET        /                             sysmo.coviddata.controllers.Application.index
+POST        /data/api       sysmo.coviddata.controllers.Application.data_api
 
 # Prefix must match `play.assets.urlPrefix`
 GET        /assets/*file                 controllers.Assets.at(file)
