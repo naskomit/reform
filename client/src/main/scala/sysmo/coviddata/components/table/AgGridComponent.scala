@@ -1,6 +1,7 @@
 package sysmo.coviddata.components.table
 
 import japgolly.scalajs.react.vdom.html_<^._
+import org.scalajs.dom
 import sysmo.coviddata.components.table.{AgGridFacades => agf}
 
 import scala.scalajs.js
@@ -19,6 +20,7 @@ trait TableDatasource[U] {
     val ds = (new js.Object).asInstanceOf[agf.TableDatasource]
 //    ds.rowCount = () => total_rows
     ds.getRows = params => {
+      dom.console.log(params)
       getRows(params).foreach(
         data => params.successCallback(data.toJSArray, total_rows)
       )

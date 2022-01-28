@@ -22,9 +22,7 @@ object DataApiClient extends Client[Value.Value, upd.Reader, upd.Writer] {
       "args" -> req.args
     )
     req_opts.body = upd.write(body)
-    dom.console.log(req_opts)
     dom.fetch("/data/api", req_opts).toFuture.flatMap(x => {
-      dom.console.log(x)
       x.text().toFuture
     }).map(x => ujson.read(x))
   }
