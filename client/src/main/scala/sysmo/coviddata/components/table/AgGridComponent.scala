@@ -1,33 +1,38 @@
 package sysmo.coviddata.components.table
 
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.coviddata.components.table.AgGridReact.IGetRowsParams
+import sysmo.coviddata.components.table.{AgGridFacades => agf}
 
 import scala.scalajs.js
 import js.JSConverters._
+import scala.concurrent.Future
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 trait TableDatasource[U] {
-  def rowCount : Int
-  def getRows(params: IGetRowsParams): Seq[U]
-  def apply() : AgGridReact.TableDatasource = {
-    val ds = (new js.Object).asInstanceOf[AgGridReact.TableDatasource]
-    ds.rowCount = () => rowCount
+  type RemoteBatch = Future[Seq[U]]
+  var total_rows : Int = -1
+
+  def rowCount : Future[Int]
+  def getRows(params: agf.IGetRowsParams): RemoteBatch
+
+  def toNative() : agf.TableDatasource = {
+    val ds = (new js.Object).asInstanceOf[agf.TableDatasource]
+//    ds.rowCount = () => total_rows
     ds.getRows = params => {
-      val data = getRows(params)
-      val js_data = data.toJSArray
-      params.successCallback(js_data)
+      getRows(params).foreach(
+        data => params.successCallback(data.toJSArray, total_rows)
+      )
     }
     ds
   }
+  val native = toNative()
+  rowCount.foreach(x => total_rows = x)
 }
 
 object AgGridComponent {
   import japgolly.scalajs.react.component.Scala.BackendScope
   import japgolly.scalajs.react.ScalaComponent
-
-
-  case class Props(ds : TableDatasource[_])
+  case class Props(ds : TableDatasource[_], columns : Seq[AgGridColumn])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -42,20 +47,21 @@ object AgGridComponent {
         <.div(^.className:="row",
           <.div(
             ^.cls := "ag-theme-alpine",
-            ^.height := "400px",
-            ^.width := "600px",
-            AgGridReact(p.ds())
+            ^.height := "800px",
+            ^.width := "100%",
+            agf.AgGridNativeComponent(p.ds.native, p.columns)
           )
         )
       )
     }
   }
 
-  val component = ScalaComponent.builder[Props]("Counter")
+  val component = ScalaComponent.builder[Props]("AgGrid")
     .initialState(State())
     .renderBackend[Backend]
     .build
 
-  def apply[U](ds: TableDatasource[U]) = component(Props(ds))
+  def apply(ds : TableDatasource[_], columns : Seq[AgGridColumn]) =
+    component(Props(ds, columns))
 
 }

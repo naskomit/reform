@@ -1,50 +1,17 @@
 package sysmo.coviddata.components.table
 
+import japgolly.scalajs.react.CtorType.ChildArg
 import japgolly.scalajs.react.{Children, JsComponent}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
+import scala.scalajs.js.|
 
 object AgGridFacades {
-
-  @JSImport("ag-grid-react", "AgGridColumn")
-  @js.native
-  object AgGridColumn extends js.Object
-
-  @js.native
-  trait Props extends js.Object {
-    var field : String = js.native
-  }
-
-  val component = JsComponent[Props, Children.None, Null](AgGridColumn)
-
-  def apply(field : String) = {
-    val props =  (new js.Object).asInstanceOf[Props]
-    props.field = field
-    component.withProps(props)()
-  }
-}
-
-//case class TableDatasource()
-//case class GridOptions(rowModelType: String, datasource : TableDatasource)
-
-
-object AgGridReact {
-  @JSImport("ag-grid-react", "AgGridReact")
-  @js.native
-  object AgGridReact extends js.Object
-
-  @js.native
-  trait Props extends js.Object {
-    var rowData: js.Object = js.native
-    var reactUi: Boolean = js.native
-    var gridOptions: js.Object = js.native
-  }
-
   @js.native
   trait GridOptions extends js.Object {
     var rowModelType: String = js.native
-    var datasource : TableDatasource // = js.native
+    var datasource: TableDatasource  = js.native
   }
 
   @js.native
@@ -54,7 +21,7 @@ object AgGridReact {
     // The first row index to NOT get.
     val endRow: Int = js.native
     // Callback to call for the result when successful.
-    val successCallback: js.Function1[js.Array[_], _] = js.native
+    val successCallback: js.Function2[js.Array[_], Int, _] = js.native
     // Callback to call when the request fails.
     val failCallback: js.Any = js.native
     // If doing server side sorting, contains the sort model
@@ -67,31 +34,66 @@ object AgGridReact {
 
   @js.native
   trait TableDatasource extends js.Object {
-    var rowCount : js.Function0[Int] = js.native
-    var getRows : js.Function1[IGetRowsParams, _] = js.native
+//    var rowCount: js.Function0[Int] = js.native
+    var getRows: js.Function1[IGetRowsParams, _] = js.native
   }
 
-//  trait TableDatasource extends js.Object {
-//    def rowCount : Int
-//    def getRows(params: IGetRowsParams): js.Array[js.Any]
-//  }
+  object AgGridColumnNativeComponent {
 
-  val component = JsComponent[Props, Children.Varargs, Null](AgGridReact)
+    @JSImport("ag-grid-react", "AgGridColumn")
+    @js.native
+    object AgGridColumnNative extends js.Object
 
-  def apply(datasource: TableDatasource) = {
-    val p = (new js.Object).asInstanceOf[Props]
+    @js.native
+    trait Props extends js.Object {
+      var field: String = js.native
+//      var `type`: String | js.Array[String]
+      var headerName : String = js.native
+    }
 
-    p.reactUi = true
+    val component = JsComponent[Props, Children.None, Null](AgGridColumnNative)
 
-    val grid_options = (new js.Object).asInstanceOf[GridOptions]
-    grid_options.rowModelType = "infinite"
-    grid_options.datasource = datasource
-    p.gridOptions = grid_options
-
-    component.withProps(p).withChildren(
-      AgGridFacades("make"),
-      AgGridFacades("model"),
-      AgGridFacades("year")
-    )()
+    def apply(col : AgGridColumn) = {
+      val props = (new js.Object).asInstanceOf[Props]
+      props.field = col.field
+      if (col.headerName != null) {
+        props.headerName = col.headerName
+      }
+      component.withProps(props)()
+    }
   }
+
+  object AgGridNativeComponent {
+
+    @JSImport("ag-grid-react", "AgGridReact")
+    @js.native
+    object AgGridReact extends js.Object
+
+    @js.native
+    trait Props extends js.Object {
+      var rowData: js.Object = js.native
+      var reactUi: Boolean = js.native
+      var gridOptions: js.Object = js.native
+    }
+
+    val component = JsComponent[Props, Children.Varargs, Null](AgGridReact)
+
+    //
+    def apply(datasource: TableDatasource, columns : Seq[AgGridColumn]) = {
+      val p = (new js.Object).asInstanceOf[Props]
+
+      p.reactUi = true
+
+      val grid_options = (new js.Object).asInstanceOf[GridOptions]
+      grid_options.rowModelType = "infinite"
+      grid_options.datasource = datasource
+      p.gridOptions = grid_options
+
+      val children : Seq[ChildArg] = columns.map(
+        x => AgGridColumnNativeComponent(x))
+
+      component.withProps(p).withChildren(children:_*)()
+    }
+  }
+
 }

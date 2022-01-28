@@ -14,12 +14,13 @@ lazy val server = project
     libraryDependencies += "com.vmunier" %% "scalajs-scripts" % "1.2.0",
     libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
     libraryDependencies += "com.lihaoyi" %% "upickle" % "1.4.3",
+//    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.1.0",
     Assets / pipelineStages  := Seq(scalaJSPipeline),
     pipelineStages := Seq(digest, gzip),
     // triggers scalaJSPipeline when using compile or continuous compilation
     Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
-    run / fork := true,
-    run / javaOptions ++= Seq("-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5015")
+//    run / fork := true,
+//    run / javaOptions ++= Seq("-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5015")
   )
   .enablePlugins(PlayScala, WebScalaJSBundlerPlugin)
   .dependsOn(shared.jvm)
@@ -50,6 +51,9 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .jsConfigure(_.enablePlugins(ScalaJSWeb))
   .settings(
     libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.3",
+  ).jvmSettings(
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided"
   )
 
-onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s}
+
+onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s} //andThen {s: State => "run" :: s}

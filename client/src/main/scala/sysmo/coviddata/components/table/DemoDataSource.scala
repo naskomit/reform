@@ -1,7 +1,8 @@
 package sysmo.coviddata.components.table
 
-import sysmo.coviddata.components.table.AgGridReact.IGetRowsParams
+import sysmo.coviddata.components.table.AgGridFacades.IGetRowsParams
 import scala.scalajs.js
+import scala.concurrent.Future
 
 trait RowData extends js.Object {
   val make: String
@@ -17,12 +18,14 @@ object RowData {
 
 
 object DemoDataSource extends TableDatasource[RowData] {
-  def rowCount : Int = 3
-  def getRows(params: IGetRowsParams): Seq[RowData] = {
-    Seq(
-      RowData("Fender", "Stratocaster", 2019),
-      RowData("Gibson", "Les Paul", 1958),
-      RowData("Fender", "Telecaster", 1971)
+  def rowCount : Future[Int] = Future.successful(3)
+  def getRows(params: IGetRowsParams): RemoteBatch = {
+    Future.successful(
+      Seq(
+        RowData("Fender", "Stratocaster", 2019),
+        RowData("Gibson", "Les Paul", 1958),
+        RowData("Fender", "Telecaster", 1971)
+      )
     )
   }
 
