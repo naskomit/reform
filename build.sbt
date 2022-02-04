@@ -5,7 +5,12 @@ ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
 
 lazy val root = (project in file("."))
-  .aggregate(server, client, shared.jvm, shared.js)
+  .aggregate(server, client, macros, shared.jvm, shared.js)
+
+lazy val macros = project
+  .settings(
+    libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
+  )
 
 lazy val server = project
   .settings(
@@ -14,13 +19,10 @@ lazy val server = project
     libraryDependencies += "com.vmunier" %% "scalajs-scripts" % "1.2.0",
     libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
     libraryDependencies += "com.lihaoyi" %% "upickle" % "1.4.3",
-//    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.1.0",
     Assets / pipelineStages  := Seq(scalaJSPipeline),
     pipelineStages := Seq(digest, gzip),
     // triggers scalaJSPipeline when using compile or continuous compilation
     Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
-//    run / fork := true,
-//    run / javaOptions ++= Seq("-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5015")
   )
   .enablePlugins(PlayScala, WebScalaJSBundlerPlugin)
   .dependsOn(shared.jvm)
