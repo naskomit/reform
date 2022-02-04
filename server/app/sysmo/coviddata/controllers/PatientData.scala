@@ -18,16 +18,16 @@ object PatientDataGenerator {
     val age = Seq(10, 80)
     val gender = Seq("Мъж", "Жена")
     val education =  Seq("основно", "средно", "висше")
-    val contact_name = Seq("Иван Петров")
-    val contact_type = Seq("1")
-    val contact_time = Seq("12.03.22")
-    val social_status = Seq("ss1", "ss2")
-    val has_concomitant_diseases = Seq(true, false)
-    val concomitant_diseases = Seq("Диабет", "Хипертония", "Артрит")
-    val risk_factors = Seq("Имунокомпрометиран", "Високо кръвно", "Възраст")
-    val alcohol = Seq(true, false)
-    val other_risk_1 = Seq("Имунокомпрометиран", "Високо кръвно", "Възраст")
-    val other_risk_2 = Seq("Имунокомпрометиран", "Високо кръвно", "Възраст")
+//    val contact_name = Seq("Иван Петров")
+//    val contact_type = Seq("1")
+//    val contact_time = Seq("12.03.22")
+//    val social_status = Seq("ss1", "ss2")
+//    val has_concomitant_diseases = Seq(true, false)
+//    val concomitant_diseases = Seq("Диабет", "Хипертония", "Артрит")
+//    val risk_factors = Seq("Имунокомпрометиран", "Високо кръвно", "Възраст")
+//    val alcohol = Seq(true, false)
+//    val other_risk_1 = Seq("Имунокомпрометиран", "Високо кръвно", "Възраст")
+//    val other_risk_2 = Seq("Имунокомпрометиран", "Високо кръвно", "Възраст")
 
   }
 
@@ -53,16 +53,16 @@ object PatientDataGenerator {
       age = random_int(pool.age),
       gender = random_element(pool.gender),
       education = random_element(pool.education),
-      contact_name = random_element(pool.contact_name),
-      contact_type = random_element(pool.contact_type),
-      contact_time = random_element(pool.contact_time),
-      social_status = random_element(pool.social_status),
-      has_concomitant_diseases = random_element(pool.has_concomitant_diseases),
-      concomitant_diseases = random_element(pool.concomitant_diseases),
-      risk_factors = random_element(pool.risk_factors),
-      alcohol = random_element(pool.alcohol),
-      other_risk_1 = random_element(pool.other_risk_1),
-      other_risk_2 = random_element(pool.other_risk_2)
+//      contact_name = random_element(pool.contact_name),
+//      contact_type = random_element(pool.contact_type),
+//      contact_time = random_element(pool.contact_time),
+//      social_status = random_element(pool.social_status),
+//      has_concomitant_diseases = random_element(pool.has_concomitant_diseases),
+//      concomitant_diseases = random_element(pool.concomitant_diseases),
+//      risk_factors = random_element(pool.risk_factors),
+//      alcohol = random_element(pool.alcohol),
+//      other_risk_1 = random_element(pool.other_risk_1),
+//      other_risk_2 = random_element(pool.other_risk_2)
     )
 
   def generate(n : Int) : Seq[PatientRecord] = {

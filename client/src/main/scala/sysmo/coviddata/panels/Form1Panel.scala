@@ -1,6 +1,7 @@
 package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.html_<^._
+import sysmo.coviddata.components.editors.StringEditor
 
 object Form1Panel {
   import japgolly.scalajs.react._
@@ -10,7 +11,10 @@ object Form1Panel {
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      <.div("Form1")
+      <.div(
+        "Form1",
+        StringEditor("Hello"))
+
     }
   }
 
