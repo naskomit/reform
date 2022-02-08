@@ -31,15 +31,16 @@ case class PatientRecord
 
 
 
-object PatientRecordMeta extends RecordMeta {
+object PatientRecordMeta extends RecordMeta[PatientRecord] {
   object FieldEnum extends Enumeration {
     type FieldEnum = Value
-    val first_name, father_name, last_name, age, gender, education = Value
-//    val father_name = Value("father_name")
-//    val last_name = Value("last_name")
-//    val age = Value("age")
-//    val gender = Value("gender")
-//    val education = Value("education")
+//    val first_name, father_name, last_name, age, gender, education = Value
+    val first_name = Value("first_name")
+    val father_name = Value("father_name")
+    val last_name = Value("last_name")
+    val age = Value("age")
+    val gender = Value("gender")
+    val education = Value("education")
 //    val contact_name = Value("contact_name")
 //    val contact_type = Value("contact_type")
 //    val contact_time = Value("contact_time")
@@ -50,6 +51,7 @@ object PatientRecordMeta extends RecordMeta {
 //    val alcohol = Value("alcohol")
 //    val other_risk_1 = Value("other_risk_1")
 //    val other_risk_2 = Value("other_risk_2")
+//    def fromString(s: String): Option[Value] = values.find(_.toString == s)
   }
   override type FieldKey = FieldEnum.Value
 
@@ -65,12 +67,50 @@ object PatientRecordMeta extends RecordMeta {
     FieldEnum.gender -> RecordField(name = "gender", label = "Пол", tpe = StringType()),
     FieldEnum.education -> RecordField(name = "education", label = "Образование", tpe = StringType()),
   )
+
+  def field_key(name : String): FieldKey = FieldEnum.withName(name)
+
+  import scala.reflect.{ClassTag, classTag}
+  private def check_value[U: ClassTag](key : FieldKey, value : Any) : U = {
+    if (value.isInstanceOf[U])
+      value.asInstanceOf[U]
+    else
+      throw new IllegalArgumentException(f"Value $value does not correspond to type ${fields(key).tpe} of field $key")
+//    value match {
+//      case x : U => x
+//      case _ =>
+//    }
+  }
+
+  override def get_value(obj : PatientRecord, key : FieldKey): Any = {
+    key match {
+      case FieldEnum.first_name => obj.first_name
+      case FieldEnum.father_name => obj.father_name
+      case FieldEnum.last_name => obj.last_name
+      case FieldEnum.age => obj.age
+      case FieldEnum.gender => obj.gender
+      case FieldEnum.education => obj.education
+    }
+
+  }
+
+  override def update_value(obj : PatientRecord, key : FieldKey, value : Any): PatientRecord = {
+    key match {
+      case FieldEnum.first_name => obj.copy(first_name = check_value[String](key, value))
+      case FieldEnum.father_name => obj.copy(father_name = check_value[String](key, value))
+      case FieldEnum.last_name => obj.copy(last_name = check_value[String](key, value))
+      case FieldEnum.age => obj.copy(age = check_value[Int](key, value))
+      case FieldEnum.gender => obj.copy(gender = check_value[String](key, value))
+      case FieldEnum.education => obj.copy(education = check_value[String](key, value))
+    }
+
+  }
 }
 
 object PatientRecord {
   implicit val rw: RW[PatientRecord] = macroRW
   implicit val tometa :  RecordWithMeta[PatientRecord] = new RecordWithMeta[PatientRecord] {
-    val _meta: RecordMeta = PatientRecordMeta
+    val _meta: RecordMeta[PatientRecord] = PatientRecordMeta
   }
 }
 

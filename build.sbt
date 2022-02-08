@@ -35,6 +35,10 @@ lazy val client = project
     libraryDependencies += "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
     libraryDependencies += "com.lihaoyi" %%% "autowire" % "0.3.3",
     libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.3",
+//    libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.3.5",
+//    libraryDependencies += "co.fs2" %%% "fs2-core" % "3.2.0",
+    libraryDependencies += "io.monix" %%% "monix" % "3.4.0",
+
     Compile / npmDependencies ++= Seq(
       "react" -> "17.0.0",
       "react-dom" -> "17.0.0",

@@ -22,7 +22,7 @@ object DataApiClient extends Client[Value.Value, upd.Reader, upd.Writer] {
       "args" -> req.args
     )
     req_opts.body = upd.write(body)
-    dom.fetch("/data/api", req_opts).toFuture.flatMap(x => {
+    dom.fetch("/sysmo/coviddata/data/api", req_opts).toFuture.flatMap(x => {
       x.text().toFuture
     }).map(x => ujson.read(x))
   }

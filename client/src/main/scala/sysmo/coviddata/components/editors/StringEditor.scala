@@ -2,36 +2,58 @@ package sysmo.coviddata.components.editors
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import monix.execution.{Ack, Cancelable}
+import monix.execution.cancelables.SingleAssignCancelable
+import monix.reactive.{Observable, Observer, OverflowStrategy}
+import monix.execution.Scheduler.Implicits.global
+import sysmo.coviddata.components.actions.ActionStreamGenerator
+
+
+
 
 object StringEditor extends AbstractEditor {
-  case class Props(value : String)
-  case class State(value: String)
+  case class Props(id : String, manager_id : String, label : String, value : String, focused: Boolean)
+  case class State()
 
   final class Backend($: BackendScope[Props, State]) {
+    val action_generator : ActionStreamGenerator[EditorAction] = ActionStreamGenerator[EditorAction]
+
     def render (p: Props, s: State): VdomElement = {
-      <.div(
-        <.input(^.`type` := "text", ^.value := s.value, ^.onChange ==> on_value_change,
-          ^.onBlur --> on_blur
+      <.div(^.className:= "form-group", ^.key:= p.id,
+        <.label(p.label),
+        <.input(^.`type`:= "text", ^.className:= "form-control", ^.autoFocus:= p.focused,
+          ^.value := p.value, ^.onChange ==> on_value_change,
+          ^.onFocus --> on_focus, ^.onBlur --> on_blur
       ))
     }
 
-    def on_value_change(event : ReactEventFromInput) =
-      $.modState(_ => State(event.target.value)) >>
-      Callback {
-        println(s"Changed to ${event.target.value}")
-      }
+    def on_value_change(event : ReactEventFromInput) : Callback = Callback {
+      action_generator.dispatch(ValueChanged(event.target.value))
+    }
+
+    def on_focus = Callback {
+      action_generator.dispatch(GotFocus())
     }
 
     def on_blur = Callback {
-      println("Lost focus")
+      action_generator.dispatch(LostFocus())
     }
+  }
 
 
-  val component = ScalaComponent.builder[Props]("Form1")
-    .initialState(State("hello-state"))
+
+  def component(action_listener: Observer[EditorAction]) =
+    ScalaComponent.builder[Props]("StringEditor")
+    .initialState(State())
     .renderBackend[Backend]
+    .componentDidMount(f => Callback {
+      println("StringEditor mounted")
+      f.backend.action_generator.start(action_listener)
+    })
     .build
 
-  def apply(value : String) = component(Props(value))
+  def apply(id : String, manager_id : String, label : String, value : String,
+            action_listener: Observer[EditorAction], focused : Boolean = false) =
+    component(action_listener)(Props(id, manager_id, label, value, focused))
 
 }
