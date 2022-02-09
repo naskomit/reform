@@ -8,14 +8,13 @@ import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
 import sysmo.coviddata.components.actions.ActionStreamGenerator
 
-
-
-
 object StringEditor extends AbstractEditor {
-  case class Props(id : String, manager_id : String, label : String, value : String, focused: Boolean)
+  case class Props(id : String, manager_id : String, label : String, value : String,
+                   focused: Boolean, action_listener: Observer[EditorAction])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
+    println("Created StringEditor backend")
     val action_generator : ActionStreamGenerator[EditorAction] = ActionStreamGenerator[EditorAction]
 
     def render (p: Props, s: State): VdomElement = {
@@ -41,19 +40,22 @@ object StringEditor extends AbstractEditor {
   }
 
 
-
-  def component(action_listener: Observer[EditorAction]) =
+//action_listener: Observer[EditorAction]
+  val component =
     ScalaComponent.builder[Props]("StringEditor")
     .initialState(State())
     .renderBackend[Backend]
     .componentDidMount(f => Callback {
       println("StringEditor mounted")
-      f.backend.action_generator.start(action_listener)
+      f.backend.action_generator.start(f.props.action_listener)
     })
     .build
 
   def apply(id : String, manager_id : String, label : String, value : String,
-            action_listener: Observer[EditorAction], focused : Boolean = false) =
-    component(action_listener)(Props(id, manager_id, label, value, focused))
+            action_listener: Observer[EditorAction], focused : Boolean = false) = {
+    println("StringEditor creating")
+    component(Props(id, manager_id, label, value, focused, action_listener))
+
+  }
 
 }

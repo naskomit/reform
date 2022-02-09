@@ -16,13 +16,13 @@ object StreamingFormEditor {
   import japgolly.scalajs.react._
   import japgolly.scalajs.react.vdom.html_<^._
 
-  case class Props[U](record_id: String, meta: RecordMeta[U], layout: FormLayout,
-                      action_hub: ActionHub[EditorAction, RecordAction])
+  case class Props[U](record_id: String, layout: FormLayout)
   case class State[U](value : Option[U] = None,
                       state_subscription: Option[Cancelable] = None)
 
-  final class Backend[U]($: BackendScope[Props[U], State[U]]) {
-    val state_observer = new Observer[U] {
+  final class Backend[U]($: BackendScope[Props[U], State[U]])(rec_manager: StreamingRecordManager[U], meta: RecordMeta[U]) {
+
+    private val state_observer = new Observer[U] {
       override def onNext(elem: U): Future[Ack] = {
         $.modState(s => s.copy(value = Some(elem))).runNow()
         Ack.Continue
@@ -32,33 +32,32 @@ object StreamingFormEditor {
 
       override def onError(ex: Throwable): Unit = {}
     }
-    //val subscription = record_stream.subscribe(state_observer)
 
-    def subscribe_to_records(record_stream : Observable[U]) : Callback = {
-      $.modState(s => {
-        val subscription = record_stream.subscribe(state_observer)
-        s.copy(state_subscription = Some(subscription))
-      })
+    private val state_subscription = rec_manager.record_stream.subscribe(state_observer)
+
+    def subscribe_to_records() : Callback = Callback {
+
     }
 
-    def unsubscribe_from_records(s: State[U]) : Callback = Callback {
-      s.state_subscription match {
-        case Some(x) => x.cancel()
-        case None =>
-      }
+    def unsubscribe_from_records() : Callback = Callback {
+      state_subscription.cancel()
     }
+
+    val action_hub = ActionHub(meta.field_keys.map(_.toString), to_record_actions)
+    action_hub.out.subscribe(rec_manager.action_handler)
+    // TODO cancel subscription on unmount
 
     def render (p: Props[U], s: State[U]): VdomElement = {
       s.value match {
         case Some(data) => {
-          val field_editors = p.meta.field_keys.map(
+          val field_editors = meta.field_keys.map(
             k => StringEditor(
-              k.toString, p.record_id, p.meta.fields(k).label,
-              p.meta.get_value(data, k).toString,
-              p.action_hub.in_observers(k.toString)
+              k.toString, p.record_id, meta.fields(k).label,
+              meta.get_value(data, k).toString,
+              action_hub.in_observers(k.toString)
             )
           )
-          val k = p.meta.field_keys(0)
+          val k = meta.field_keys(0)
           <.form(^.className:="form", //field_editors.map(x => x.vdomElement))
             p.layout.to_component(field_editors.map(x => x.vdomElement)))
         }
@@ -69,12 +68,13 @@ object StreamingFormEditor {
     }
   }
 
-  def component[U](record_stream : Observable[U]) = ScalaComponent.builder[Props[U]]("FormEditor")
+  def component[U](rec_manager: StreamingRecordManager[U], meta: RecordMeta[U]) =
+    ScalaComponent.builder[Props[U]]("FormEditor")
     .initialState(State[U]())
-    .backend(new Backend[U](_))
+    .backend(new Backend[U](_)(rec_manager, meta))
     .renderBackend
-    .componentDidMount(f => f.backend.subscribe_to_records(record_stream))
-    .componentWillUnmount(f => f.backend.unsubscribe_from_records(f.state))
+    .componentDidMount(f => f.backend.subscribe_to_records())
+    .componentWillUnmount(f => f.backend.unsubscribe_from_records())
     .build
 
   def to_record_actions(key: String, editor_action: EditorAction) : Seq[RecordAction] =
@@ -85,11 +85,7 @@ object StreamingFormEditor {
 
   def apply[U](rec_manager: StreamingRecordManager[U], record_id: String, layout : FormLayout = ColumnarLayout(2))(implicit meta_holder: data.RecordWithMeta[U]) = {
     println("Connstructed form")
-    val meta = meta_holder._meta
-    val action_hub = ActionHub(meta.field_keys.map(_.toString), to_record_actions)
-    // TODO cancel subscription on unmount
-    action_hub.out.subscribe(rec_manager.action_handler)
-    component[U](rec_manager.record_stream)(Props(record_id, meta, layout, action_hub))
+    component[U](rec_manager, meta_holder._meta)(Props(record_id, layout))
   }
 
 }
