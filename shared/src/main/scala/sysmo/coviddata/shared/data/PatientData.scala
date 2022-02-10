@@ -1,9 +1,11 @@
 package sysmo.coviddata.shared.data
 
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, Record, RecordField, RecordMeta, RecordWithMeta, StringType}
 import upickle.default.{macroRW, ReadWriter => RW}
 
 import scala.collection.immutable.VectorMap
 import scala.scalajs.js.{annotation => ann}
+
 
 
 
@@ -26,7 +28,7 @@ case class PatientRecord
 //  alcohol: Boolean,
 //  other_risk_1: String,
 //  other_risk_2: String
-)
+) extends Record
 
 
 
@@ -64,23 +66,16 @@ object PatientRecordMeta extends RecordMeta[PatientRecord] {
     FieldEnum.father_name -> RecordField(name = "father_name", label = "Презиме", tpe = StringType()),
     FieldEnum.last_name -> RecordField(name = "last_name", label = "Фамилия", tpe = StringType()),
     FieldEnum.age -> RecordField(name = "age", label = "Възраст", tpe = StringType()),
-    FieldEnum.gender -> RecordField(name = "gender", label = "Пол", tpe = StringType()),
+    FieldEnum.gender -> RecordField(name = "gender", label = "Пол", tpe = StringType(),
+      //domain = Some(EnumeratedDomain(Seq("male", "female")))
+      domain = Some(EnumeratedDomain(Seq(EnumeratedOption("male", "мъж"), EnumeratedOption("female", "жена"))))
+    ),
     FieldEnum.education -> RecordField(name = "education", label = "Образование", tpe = StringType()),
   )
 
   def field_key(name : String): FieldKey = FieldEnum.withName(name)
 
-  import scala.reflect.{ClassTag, classTag}
-  private def check_value[U: ClassTag](key : FieldKey, value : Any) : U = {
-    if (value.isInstanceOf[U])
-      value.asInstanceOf[U]
-    else
-      throw new IllegalArgumentException(f"Value $value does not correspond to type ${fields(key).tpe} of field $key")
-//    value match {
-//      case x : U => x
-//      case _ =>
-//    }
-  }
+
 
   override def get_value(obj : PatientRecord, key : FieldKey): Any = {
     key match {
@@ -96,12 +91,12 @@ object PatientRecordMeta extends RecordMeta[PatientRecord] {
 
   override def update_value(obj : PatientRecord, key : FieldKey, value : Any): PatientRecord = {
     key match {
-      case FieldEnum.first_name => obj.copy(first_name = check_value[String](key, value))
-      case FieldEnum.father_name => obj.copy(father_name = check_value[String](key, value))
-      case FieldEnum.last_name => obj.copy(last_name = check_value[String](key, value))
-      case FieldEnum.age => obj.copy(age = check_value[Int](key, value))
-      case FieldEnum.gender => obj.copy(gender = check_value[String](key, value))
-      case FieldEnum.education => obj.copy(education = check_value[String](key, value))
+      case FieldEnum.first_name => obj.copy(first_name = check_field_type[String](key, value))
+      case FieldEnum.father_name => obj.copy(father_name = check_field_type[String](key, value))
+      case FieldEnum.last_name => obj.copy(last_name = check_field_type[String](key, value))
+      case FieldEnum.age => obj.copy(age = check_field_type[Int](key, value))
+      case FieldEnum.gender => obj.copy(gender = check_field_type[String](key, value))
+      case FieldEnum.education => obj.copy(education = check_field_type[String](key, value))
     }
 
   }

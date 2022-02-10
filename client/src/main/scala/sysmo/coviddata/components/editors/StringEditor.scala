@@ -2,10 +2,7 @@ package sysmo.coviddata.components.editors
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monix.execution.{Ack, Cancelable}
-import monix.execution.cancelables.SingleAssignCancelable
 import monix.reactive.{Observable, Observer, OverflowStrategy}
-import monix.execution.Scheduler.Implicits.global
 import sysmo.coviddata.components.actions.ActionStreamGenerator
 
 object StringEditor extends AbstractEditor {
@@ -40,7 +37,9 @@ object StringEditor extends AbstractEditor {
   }
 
 
-//action_listener: Observer[EditorAction]
+  implicit val props_reuse = Reusability.by((_ : Props).value)
+  implicit val state_reuse = Reusability.derive[State]
+
   val component =
     ScalaComponent.builder[Props]("StringEditor")
     .initialState(State())
@@ -49,6 +48,7 @@ object StringEditor extends AbstractEditor {
       println("StringEditor mounted")
       f.backend.action_generator.start(f.props.action_listener)
     })
+    .configure(Reusability.shouldComponentUpdate)
     .build
 
   def apply(id : String, manager_id : String, label : String, value : String,

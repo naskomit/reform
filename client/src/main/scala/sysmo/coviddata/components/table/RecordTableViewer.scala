@@ -3,8 +3,7 @@ package sysmo.coviddata.components.table
 import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js
-import sysmo.coviddata.shared.data
-import sysmo.coviddata.shared.data.{RecordField, RecordMeta}
+import sysmo.reform.shared.data.{RecordField, RecordWithMeta}
 
 object RecordTableViewer {
   import japgolly.scalajs.react._
@@ -29,7 +28,7 @@ object RecordTableViewer {
     .renderBackend[Backend[U]]
     .build
 
-  def apply[U](ds : TableDatasource[U])(implicit meta_holder: data.RecordWithMeta[U]) = {
+  def apply[U](ds : TableDatasource[U])(implicit meta_holder: RecordWithMeta[U]) = {
     val meta = meta_holder._meta
     val columns = meta.field_keys.map(x => meta.fields(x))
     component[U](Props(ds, columns))

@@ -4,15 +4,11 @@ import monix.execution.{Ack, Cancelable}
 import monix.execution.cancelables.SingleAssignCancelable
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
-import sysmo.coviddata.shared.data
-import sysmo.coviddata.shared.data.RecordMeta
-
-import concurrent.duration._
-import monix.reactive.observers.Subscriber
+import sysmo.reform.shared.data.{Record, RecordMeta, RecordWithMeta}
 
 import scala.concurrent.Future
 
-class StreamingRecordManager[U](initial_value: U, meta: RecordMeta[U]) {
+class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U]) {
   var on_new_state: Option[Function1[U, Ack]] = None
   var state: U = initial_value
 //  val meta = meta_holder._meta
@@ -47,23 +43,10 @@ class StreamingRecordManager[U](initial_value: U, meta: RecordMeta[U]) {
 
     override def onComplete(): Unit = ???
   }
-
-//  def dispatch(action: RecordAction) = {
-//    on_new_state match {
-//      case Some(f) => action match {
-//        case UpdateField(form_id, field_id, value) => {
-//          state = meta.update_value(state, meta.field_key(field_id), value)
-//          f(state)
-//        }
-//      }
-//
-//      case None =>
-//    }
-//  }
 }
 
 object StreamingRecordManager {
-  def apply[U](value : U)(implicit meta_holder: data.RecordWithMeta[U]): StreamingRecordManager[U] =
+  def apply[U <: Record](value : U)(implicit meta_holder: RecordWithMeta[U]): StreamingRecordManager[U] =
     new StreamingRecordManager[U](value, meta_holder._meta)
 }
 

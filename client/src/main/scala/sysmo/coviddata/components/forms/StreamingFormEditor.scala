@@ -1,26 +1,29 @@
 package sysmo.coviddata.components.forms
 
-import monix.execution.{Ack, Cancelable}
-import monix.reactive.{Observable, Observer}
-import sysmo.coviddata.components.editors.{EditorAction, StringEditor, ValueChanged}
-import sysmo.coviddata.data.{AsyncFormDataInterface, RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.coviddata.shared.data
-import sysmo.coviddata.shared.data.RecordMeta
-import monix.execution.Scheduler.Implicits.global
-import sysmo.coviddata.components.actions.ActionHub
-
+import scala.collection.mutable
 import scala.concurrent.Future
+import scala.reflect.ClassTag
+import monix.execution.{Ack, Cancelable}
+import monix.reactive.{Observable, Observer, OverflowStrategy}
+import monix.execution.Scheduler.Implicits.global
+import monix.execution.cancelables.SingleAssignCancelable
+import sysmo.coviddata.components.editors.{EditorAction, SelectEditor, StringEditor, ValueChanged}
+import sysmo.coviddata.data.{RecordAction, StreamingRecordManager, UpdateField}
+import sysmo.coviddata.components.actions.ActionHub
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, Record, RecordField, RecordMeta, RecordWithMeta}
+
 
 // TODO Handle premature component unmount
-object StreamingFormEditor {
+class StreamingFormEditor[U <: Record] {
+
   import japgolly.scalajs.react._
   import japgolly.scalajs.react.vdom.html_<^._
 
-  case class Props[U](record_id: String, layout: FormLayout)
-  case class State[U](value : Option[U] = None,
-                      state_subscription: Option[Cancelable] = None)
+  type Props_ = StreamingFormEditor.Props[U]
+  type State_ = StreamingFormEditor.State[U]
 
-  final class Backend[U]($: BackendScope[Props[U], State[U]])(rec_manager: StreamingRecordManager[U], meta: RecordMeta[U]) {
+  final class Backend($: BackendScope[Props_, State_]) {
+    println("Created StreamingFormEditor backend")
 
     private val state_observer = new Observer[U] {
       override def onNext(elem: U): Future[Ack] = {
@@ -33,32 +36,60 @@ object StreamingFormEditor {
       override def onError(ex: Throwable): Unit = {}
     }
 
-    private val state_subscription = rec_manager.record_stream.subscribe(state_observer)
+    private var state_subscription: Cancelable = _
+    private var action_hub: ActionHub[EditorAction, RecordAction] = _
 
-    def subscribe_to_records() : Callback = Callback {
+    def to_record_actions(key: String, editor_action: EditorAction): Seq[RecordAction] =
+      editor_action match {
+        case ValueChanged(v) => Seq(UpdateField("Form1", key, v))
+        case _ => Seq()
+      }
 
+    def subscribe_to_records(p: Props_): Callback = Callback {
+      state_subscription = p.rec_manager.record_stream.subscribe(state_observer)
+      action_hub = ActionHub(p.meta.field_keys.map(_.toString), to_record_actions)
+      action_hub.out.subscribe(p.rec_manager.action_handler)
     }
 
-    def unsubscribe_from_records() : Callback = Callback {
+    def unsubscribe_from_records(): Callback = Callback {
       state_subscription.cancel()
     }
 
-    val action_hub = ActionHub(meta.field_keys.map(_.toString), to_record_actions)
-    action_hub.out.subscribe(rec_manager.action_handler)
     // TODO cancel subscription on unmount
 
-    def render (p: Props[U], s: State[U]): VdomElement = {
+    def render(p: Props_, s: State_): VdomElement = {
       s.value match {
         case Some(data) => {
-          val field_editors = meta.field_keys.map(
-            k => StringEditor(
-              k.toString, p.record_id, meta.fields(k).label,
-              meta.get_value(data, k).toString,
-              action_hub.in_observers(k.toString)
-            )
-          )
-          val k = meta.field_keys(0)
-          <.form(^.className:="form", //field_editors.map(x => x.vdomElement))
+          val field_editors = p.meta.field_keys.map(k => {
+            val RecordField(f_name, f_label, f_tpe, f_domain) = p.meta.fields(k)
+            (f_tpe, f_domain) match {
+              case (_, Some(EnumeratedDomain(options))) => {
+//                val option_stream: Observable[Seq[EnumeratedOption]] = Observable.create(OverflowStrategy.Unbounded) {
+//                  sub => sub.onNext(options)
+//                  val c = SingleAssignCancelable()
+//
+//                  c := Cancelable(() => None)
+//                }
+
+                SelectEditor(
+                  f_name, p.record_id, f_label,
+                  p.meta.get_value(data, k).toString,
+                  options,
+                  action_hub.in_observers(k.toString)
+                )
+
+              }
+
+              case _ =>
+                StringEditor(
+                  f_name, p.record_id, f_label,
+                  p.meta.get_value(data, k).toString,
+                  action_hub.in_observers(k.toString)
+              )
+            }
+          })
+
+          <.form(^.className := "form",
             p.layout.to_component(field_editors.map(x => x.vdomElement)))
         }
 
@@ -68,24 +99,43 @@ object StreamingFormEditor {
     }
   }
 
-  def component[U](rec_manager: StreamingRecordManager[U], meta: RecordMeta[U]) =
-    ScalaComponent.builder[Props[U]]("FormEditor")
-    .initialState(State[U]())
-    .backend(new Backend[U](_)(rec_manager, meta))
-    .renderBackend
-    .componentDidMount(f => f.backend.subscribe_to_records())
-    .componentWillUnmount(f => f.backend.unsubscribe_from_records())
-    .build
+  implicit val props_reuse = Reusability.by((_ : Props_).record_id)
+//
+//  implicit val state_reuse = Reusability.by((_ : State_).value)
 
-  def to_record_actions(key: String, editor_action: EditorAction) : Seq[RecordAction] =
-    editor_action match {
-      case ValueChanged(v) => Seq(UpdateField("Form1", key, v))
-      case _ => Seq()
-    }
+  val component =
+    ScalaComponent.builder[Props_]("FormEditor")
+      .initialState(StreamingFormEditor.State[U]())
+      .backend(new Backend(_))
+      .renderBackend
+      .componentDidMount({
+        println("FormEditor mounted")
+        f => f.backend.subscribe_to_records(f.props)})
+      .componentWillUnmount(f => f.backend.unsubscribe_from_records())
+//      .configure(Reusability.shouldComponentUpdate)
+      .build
 
-  def apply[U](rec_manager: StreamingRecordManager[U], record_id: String, layout : FormLayout = ColumnarLayout(2))(implicit meta_holder: data.RecordWithMeta[U]) = {
-    println("Connstructed form")
-    component[U](rec_manager, meta_holder._meta)(Props(record_id, layout))
+}
+
+object StreamingFormEditor {
+  case class Props[U <: Record](record_id: String, layout: FormLayout, rec_manager: StreamingRecordManager[U], meta: RecordMeta[U])
+  case class State[U <: Record](value: Option[U] = None,
+                   state_subscription: Option[Cancelable] = None)
+
+
+  val component_classes : mutable.Map[ClassTag[_], StreamingFormEditor[Record]] =
+    mutable.Map()
+
+  def get_component[U <: Record](tag: ClassTag[_]) =
+    component_classes.getOrElseUpdate(tag, {
+      println(f"Creating component for ${tag.runtimeClass}")
+      (new StreamingFormEditor[U]).asInstanceOf[StreamingFormEditor[Record]]
+    }).asInstanceOf[StreamingFormEditor[U]].component
+
+
+  def apply[U <: Record](rec_manager: StreamingRecordManager[U], record_id: String, layout : FormLayout = ColumnarLayout(2))
+                        (implicit meta_holder: RecordWithMeta[U], tag: ClassTag[U]) = {
+    get_component[U](tag)(Props[U](record_id, layout, rec_manager, meta_holder._meta))
   }
 
 }

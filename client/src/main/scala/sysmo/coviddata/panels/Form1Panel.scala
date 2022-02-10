@@ -2,7 +2,8 @@ package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.coviddata.components.editors.StringEditor
-import sysmo.coviddata.components.forms.{StreamingFormEditor}
+import sysmo.coviddata.components.forms.StreamingFormEditor
+import sysmo.coviddata.components.select.ReactSelectFacades.ReactSelectNativeComponent
 import sysmo.coviddata.data.{DefaultAsyncDataInterface, StreamingRecordManager}
 import sysmo.coviddata.shared.data.PatientRecord
 
@@ -22,6 +23,9 @@ object Form1Panel {
           )
         ), "aaa"
       )
+//        ReactSelectNativeComponent(Seq(
+//          ("A", "B"), ("C", "D")
+//        ))
 //      FormEditor(DefaultAsyncDataInterface, "aaa")
 //      <.div(
 //

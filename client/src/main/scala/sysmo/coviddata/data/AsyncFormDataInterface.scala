@@ -1,5 +1,6 @@
 package sysmo.coviddata.data
 
+
 import sysmo.coviddata.shared.data.PatientRecord
 
 import scala.concurrent.Future

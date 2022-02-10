@@ -3,7 +3,7 @@ package sysmo.coviddata.components.forms
 import sysmo.coviddata.components.editors.StringEditor
 import sysmo.coviddata.data.AsyncFormDataInterface
 import sysmo.coviddata.shared.data
-import sysmo.coviddata.shared.data.RecordMeta
+import sysmo.reform.shared.data.RecordMeta
 //import japgolly.scalajs.react.util.Effect.Dispatch
 //import scalajs.concurrent.JSExecutionContext.Implicits.global
 //import scala.concurrent.ExecutionContext.Implicits.global

@@ -5,7 +5,6 @@ import japgolly.scalajs.react.{Children, JsComponent}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import scala.scalajs.js.|
 
 object AgGridFacades {
   @js.native

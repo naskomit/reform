@@ -3,6 +3,7 @@ package sysmo.coviddata.components.table
 import sysmo.coviddata.shared.data.{PatientData, PatientRecord}
 import sysmo.coviddata.services.DataApiClient
 import autowire._
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.concurrent.Future
 

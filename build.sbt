@@ -43,7 +43,8 @@ lazy val client = project
       "react" -> "17.0.0",
       "react-dom" -> "17.0.0",
       "ag-grid-react"     -> "26.2.0",
-      "ag-grid-community" -> "26.2.0"
+      "ag-grid-community" -> "26.2.0",
+      "react-select" ->  "5.2.2",
     ),
     scalaJSUseMainModuleInitializer := true,
     webpackBundlingMode := BundlingMode.LibraryOnly()
