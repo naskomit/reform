@@ -12,6 +12,26 @@ lazy val macros = project
     libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
   )
 
+lazy val reform_back = project
+  .settings(
+    // Arrow
+    libraryDependencies += "org.apache.arrow" % "arrow-vector" % "6.0.1",
+    libraryDependencies += "org.apache.arrow" % "arrow-memory-netty" % "6.0.1" % "runtime",
+    libraryDependencies += "org.apache.arrow" % "arrow-dataset" % "6.0.1",
+    // kantan CSV IO
+    libraryDependencies += "com.nrinaudo" %% "kantan.csv" % "0.6.1",
+    libraryDependencies += "com.nrinaudo" %% "kantan.csv-generic" % "0.6.1",
+    // Slick
+    libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.3",
+    libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.6.4",
+    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3",
+    // SQLite
+    libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.36.0.3",
+    // Monix
+    libraryDependencies += "io.monix" %%% "monix" % "3.4.0",
+
+  ).dependsOn(shared.jvm)
+
 lazy val server = project
   .settings(
     scalaJSProjects := Seq(client),
@@ -25,7 +45,7 @@ lazy val server = project
     Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
   )
   .enablePlugins(PlayScala, WebScalaJSBundlerPlugin)
-  .dependsOn(shared.jvm)
+  .dependsOn(reform_back)
 
 lazy val client = project
   .settings(

@@ -11,7 +11,7 @@ import scala.scalajs.js.{annotation => ann}
 
 @ann.JSExportAll
 case class PatientRecord
-(
+( id: Option[Int],
   first_name: String,
   father_name: String,
   last_name: String,
@@ -103,6 +103,8 @@ object PatientRecordMeta extends RecordMeta[PatientRecord] {
 }
 
 object PatientRecord {
+  def apply_noid(first_name: String, father_name: String, last_name: String, age: Int, gender: String, education: String): PatientRecord =
+    new PatientRecord(None, first_name, father_name, last_name, age, gender, education)
   implicit val rw: RW[PatientRecord] = macroRW
   implicit val tometa :  RecordWithMeta[PatientRecord] = new RecordWithMeta[PatientRecord] {
     val _meta: RecordMeta[PatientRecord] = PatientRecordMeta
