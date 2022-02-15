@@ -12,8 +12,17 @@ lazy val macros = project
     libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
   )
 
+
 lazy val reform_back = project
   .settings(
+    // Logging
+//    libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.36",
+//    libraryDependencies += "org.slf4j" % "slf4j-reload4j" % "1.7.36",
+//    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10",
+    libraryDependencies += "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.17.1",
+    libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.9.0",
+    libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.6",
+
     // Arrow
     libraryDependencies += "org.apache.arrow" % "arrow-vector" % "6.0.1",
     libraryDependencies += "org.apache.arrow" % "arrow-memory-netty" % "6.0.1" % "runtime",
@@ -23,7 +32,7 @@ lazy val reform_back = project
     libraryDependencies += "com.nrinaudo" %% "kantan.csv-generic" % "0.6.1",
     // Slick
     libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.3",
-    libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.6.4",
+//    libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.6.4",
     libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3",
     // SQLite
     libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.36.0.3",

@@ -1,0 +1,33 @@
+Configuration:
+  name: ReformLogging
+  properties:
+    property:
+      name: basePath
+      value: "./log"
+
+  appenders:
+    Console:
+      name: STDOUT
+      PatternLayout:
+        Pattern: "[%d][%p][%t/%c] %m%n"
+
+    RollingFile:
+      name: RollingFile
+      fileName: ${basePath}/emerald.log
+      filePattern: ${basePath}/emerald-%i.log
+      PatternLayout:
+        Pattern: "[%d][%p][%t/%c] %m%n"
+      Policies:
+        SizeBasedTriggeringPolicy:
+          size: 50MB
+      DefaultRolloverStrategy:
+        max: 10
+
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+        - ref: STDOUT
+        - ref: RollingFile
+
+
