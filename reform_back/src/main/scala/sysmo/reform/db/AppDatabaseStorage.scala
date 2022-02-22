@@ -10,27 +10,26 @@ import slick.jdbc.meta.MTable
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Using}
+import sysmo.reform.util.{AsyncLogging}
 
-import sysmo.reform.util.Logging
 
-
-trait DBConfiguration extends Logging {
+trait DBConfiguration extends AsyncLogging {
   val jdbc_profile: JdbcProfile
   def connection : jdbc_profile.api.Database
-  def with_connection[U](f: jdbc_profile.api.Database => U): U = {
-    Using(connection) {
-      db => f(db)
-    }} match {
-    case Success(x) => x
-    case Failure(e) => {
-      logger.error("Failed with connection")
-      throw new RuntimeException("Failed", e)
-    }
-  }
+//  def with_connection[U](f: jdbc_profile.api.Database => U): U = {
+//    Using(connection) {
+//      db => f(db)
+//    }} match {
+//    case Success(x) => x
+//    case Failure(e) => {
+//      logger.error("Failed with connection")
+//      throw new RuntimeException("Failed", e)
+//    }
+//  }
 }
 
 
-trait AppDatabaseStorage extends Logging {
+trait AppDatabaseStorage extends AsyncLogging {
 
   val db_config: DBConfiguration
   import db_config.jdbc_profile.api._
@@ -54,55 +53,71 @@ trait AppDatabaseStorage extends Logging {
     )
   }
 
-  private def run[R](action : DBIOAction[R, NoStream, Nothing], log : Boolean = true): Task[R] =
+  /** Task to run any DB actions */
+  protected def run[R](action : DBIOAction[R, NoStream, Nothing], log : Boolean = true): Task[R] =
     conn.use(x => Task.deferFuture {
       x.run(action)
     })
 
-  def list_tables: Task[Vector[MTable]] = run(MTable.getTables)
-  def empty_table[U](table : TableQuery[_ <: Table[_]]): Task[Unit] = run(DBIO.seq(table.delete))
+  /** Base effects */
 
+  def query[Tbl, Rec](q: Query[Tbl, Rec, Seq]): Task[Seq[Rec]] = {
+    val q1: JdbcActionComponent#StreamingQueryActionExtensionMethods[Seq[Rec], Rec] = q
+    logger.info(
+      q1.result.statements.mkString("\n")
+    ) >>
+    run(
+      q1.result
+    )
+    .flatMap(x => {
+      logger.info(f"Fetched ${x.length} records") >>
+      Task(x)
+     })
+  }
+
+  /** */
+  def list_tables: Task[Vector[MTable]] = run(MTable.getTables)
+
+  /** Create all the tables defined in the schema */
+  def create_schema(): Task[Unit] = {
+    val sql = schema_methods.create
+    logger.info(sql.statements.mkString("\n")) >>
+    run(sql) >>
+    logger.info("Schema created")
+  }
+
+  def drop_schema(): Task[Unit] = {
+    val sql = schema_methods.drop
+    logger.info(sql.statements.mkString("\n")) >>
+    run(sql) >>
+    logger.info("Schema dropped")
+  }
+
+
+  /** Remove content from all the tables */
+  def empty_tables: Task[Unit] = {
+    logger.warn("Emptying DB tables") >>
+    run(DBIO.seq(all_tables.reverse.map(x => x.delete): _*))
+  }
+
+  /** Higher order functionality*/
   def initialize_schema: Task[Unit] = {
     list_tables.flatMap(tables => {
-      if (tables.isEmpty) {
-        val create_sql = schema_methods.create
-        Task {
-          logger.info("Creating schema")
-          logger.info(create_sql.statements.mkString("\n"))
-        } >>
-        run(schema_methods.create) >>
-        Task {
-          logger.info("Schema created")
-        }
-
-      }
+      if (tables.isEmpty)
+        Task {}
       else {
-        Task {
-          logger.info("Schema exists")
-        }
+        drop_schema()
       }
-    })
+    }) >> create_schema()
   }
-
-  def empty_tables: Task[Unit] = Task {
-    logger.info("Emptying DB tables")
-  } >> run(DBIO.seq(all_tables.reverse.map(x => x.delete): _*))
 
   def insert_batch[U](table: TableQuery[_ <: Table[U]],
-                      data: Seq[U]): Future[Unit] = {
-    db_config.with_connection(db => {
-      val sql = DBIO.seq(table ++= data)
-      db.run(sql)
-        .map(x => {
-          logger.info(f"Inserted batch of ${data.length} records"); x
-        })
-    })
+                      data: Seq[U]): Task[Unit] = {
+    val sql = DBIO.seq(table ++= data)
+    logger.info(f"Inserting ${data.length} records into ${table.schema}") >>
+    run(sql)
   }
 
-  def read_table[U](db: Database, table: TableQuery[_ <: Table[U]]): Future[Seq[U]] = {
-    val sql = table
-    db.run(sql.result)
-  }
 
 //  def insert_data[U](db: Database, table: TableQuery[_ <: Table[U]],
 //                     data: Observable[U]): Future[Unit] = {

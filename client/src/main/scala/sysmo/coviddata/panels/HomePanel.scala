@@ -1,14 +1,8 @@
 package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.coviddata.components.table.{AgGridColumn, AgGridComponent, DemoDataSource, DemoServerDataSource, RecordTableViewer}
-
-import scala.scalajs.js
-import sysmo.coviddata.shared.data
-
-
-
-
+import sysmo.reform.components.table.RecordTableViewer
+import sysmo.coviddata.data.DemoServerDataSource
 
 object HomePanel {
 
@@ -20,7 +14,7 @@ object HomePanel {
 
   final class Backend($: BackendScope[Props, State]) {
     def render(p: Props, s: State): VdomElement = {
-      RecordTableViewer(DemoServerDataSource)
+      RecordTableViewer(DemoServerDataSource, "PatientData")
     }
   }
 

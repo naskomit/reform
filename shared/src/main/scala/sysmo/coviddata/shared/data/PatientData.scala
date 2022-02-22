@@ -31,6 +31,28 @@ case class PatientRecord
 ) extends Record
 
 
+case class Pathology(
+  id: String,
+  `Лаб. №`: String,
+  `PCR от назофар. секрет`: String,
+  `MIP2-ELISA`: String,
+  `TNF-α -ELISA`: String,
+  `TGF-β1- ELISA`: String,
+  `Ang(1–7)-ELISA`: String,
+  `ACE2- ELISA`: String,
+  `chatepsins L-IH`: String,
+  `ACE2-IH:стойност`: String,
+  `TGF-β1- IH`: String,
+  `p-38-IH`: String,
+  `IL-1β-IH`: String,
+  `eNOS-IH`: String,
+  `iNOS-IH`: String,
+  `Придружава-щи заболявания`: String,
+)
+
+//object Pathology {
+//  def f1 = new Pathology(`iNOS-IH`= "asda")
+//}
 
 
 object PatientRecordMeta extends RecordMeta[PatientRecord] {

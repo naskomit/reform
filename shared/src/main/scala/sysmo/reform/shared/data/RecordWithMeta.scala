@@ -28,14 +28,14 @@ trait RecordMeta[U] {
 
   def field_key(name : String): FieldKey
 
-  def check_field_type[FT](key : FieldKey, value : Any) : FT = {
+  def check_field_type[FT](key : FieldKey, value : Any)(implicit _t : ClassTag[FT]) : FT = {
     value match {
       case x : FT => x
       case _ => throw new IllegalArgumentException(f"Value $value does not correspond to type ${fields(key).tpe} of field $key")
     }
   }
 
-  def ensure_type(obj : Any): U = {
+  def ensure_type(obj : Any)(implicit _t : ClassTag[U]): U = {
     obj match {
       case x : U => x
       case _ => throw new IllegalArgumentException(f"Object $obj is not of correct type")

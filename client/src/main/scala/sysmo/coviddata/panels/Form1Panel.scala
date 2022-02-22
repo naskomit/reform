@@ -1,10 +1,8 @@
 package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.coviddata.components.editors.StringEditor
-import sysmo.coviddata.components.forms.StreamingFormEditor
-import sysmo.coviddata.components.select.ReactSelectFacades.ReactSelectNativeComponent
-import sysmo.coviddata.data.{DefaultAsyncDataInterface, StreamingRecordManager}
+import sysmo.reform.components.forms.StreamingFormEditor
+import sysmo.reform.data.StreamingRecordManager
 import sysmo.coviddata.shared.data.PatientRecord
 
 object Form1Panel {
@@ -17,7 +15,7 @@ object Form1Panel {
     def render (p: Props, s: State): VdomElement = {
       StreamingFormEditor(
         StreamingRecordManager(
-          PatientRecord(
+          PatientRecord.apply_noid(
             first_name = "Джон", father_name = "И", last_name = "Атанасов",
             age = 63, gender = "мъж", education = "висше"
           )

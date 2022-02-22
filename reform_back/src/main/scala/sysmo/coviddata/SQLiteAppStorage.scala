@@ -30,7 +30,6 @@ class CovidDatabaseStorage(override val db_config: DBConfiguration
       ((PatientRecord.apply _).tupled, PatientRecord.unapply)
   }
   val patients = TableQuery[PatientRecordTable]
-
   override def all_tables = Seq(patients)
 }
 
@@ -46,19 +45,36 @@ object SQLiteAppStorage {
       }
   })
 
+  import app_storage.db_config.jdbc_profile.api._
+
   def test_import() = {
     println("Test import")
     val patient_data = CSVDataSource.read_patient_data()
-//    Using(app_storage.db_config.connection) { db =>
-      val initialization = app_storage.initialize_schema
-        .flatMap(_ => app_storage.empty_tables)
-//        .flatMap(_ => app_storage.insert_batch[PatientRecord](app_storage.patients, patient_data))
-      //        .flatMap(_ => app_storage.read_table[PatientRecord](db, app_storage.patients))
 
-      initialization.runSyncUnsafe(Duration("2s"))
+    println(app_storage.patients.result.statements)
+    println(app_storage.patients.filter(x => x.age > 10 || x.age < 3).result.statements)
+    println(app_storage.patients.schema.create.statements)
 
+//    val initialization = app_storage.initialize_schema
+//      .flatMap(_ => app_storage.empty_tables)
+//      .flatMap(_ => app_storage.insert_batch[PatientRecord](app_storage.patients, patient_data))
+//      .flatMap(_ => app_storage.query(app_storage.patients))
+//      .foreachL(println)
+//
+//      initialization.runSyncUnsafe(Duration("2s"))
+// .filter(_.age > 30).take(5)
 //    }
   }
+
+
+//  def test_scalike() = {
+//    import scalikejdbc._
+//
+//    case class Programmer(age: Int)
+//    object Programmer extends SQLSyntaxSupport[Programmer]
+//    val p = Programmer.syntax("p")
+////    val x = select.from(Programmer as p).where.gt(p., 20)
+//  }
 //
 //  def test_query() = {
 //    Using(db_profile.api.Database.forURL(db_conf)) { db => {

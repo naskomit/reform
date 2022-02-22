@@ -46,7 +46,7 @@ object PatientDataGenerator {
   }
 
   def generate_one() : PatientRecord =
-    PatientRecord(
+    PatientRecord.apply_noid(
       first_name = random_element(pool.first_name),
       father_name = random_element(pool.father_name),
       last_name = random_element(pool.last_name),
