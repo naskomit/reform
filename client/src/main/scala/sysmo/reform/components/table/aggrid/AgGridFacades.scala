@@ -30,7 +30,7 @@ object AgGridFacades {
         if (flt.filterType == "text") {
           println("Text filter")
           val f = flt.asInstanceOf[TextFilterModelJS]
-          Some(LogicalComparison(ComparisonOp.Equal, StringValue(f.filter), ColumnRef(column)))
+          Some(NumericalPredicate(NumericalPredicateOp.Equal, StringValue(f.filter), ColumnRef(column)))
         }
 //        else if (flt.filterType == "number") {
 //          val f = flt.asInstanceOf[NumberFilterModelJS]

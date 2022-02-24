@@ -39,7 +39,10 @@ lazy val reform_back = project
     // SQLite
     libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.36.0.3",
     // Monix
-    libraryDependencies += "io.monix" %%% "monix" % "3.4.0",
+    libraryDependencies += "io.monix" %% "monix" % "3.4.0",
+    // OrientDB
+    libraryDependencies += "com.orientechnologies" % "orientdb-client" % "3.2.5",
+    libraryDependencies += "com.orientechnologies" % "orientdb-gremlin" % "3.2.5",
 
   ).dependsOn(shared.jvm)
 

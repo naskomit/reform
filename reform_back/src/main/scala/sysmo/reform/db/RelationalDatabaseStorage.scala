@@ -2,15 +2,12 @@ package sysmo.reform.db
 
 import cats.effect.Resource
 import monix.eval.Task
-import monix.reactive.Observable
-
-import scala.concurrent
 import slick.jdbc.{JdbcActionComponent, JdbcProfile}
 import slick.jdbc.meta.MTable
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Success, Using}
+import scala.concurrent.{ExecutionContext, Future}
 import sysmo.reform.util.{AsyncLogging}
+import sysmo.reform.shared.{query => Q}
 
 
 trait DBConfiguration extends AsyncLogging {
@@ -29,7 +26,7 @@ trait DBConfiguration extends AsyncLogging {
 }
 
 
-trait AppDatabaseStorage extends AsyncLogging {
+trait RelationalDatabaseStorage extends AsyncLogging {
 
   val db_config: DBConfiguration
   import db_config.jdbc_profile.api._
@@ -61,7 +58,7 @@ trait AppDatabaseStorage extends AsyncLogging {
 
   /** Base effects */
 
-  def query[Tbl, Rec](q: Query[Tbl, Rec, Seq]): Task[Seq[Rec]] = {
+  def query[Tbl <: Table[Rec], Rec](q: Query[Tbl, Rec, Seq]): Task[Seq[Rec]] = {
     val q1: JdbcActionComponent#StreamingQueryActionExtensionMethods[Seq[Rec], Rec] = q
     logger.info(
       q1.result.statements.mkString("\n")
@@ -116,6 +113,10 @@ trait AppDatabaseStorage extends AsyncLogging {
     val sql = DBIO.seq(table ++= data)
     logger.info(f"Inserting ${data.length} records into ${table.schema}") >>
     run(sql)
+  }
+
+  def use_query_filter[Rec](table: Table[Rec], q : Q.QueryFilter) = {
+    table
   }
 
 

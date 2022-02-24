@@ -22,6 +22,7 @@ object EnumeratedDomain {
 case class RecordField(name: String, label: String, tpe: FieldType, domain: Option[Domain] = None)
 
 trait RecordMeta[U] {
+  val id: String
   type FieldKey
   val field_keys: Seq[FieldKey]
   val fields : Map[FieldKey, RecordField]

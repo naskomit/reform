@@ -1,6 +1,6 @@
 package sysmo.coviddata.shared.data
 
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, Record, RecordField, RecordMeta, RecordWithMeta, StringType}
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, IntegerType, Record, RecordField, RecordMeta, RecordWithMeta, StringType}
 import upickle.default.{macroRW, ReadWriter => RW}
 
 import scala.collection.immutable.VectorMap
@@ -56,6 +56,7 @@ case class Pathology(
 
 
 object PatientRecordMeta extends RecordMeta[PatientRecord] {
+  val id = "PatientRecord"
   object FieldEnum extends Enumeration {
     type FieldEnum = Value
 //    val first_name, father_name, last_name, age, gender, education = Value
@@ -87,7 +88,7 @@ object PatientRecordMeta extends RecordMeta[PatientRecord] {
     FieldEnum.first_name -> RecordField(name = "first_name", label = "Име", tpe = StringType()),
     FieldEnum.father_name -> RecordField(name = "father_name", label = "Презиме", tpe = StringType()),
     FieldEnum.last_name -> RecordField(name = "last_name", label = "Фамилия", tpe = StringType()),
-    FieldEnum.age -> RecordField(name = "age", label = "Възраст", tpe = StringType()),
+    FieldEnum.age -> RecordField(name = "age", label = "Възраст", tpe = IntegerType()),
     FieldEnum.gender -> RecordField(name = "gender", label = "Пол", tpe = StringType(),
       //domain = Some(EnumeratedDomain(Seq("male", "female")))
       domain = Some(EnumeratedDomain(Seq(EnumeratedOption("male", "мъж"), EnumeratedOption("female", "жена"))))

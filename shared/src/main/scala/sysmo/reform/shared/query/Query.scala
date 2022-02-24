@@ -22,12 +22,20 @@ case class LogicalOr(expr_list: Seq[PredicateExpression])
 case class LogicalNot(expr: PredicateExpression)
   extends PredicateExpression
 
-object ComparisonOp extends Enumeration {
+object NumericalPredicateOp extends Enumeration {
   type Comparison = Value
   val Equal, NotEqual, >, >=, <, <= = Value
 }
 
-case class LogicalComparison(op: ComparisonOp.Value, arg1: Expression, arg2: Expression)
+case class NumericalPredicate(op: NumericalPredicateOp.Value, arg1: Expression, arg2: Expression)
+  extends PredicateExpression
+
+object StringPredicateOp extends Enumeration {
+  type Comparison = Value
+  val Equal, NotEqual, BeginsWith, Contains = Value
+}
+
+case class StringPredicate(op: StringPredicateOp.Value, arg1: Expression, arg2: Expression)
   extends PredicateExpression
 
 /** # Filter */
