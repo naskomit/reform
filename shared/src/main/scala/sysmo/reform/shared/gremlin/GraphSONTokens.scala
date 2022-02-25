@@ -1,0 +1,56 @@
+package sysmo.reform.shared.gremlin
+
+object GraphSONTokens {
+  val CLASS = "@class"
+  val VALUETYPE = "@type"
+  val VALUEPROP = "@value"
+  val ID = "id"
+  val TYPE = "type"
+  val VALUE = "value"
+  val PROPERTIES = "properties"
+  val KEY = "key"
+  val EDGE = "edge"
+  val EDGES = "edges"
+  val ELEMENT = "ELEMENT"
+  val VERTEX = "vertex"
+  val VERTEX_PROPERTY = "vertexProperty"
+  val VERTICES = "vertices"
+  val IN = "inV"
+  val OUT = "outV"
+  val IN_E = "inE"
+  val OUT_E = "outE"
+  val LABEL = "label"
+  val LABELS = "labels"
+  val OBJECTS = "objects"
+  val IN_LABEL = "inVLabel"
+  val OUT_LABEL = "outVLabel"
+  val GREMLIN_TYPE_NAMESPACE = "g"
+  val GREMLINX_TYPE_NAMESPACE = "gx"
+
+  // TraversalExplanation Tokens
+  val ORIGINAL = "original"
+  val FINAL = "final"
+  val INTERMEDIATE = "intermediate"
+  val CATEGORY = "category"
+  val TRAVERSAL = "traversal"
+  val STRATEGY = "strategy"
+
+  // TraversalMetrics Tokens
+  val METRICS = "metrics"
+  val DURATION = "dur"
+  val NAME = "name"
+  val COUNTS = "counts"
+  val ANNOTATIONS = "annotations"
+
+  val BULK = "bulk"
+
+  val SCRIPT = "script"
+  val LANGUAGE = "language"
+  val ARGUMENTS = "arguments"
+  val PREDICATE = "predicate"
+  val AND = "and"
+  val NOT = "not"
+  val OR = "or"
+  val SOURCE = "source"
+  val STEP = "step"
+}

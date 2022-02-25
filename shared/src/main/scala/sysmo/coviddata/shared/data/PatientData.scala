@@ -137,4 +137,5 @@ object PatientRecord {
 trait PatientData {
   def list_patients(): Seq[PatientRecord]
   def count_patients(): Int
+  def query_gremlin(q: String): Seq[PatientRecord]
 }

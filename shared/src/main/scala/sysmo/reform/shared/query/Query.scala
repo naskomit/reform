@@ -22,27 +22,36 @@ case class LogicalOr(expr_list: Seq[PredicateExpression])
 case class LogicalNot(expr: PredicateExpression)
   extends PredicateExpression
 
-object NumericalPredicateOp extends Enumeration {
-  type Comparison = Value
+trait PredicateOp extends Enumeration
+
+object NumericalPredicateOp extends PredicateOp {
+  type NumericalPredicateOp = Value
   val Equal, NotEqual, >, >=, <, <= = Value
 }
 
 case class NumericalPredicate(op: NumericalPredicateOp.Value, arg1: Expression, arg2: Expression)
   extends PredicateExpression
 
-object StringPredicateOp extends Enumeration {
-  type Comparison = Value
-  val Equal, NotEqual, BeginsWith, Contains = Value
+object StringPredicateOp extends PredicateOp {
+  type StringPredicateOp = Value
+  val Equal, NotEqual, StartingWith, NonStartingWith, EndingWith, NotEndingWith, Containing, NotContaining = Value
 }
 
 case class StringPredicate(op: StringPredicateOp.Value, arg1: Expression, arg2: Expression)
+  extends PredicateExpression
+
+object ContainmentPredicateOp extends PredicateOp {
+  val Within, Without = Value
+}
+
+case class ContainmentPredicate(op: ContainmentPredicateOp.Value, arg1: Expression, arg2: Seq[AtomicValue])
   extends PredicateExpression
 
 /** # Filter */
 case class QueryFilter(expr: PredicateExpression)
 
 /** # Sort */
-case class ColumnSort(col: ColumnRef, ascending: true)
+case class ColumnSort(col: ColumnRef, ascending: Boolean)
 
 case class QuerySort(column_sorts: Seq[ColumnSort])
 

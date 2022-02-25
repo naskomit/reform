@@ -75,6 +75,9 @@ object PatientDataImpl extends PatientData {
   val total_count = 20
   override def count_patients(): Int = total_count
   override def list_patients(): Seq[PatientRecord] = PatientDataGenerator.generate(total_count)
+  override def query_gremlin(q: String): Seq[PatientRecord] = {
+    Seq()
+  }
 }
 
 class DataApiServer @Inject()(implicit ec: ExecutionContext) extends Server[Value.Value, up.Reader, up.Writer] {

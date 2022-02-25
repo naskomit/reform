@@ -1,6 +1,7 @@
 package sysmo.reform.components.table.aggrid
 
 import japgolly.scalajs.react.vdom.html_<^._
+import org.scalajs.dom
 import sysmo.reform.shared.query._
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 import sysmo.reform.data.TableDatasource
@@ -26,7 +27,14 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
   }
 
   private def process_sort(sort_model: AgGridFacades.SortModel): Option[QuerySort] = {
-    None
+    if (sort_model.isEmpty)
+      None
+    else
+      Some(QuerySort(
+        sort_model.toSeq.map(sort_item => {
+          ColumnSort(ColumnRef(sort_item.colId), sort_item.sort == "asc")
+        })
+      ))
   }
 
   var total_rows : Int = -1
@@ -36,12 +44,14 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
     val ag_ds = (new js.Object).asInstanceOf[AgGridFacades.TableDatasource]
     //    ds.rowCount = () => total_rows
     ag_ds.getRows = params => {
+      dom.console.log(params)
       val filter = process_filter(params.filterModel)
       var sort = process_sort(params.sortModel)
-      var range = None
+      var range = Some(QueryRange(params.startRow, params.endRow - params.startRow))
       val query = BasicQuery(
         source, filter, sort, range
       )
+      println(query)
       ds.run_query(query).foreach(
         data => params.successCallback(data.toJSArray, total_rows)
       )
@@ -59,7 +69,7 @@ object AgGridSourceAgaptor {
 object AgGridComponent {
   import japgolly.scalajs.react.ScalaComponent
   import japgolly.scalajs.react.component.Scala.BackendScope
-  case class Props(ds : AgGridSourceAgaptor[_], columns : Seq[AgGridColumn])
+  case class Props(ds : AgGridSourceAgaptor[_], columns : Seq[agf.Column])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -88,7 +98,7 @@ object AgGridComponent {
     .renderBackend[Backend]
     .build
 
-  def apply(ds : TableDatasource[_], table: QuerySource, columns : Seq[AgGridColumn]) =
+  def apply(ds : TableDatasource[_], table: QuerySource, columns : Seq[agf.Column]) =
     component(Props(AgGridSourceAgaptor(ds, table), columns))
 
 }

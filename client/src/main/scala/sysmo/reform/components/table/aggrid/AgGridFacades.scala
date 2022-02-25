@@ -8,6 +8,8 @@ import js.JSConverters._
 import scala.scalajs.js.annotation.JSImport
 import japgolly.scalajs.react.{Children, JsComponent}
 
+import scala.scalajs.js.|
+
 object AgGridFacades {
   @js.native
   trait GridOptions extends js.Object {
@@ -25,21 +27,23 @@ object AgGridFacades {
 
   class FilterModelJSExtractor(column: String) {
     def unapply(flt : ColumnFilter): Option[PredicateExpression] = {
-      dom.console.log(flt)
       if (flt.hasOwnProperty("filterType")) {
-        if (flt.filterType == "text") {
-          println("Text filter")
-          val f = flt.asInstanceOf[TextFilterModelJS]
-          Some(NumericalPredicate(NumericalPredicateOp.Equal, StringValue(f.filter), ColumnRef(column)))
+        flt.filterType match {
+          case "text" => {
+            val f = flt.asInstanceOf[TextFilterModelJS]
+            Some(StringPredicate(StringPredicateOp.Equal, StringValue(f.filter), ColumnRef(column)))
+          }
+
+          case "number" => {
+            val f = flt.asInstanceOf[NumberFilterModelJS]
+            Some(NumericalPredicate(NumericalPredicateOp.Equal, RealValue(f.filter), ColumnRef(column)))
+          }
+
+          case x => {
+            dom.console.warn(f"Unimplemented filter type $x")
+            None
+          }
         }
-//        else if (flt.filterType == "number") {
-//          val f = flt.asInstanceOf[NumberFilterModelJS]
-//          Some(NumberFilter(f.filter, f.filterTo, f.`type`))
-//        } else if (flt.filterType == "date") {
-//          val f = flt.asInstanceOf[DateFilterModelJS]
-//          Some(DateFilter(f.dateFrom, f.dateTo, f.`type`))
-//        }
-        else None
       } else
         None
     }
@@ -100,6 +104,37 @@ object AgGridFacades {
   }
 
 
+  @js.native
+  trait Column extends js.Object {
+    var field: String = js.native
+    //      var `type`: String | js.Array[String]
+    var headerName: js.UndefOr[String] = js.native
+    var filter: js.UndefOr[String | Boolean] = js.native
+    var sortable: js.UndefOr[Boolean] = js.native
+  }
+
+  object Filters extends Enumeration {
+    val default, text, number = Value
+  }
+
+  def column(field: String, headerName: Option[String] = None,
+             filter: Option[Filters.Value] = None,
+             sortable: Option[Boolean] = None
+            ) : Column = {
+    val col_js = (new js.Object).asInstanceOf[Column]
+    col_js.field = field
+    col_js.headerName = headerName.orUndefined
+    col_js.filter = filter match {
+      case None => None.orUndefined
+      case Some(Filters.default) => true
+      case Some(Filters.text) => "agTextColumnFilter"
+      case Some(Filters.number) => "agNumberColumnFilter"
+    }
+    col_js.sortable = sortable.orUndefined
+
+    col_js
+  }
+
 
   object AgGridNativeComponent {
 
@@ -107,17 +142,10 @@ object AgGridFacades {
     @js.native
     object AgGridReact extends js.Object
 
-    @js.native
-    trait ColDef extends js.Object {
-      var field: String = js.native
-      //      var `type`: String | js.Array[String]
-      var headerName: String = js.native
-      var filter: String = js.native
-    }
 
     @js.native
     trait Props extends js.Object {
-      var columnDefs: js.Array[ColDef] = js.native
+      var columnDefs: js.Array[Column] = js.native
       var rowData: js.Object = js.native
       var reactUi: Boolean = js.native
       var gridOptions: GridOptions = js.native
@@ -126,8 +154,7 @@ object AgGridFacades {
 
     val component = JsComponent[Props, Children.None, Null](AgGridReact)
 
-    //
-    def apply(datasource: TableDatasource, columns : Seq[AgGridColumn]) = {
+    def apply(datasource: TableDatasource, columns : Seq[Column]) = {
       val p = (new js.Object).asInstanceOf[Props]
 
       p.reactUi = true
@@ -136,15 +163,7 @@ object AgGridFacades {
       grid_options.rowModelType = "infinite"
       grid_options.datasource = datasource
       p.gridOptions = grid_options
-      p.columnDefs = columns.map(x => {
-        val cdef = (new js.Object).asInstanceOf[ColDef]
-
-        cdef.field = x.field
-        cdef.headerName = x.headerName
-        cdef.filter = "agTextColumnFilter"
-
-        cdef
-      }).toJSArray
+      p.columnDefs = columns.toJSArray
 
       component.withProps(p)()
     }

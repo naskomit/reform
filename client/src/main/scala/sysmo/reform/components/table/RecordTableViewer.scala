@@ -3,9 +3,10 @@ package sysmo.reform.components.table
 import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js
-import sysmo.reform.shared.data.{RecordField, RecordWithMeta}
+import sysmo.reform.shared.data.{IntegerType, RecordField, RecordWithMeta, StringType}
 import sysmo.reform.shared.{query => Q}
-import sysmo.reform.components.table.aggrid.{AgGridColumn, AgGridComponent}
+import sysmo.reform.components.table.aggrid.AgGridComponent
+import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 import sysmo.reform.data.TableDatasource
 
 object RecordTableViewer {
@@ -19,7 +20,14 @@ object RecordTableViewer {
       <.div(^.style:=js.Dictionary("marginLeft" -> "100px", "marginRight" -> "100px"),
         AgGridComponent(
           p.ds, p.source,
-          p.columns.map(col => AgGridColumn(col.name, col.label))
+          p.columns.map(col => {
+            val filter = col.tpe match {
+              case StringType() => Some(agf.Filters.text)
+              case IntegerType() => Some(agf.Filters.number)
+              case _ => None
+            }
+            agf.column(col.name, headerName = Some(col.label), filter = filter, sortable = Some(true))
+          })
         )
       )
     }
