@@ -1,14 +1,16 @@
 package sysmo.coviddata.controllers
 
+import autowire.Core.Request
+import javax.inject._
 import autowire.Server
 import upickle.{default => up}
-import javax.inject._
-
-import scala.concurrent.ExecutionContext
 import ujson.Value
-import sysmo.coviddata.shared.data.{PatientData, PatientRecord}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
+import sysmo.coviddata.shared.data.{PatientData, PatientRecord}
+import sysmo.reform.db.GraphAppStorage
+import sysmo.reform.shared.query.Query
 
 object PatientDataGenerator {
   object pool {
@@ -71,17 +73,79 @@ object PatientDataGenerator {
 }
 
 
-object PatientDataImpl extends PatientData {
+class PatientDataImpl(app_storage: GraphAppStorage) extends PatientData {
   val total_count = 20
   override def count_patients(): Int = total_count
   override def list_patients(): Seq[PatientRecord] = PatientDataGenerator.generate(total_count)
+
   override def query_gremlin(q: String): Seq[PatientRecord] = {
     Seq()
   }
+
+  private def get_single_elem[U](x: java.util.AbstractMap[_, _], k: String) = {
+    type AList = java.util.AbstractList[_]
+    x.get(k).asInstanceOf[AList].get(0).asInstanceOf[U]
+  }
+
+  def query_table(q: Query): Seq[PatientRecord] = {
+    type AMap = java.util.AbstractMap[_, _]
+    val result = app_storage.query_table(q)
+    result.map {
+      case x: AMap =>
+        PatientRecord(
+          None,
+          this.get_single_elem[String](x, "first_name"),
+          this.get_single_elem[String](x, "father_name"),
+          this.get_single_elem[String](x, "last_name"),
+          this.get_single_elem[Int](x, "age"),
+          this.get_single_elem[String](x, "gender"),
+          this.get_single_elem[String](x, "education"),
+        )
+    }
+  }
 }
 
-class DataApiServer @Inject()(implicit ec: ExecutionContext) extends Server[Value.Value, up.Reader, up.Writer] {
-  override def read[Result: up.Reader](p: Value) = up.read(p)
-  override def write[Result: up.Writer](r: Result) = up.writeJs(r)
-  val routes = route[PatientData](PatientDataImpl)
+object PatientDataImpl {
+  def apply(app_storage: GraphAppStorage): PatientDataImpl = new PatientDataImpl(app_storage)
+}
+//class DataApiServer @Inject()(implicit ec: ExecutionContext) extends Server[Value.Value, up.Reader, up.Writer] {
+//  import sysmo.reform.shared.query.ReadersWriters.rwQuery
+////  override def read[Result: up.Reader](p: Value) = up.read[Value](p)
+////  override def write[Result: up.Writer](r: Result) = up.writeJs(r)
+//  val routes = route[PatientData](PatientDataImpl)
+//}
+
+class DataApiServer
+  (base_path: Seq[String], app_storage: GraphAppStorage)
+  (implicit ec: ExecutionContext) {
+
+  import sysmo.reform.shared.query.ReadersWriters.rwQuery
+  type PickleType = Value.Value
+  private val route_map = Map(
+    (base_path :+ "count_patients") -> this.count_patients _,
+    (base_path :+ "query_table") -> this.query_table _
+  )
+
+  def count_patients(args: Map[String, PickleType]): PickleType = {
+    val result = PatientDataImpl(app_storage).count_patients()
+    up.writeJs(result)
+
+  }
+
+  def query_table(args: Map[String, PickleType]): PickleType = {
+    val q = upickle.default.read[Query](args("query"))
+    val result = PatientDataImpl(app_storage).query_table(q)
+    up.writeJs(result)
+
+  }
+
+  val routes: autowire.Core.Router[PickleType] = {
+    case Request(path, args) => {
+      val method = route_map.getOrElse(path,
+        throw new IllegalArgumentException(f"Cannot find method for path $path")
+      )
+      Future(method(args))
+    }
+  }
+
 }

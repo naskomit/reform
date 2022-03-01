@@ -7,7 +7,7 @@ object TestApp extends App {
 //  SQLiteAppStorage.test_query()
 //  SQLiteAppStorage.test_task
 
-  GraphAppStorage.test_import()
+  OrientDBGraphAppStorage.test_import()
 }
 
 

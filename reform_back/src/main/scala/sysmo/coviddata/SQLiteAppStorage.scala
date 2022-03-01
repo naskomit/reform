@@ -120,9 +120,9 @@ object SQLiteAppStorage {
     val q = Q.BasicQuery(
       source = Q.SingleTable("PatientData"),
       filter = Some(Q.QueryFilter(
-        Q.NumericalPredicate(Q.NumericalPredicateOp.>=, Q.ColumnRef("age"), Q.RealValue(10)))
+        Q.NumericalPredicate(Q.NumericalPredicateOp.>=, Q.ColumnRef("age"), Q.Val(10)))
       ),
-      sort = Some(Q.QuerySort(Seq())),
+      sort = Some(Q.QuerySort()),
       range = Some(Q.QueryRange(3, 4))
     )
 

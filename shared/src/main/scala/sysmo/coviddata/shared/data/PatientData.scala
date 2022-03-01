@@ -1,6 +1,7 @@
 package sysmo.coviddata.shared.data
 
 import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, IntegerType, Record, RecordField, RecordMeta, RecordWithMeta, StringType}
+import sysmo.reform.shared.query.Query
 import upickle.default.{macroRW, ReadWriter => RW}
 
 import scala.collection.immutable.VectorMap
@@ -47,7 +48,7 @@ case class Pathology(
   `IL-1β-IH`: String,
   `eNOS-IH`: String,
   `iNOS-IH`: String,
-  `Придружава-щи заболявания`: String,
+  `Придружаващи заболявания`: String,
 )
 
 //object Pathology {
@@ -138,4 +139,5 @@ trait PatientData {
   def list_patients(): Seq[PatientRecord]
   def count_patients(): Int
   def query_gremlin(q: String): Seq[PatientRecord]
+  def query_table(q: Query): Seq[PatientRecord]
 }

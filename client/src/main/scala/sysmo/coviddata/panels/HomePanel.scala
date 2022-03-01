@@ -14,7 +14,7 @@ object HomePanel {
 
   final class Backend($: BackendScope[Props, State]) {
     def render(p: Props, s: State): VdomElement = {
-      RecordTableViewer(DemoServerDataSource, "PatientData")
+      RecordTableViewer(DemoServerDataSource, "PatientRecord")
     }
   }
 

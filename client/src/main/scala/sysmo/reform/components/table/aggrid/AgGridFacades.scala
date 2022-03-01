@@ -31,12 +31,37 @@ object AgGridFacades {
         flt.filterType match {
           case "text" => {
             val f = flt.asInstanceOf[TextFilterModelJS]
-            Some(StringPredicate(StringPredicateOp.Equal, StringValue(f.filter), ColumnRef(column)))
+            val predicate = f.`type` match {
+              case "equals" => StringPredicateOp.Equal
+              case "notEqual" => StringPredicateOp.NotEqual
+              case "contains" => StringPredicateOp.Containing
+              case "notContains" => StringPredicateOp.NotContaining
+              case "startsWith" => StringPredicateOp.StartingWith
+              case "endsWith" => StringPredicateOp.EndingWith
+
+            }
+            Some(StringPredicate(predicate, ColumnRef(column), Val(f.filter)))
           }
 
           case "number" => {
             val f = flt.asInstanceOf[NumberFilterModelJS]
-            Some(NumericalPredicate(NumericalPredicateOp.Equal, RealValue(f.filter), ColumnRef(column)))
+            if (f.`type` == "inRange") {
+              Some(LogicalAnd(
+                NumericalPredicate(NumericalPredicateOp.>=, ColumnRef(column), Val(f.filter)),
+                NumericalPredicate(NumericalPredicateOp.<=, ColumnRef(column), Val(f.filterTo))
+              ))
+            } else {
+              val predicate = f.`type` match {
+                case "equals" => NumericalPredicateOp.Equal
+                case "notEqual" => NumericalPredicateOp.NotEqual
+                case "lessThan" => NumericalPredicateOp.<
+                case "lessThanOrEqual" => NumericalPredicateOp.<=
+                case "greaterThan" => NumericalPredicateOp.>
+                case "greaterThanOrEqual" => NumericalPredicateOp.>=
+
+              }
+              Some(NumericalPredicate(predicate, ColumnRef(column), Val(f.filter)))
+            }
           }
 
           case x => {

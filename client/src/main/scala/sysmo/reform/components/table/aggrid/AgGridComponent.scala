@@ -21,7 +21,7 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
       }
     }.values.toSeq
     if (filter_seq.nonEmpty) {
-      Some(QueryFilter(LogicalAnd(filter_seq)))
+      Some(QueryFilter(LogicalAnd(filter_seq: _*)))
     } else
       None
   }
@@ -33,7 +33,7 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
       Some(QuerySort(
         sort_model.toSeq.map(sort_item => {
           ColumnSort(ColumnRef(sort_item.colId), sort_item.sort == "asc")
-        })
+        }): _*
       ))
   }
 
@@ -51,7 +51,6 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
       val query = BasicQuery(
         source, filter, sort, range
       )
-      println(query)
       ds.run_query(query).foreach(
         data => params.successCallback(data.toJSArray, total_rows)
       )

@@ -1,5 +1,7 @@
 package sysmo.reform.shared.gremlin
 
+import sysmo.reform.shared.gremlin.bytecode.{Bytecode, Instruction, Predicate, TextP}
+import sysmo.reform.shared.gremlin.{bytecode => bc}
 import ujson.{Arr, Obj, Value}
 
 object GraphsonEncoder {
@@ -12,7 +14,7 @@ object GraphsonEncoder {
       case x: Bytecode => bytecode(x)
       case x: Instruction => instruction(x)
       case x: Predicate[_] => predicate(x)
-      case x: TextPredicate => text_predicate(x)
+      case x: bc.Order.Value if bc.Order.has(x) => order(x)
       case x if x == null => null
     }
   }
@@ -28,17 +30,25 @@ object GraphsonEncoder {
       ))
   )
 
+  def order(v: bc.Order.Value): Value = Obj(
+    ("@type", "g:Order"),
+    ("@value", v.toString)
+  )
+
   def predicate[U](o: Predicate[U]): Value = {
+    val _type = if (TextP.has(o.biPredicate)) {
+      "g:TextP"
+    } else "g:P"
     Obj(
-      ("@type", "g:P"),
+      ("@type", _type),
       ("@value", Obj(
         ("predicate", o.biPredicate.toString),
         ("value", to_value(o.value))
       ))
-    )
-  }
 
-  def text_predicate(o: TextPredicate): Value = ???
+    )
+
+}
 
   def int32(o: Int): Obj = Obj(
     ("@type", "g:Int32"),

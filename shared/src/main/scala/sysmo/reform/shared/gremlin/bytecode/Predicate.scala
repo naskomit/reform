@@ -1,4 +1,4 @@
-package sysmo.reform.shared.gremlin
+package sysmo.reform.shared.gremlin.bytecode
 
 trait BiPredicate extends Enumeration
 
@@ -15,7 +15,13 @@ object Contains extends BiPredicate {
 object TextP extends BiPredicate {
   type Text = Value
   val startingWith, notStartingWith,endingWith, notEndingWith, containing, notContaining = Value
+  def has(v: BiPredicate#Value): Boolean = v match {
+    case v : Text if values.contains(v) => true
+    case _ => false
+  }
 }
+
+
 
 case class Predicate[V](biPredicate: BiPredicate#Value, value: V)
 
@@ -30,15 +36,10 @@ object Predicate {
   def within[V](value: Iterable[V]) = Predicate(Contains.within, value)
   def without[V](value: Iterable[V]) = Predicate(Contains.without, value)
 
-}
-
-case class TextPredicate(biPredicate: TextP.Value, value: String)
-
-case object TextPredicate {
-  def startingWith(value: String): TextPredicate = TextPredicate(TextP.startingWith, value)
-  def notStartingWith(value: String): TextPredicate = TextPredicate(TextP.notStartingWith, value)
-  def endingWith(value: String): TextPredicate = TextPredicate(TextP.endingWith, value)
-  def notEndingWith(value: String): TextPredicate = TextPredicate(TextP.notEndingWith, value)
-  def containing(value: String): TextPredicate = TextPredicate(TextP.containing, value)
-  def notContaining(value: String): TextPredicate = TextPredicate(TextP.notContaining, value)
+  def startingWith(value: String): Predicate[String] = Predicate(TextP.startingWith, value)
+  def notStartingWith(value: String): Predicate[String] = Predicate(TextP.notStartingWith, value)
+  def endingWith(value: String): Predicate[String] = Predicate(TextP.endingWith, value)
+  def notEndingWith(value: String): Predicate[String] = Predicate(TextP.notEndingWith, value)
+  def containing(value: String): Predicate[String] = Predicate(TextP.containing, value)
+  def notContaining(value: String): Predicate[String] = Predicate(TextP.notContaining, value)
 }

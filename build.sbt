@@ -81,7 +81,8 @@ lazy val client = project
       "react-select" ->  "5.2.2",
     ),
     scalaJSUseMainModuleInitializer := true,
-    webpackBundlingMode := BundlingMode.LibraryOnly()
+    webpackBundlingMode := BundlingMode.LibraryOnly(),
+    webpackEmitSourceMaps := false
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
   .dependsOn(shared.js)
