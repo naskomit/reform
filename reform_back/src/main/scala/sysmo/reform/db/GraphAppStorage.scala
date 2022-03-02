@@ -96,10 +96,6 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
     val gremlin_scala_bc = Query2GremlinCompiler.compile(q)
     val gremlin_str = write(GraphsonEncoder.to_value(gremlin_scala_bc))
     val gremlin_native_bc = GremlinIO.readValue(gremlin_str, classOf[Bytecode])
-    println("query_table")
-    println(q)
-    println(gremlin_str)
-    println(gremlin_native_bc)
     Using(graph_factory.getTx) { graph =>
       val g = graph.traversal
       val trav: Traversal.Admin[_, _] = JavaTranslator.of(g).translate(gremlin_native_bc)

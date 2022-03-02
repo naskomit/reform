@@ -43,6 +43,9 @@ lazy val reform_back = project
     // OrientDB
     libraryDependencies += "com.orientechnologies" % "orientdb-client" % "3.2.5",
     libraryDependencies += "com.orientechnologies" % "orientdb-gremlin" % "3.2.5",
+    // POI
+    libraryDependencies += "org.apache.poi" % "poi" % "5.2.0",
+    libraryDependencies += "org.apache.poi" % "poi-ooxml" % "5.2.0",
 
   ).dependsOn(shared.jvm)
 
