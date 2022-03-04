@@ -22,6 +22,7 @@ object ArrowVector {
         tp.splitAndTransfer(start, length)
         new Storage(manager, tp.getTo.asInstanceOf[StorageBackend])
       }
+      override def name: String = backend.getName
       override def close(): Unit = backend.close()
     }
     override def create_storage(manager: sdt.TableManager, name: String): Storage = {
@@ -43,6 +44,7 @@ object ArrowVector {
         tp.splitAndTransfer(start, length)
         new Storage(manager, tp.getTo.asInstanceOf[StorageBackend])
       }
+      override def name: String = backend.getName
       override def close(): Unit = backend.close()
     }
     override def create_storage(manager: sdt.TableManager, name: String): Storage = {
@@ -64,6 +66,7 @@ object ArrowVector {
         tp.splitAndTransfer(start, length)
         new Storage(manager, tp.getTo.asInstanceOf[StorageBackend])
       }
+      override def name: String = backend.getName
       override def close(): Unit = backend.close()
     }
     override def create_storage(manager: sdt.TableManager, name: String): Storage = {
@@ -85,6 +88,7 @@ object ArrowVector {
         tp.splitAndTransfer(start, length)
         new Storage(manager, tp.getTo.asInstanceOf[StorageBackend])
       }
+      override def name: String = backend.getName
       override def close(): Unit = backend.close()
     }
     override def create_storage(manager: sdt.TableManager, name: String): Storage = {

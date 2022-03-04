@@ -7,18 +7,20 @@ abstract class VectorStorage[ValueT](val manager: TableManager) {
   def get_value_count: Int
   def range_view(start: Int, length: Int): VectorStorage[ValueT]
   def close(): Unit
+  def name: String
 }
 
-class Vector[V, Storage <: VectorStorage[V]](storage: Storage)(implicit tci: VectorTypeclass[V])
+class Vector[V, +Storage <: VectorStorage[V]](storage: Storage)(implicit tci: VectorTypeclass[V])
     extends Iterable[V] with AutoCloseable {
   type ValueType = V
-  type VecT = Vector[V, Storage]
+//  type VecT = Vector[V, Storage]
+  def name: String = storage.name
   def apply(i: Int): ValueType = storage.get(i)
   def length: Int = storage.get_value_count
   def iterator = new VectorIterator[V](this)
-  def range(start: Int, length: Int): VecT =
+  def range(start: Int, length: Int): Vector[V, Storage] =
     // Not sure why this conversion is necessary, but doesn't work otherwise
-    new VecT(storage.range_view(start, length).asInstanceOf[Storage])
+    new Vector[V, Storage](storage.range_view(start, length).asInstanceOf[Storage])
 
   def map2[B](f: V => B)(implicit tci_out: VectorTypeclass[B]): Vector[B, tci_out.Storage] = {
     val builder = new IncrementalVectorBuilder[B, tci_out.Storage](storage.manager.create_storage("")(tci_out))
@@ -46,7 +48,8 @@ class VectorIterator[V](vec: Vector[V, _]) extends Iterator[V] {
 }
 
 // TODO Not safe (not auto close-able)
-trait VectorBuilder[V, Storage <: VectorStorage[V]] {
+abstract class VectorBuilder[V, Storage <: VectorStorage[V]](storage: Storage)(implicit tci: VectorTypeclass[V]) {
+  def tpe: VectorType.Value = tci.tpe
   def toVector: Vector[V, Storage]
 }
 
@@ -56,7 +59,7 @@ trait VectorBuilder[V, Storage <: VectorStorage[V]] {
 
 class IncrementalVectorBuilder[V, Storage <: VectorStorage[V]]
   (storage: Storage)(implicit tci: VectorTypeclass[V])
-    extends VectorBuilder[V, Storage] {
+    extends VectorBuilder[V, Storage](storage) {
   var num_elements: Int = 0
   def append(value: V): Unit = {
     num_elements += 1

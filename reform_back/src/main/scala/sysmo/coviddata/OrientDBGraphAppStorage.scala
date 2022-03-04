@@ -1,15 +1,19 @@
 package sysmo.coviddata
 
+import java.util
+
 import org.apache.tinkerpop.gremlin.jsr223.JavaTranslator
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
-import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, P, Traversal, Order}
+import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import sysmo.coviddata.shared.data.PatientRecord
 import sysmo.reform.db.GraphAppStorage
 import sysmo.reform.db.GremlinIO.{readValue, writeValueAsString}
 import sysmo.reform.shared.data.RecordWithMeta
+import sysmo.reform.shared.data.{table => sdt}
 import sysmo.reform.shared.query.Query2GremlinCompiler
+
 import scala.jdk.CollectionConverters._
 
 object OrientDBGraphAppStorage {
@@ -25,7 +29,6 @@ object OrientDBGraphAppStorage {
     app_storage.list_schema
     app_storage.drop_data
     app_storage.import_batch(patient_data)
-    query_data()
   }
 
   def query_data() = {
@@ -45,17 +48,31 @@ object OrientDBGraphAppStorage {
       )
       //.valueMap().`with`(WithOptions.tokens, WithOptions.all)
       .order().by("age", Order.desc)
-      .range(1, 2)
-
+//      .range(1, 2)
       .valueMap()
+      .select("first_name", "father_name", "last_name", "gender", "age", "education")
+//      .by(__.unfold)
 
-    t2.asScala.foreach(println)
+    val data_in = t2.asScala.map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
+    println(data_in.toSeq)
 
-    val bc = t2.asAdmin().getBytecode
-    val bc_out = writeValueAsString(bc)
+    import sdt.{VectorType => VT}
+    val schema = sdt.Schema(Seq(
+      sdt.Field("first_name", sdt.FieldType(VT.Char)), sdt.Field("father_name", sdt.FieldType(VT.Char)),
+      sdt.Field("last_name", sdt.FieldType(VT.Char)), sdt.Field("gender", sdt.FieldType(VT.Char)),
+      sdt.Field("age", sdt.FieldType(VT.Int)), sdt.Field("education", sdt.FieldType(VT.Char))
+    ))
 
-    println(bc)
-    println(bc_out)
+//      for (x <- t2.iterator().asScala) {
+//        println(x)
+//      }
+//      t2.asScala.foreach(println)
+
+//    val bc = t2.asAdmin().getBytecode
+//    val bc_out = writeValueAsString(bc)
+
+//    println(bc)
+//    println(bc_out)
 //    t2.asScala.foreach(println)
 //
 //    val bc = t2.asAdmin().getBytecode
