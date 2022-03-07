@@ -60,13 +60,13 @@ object OrientDBGraphAppStorage {
       sdt.Field("age", sdt.FieldType(VT.Int)), sdt.Field("education", sdt.FieldType(VT.Char))
     ))
 
-    Using(dt.ArrowTableManager()) { tm => {
+    Using(dt.arrow.ArrowTableManager()) { tm => {
       val tb_1 = tm.incremental_table_builder(schema)
       t2.asScala.foreach(x => {
         val prop_map = x.asInstanceOf[java.util.Map[String, Any]].asScala.toMap
             .view.mapValues {
-              case el: java.util.List[Any] => el.get(0)
-              case x => x
+              case el: java.util.List[_] => Some(el.get(0))
+              case x => Some(x)
             }.toMap
 
         tb_1 :+ prop_map

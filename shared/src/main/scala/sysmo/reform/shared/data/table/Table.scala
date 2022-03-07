@@ -1,13 +1,13 @@
 package sysmo.reform.shared.data.table
 
 trait TableBuilder {
-  def :+(row_data: Map[String, Any]): Unit
+  def :+(row_data: Map[String, Option[Any]]): Unit
   def toTable: Table
 }
 
 class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) extends TableBuilder {
   private val column_map = col_builders.zip(schema.fields).map(x => (x._2.name, x._1)).toMap
-  override def :+(row_data: Map[String, Any]): Unit = {
+  override def :+(row_data: Map[String, Option[Any]]): Unit = {
     for (field <- schema.fields) {
       column_map(field.name) :+ row_data(field.name)
     }
@@ -67,7 +67,10 @@ class TableImpl(var schema: Schema, var column_data: Seq[Series]) extends Table 
     for (row <- row_iter) {
       sb ++= h_delim
       for (col <- 0 until schema.fields.size) {
-        val value_rep = row.get(col).as_char.get
+        val value_rep = row.get(col).as_char match {
+          case Some(x) => x
+          case None => "N/A"
+        }
         val extra_padding_size = field_width(col) - value_rep.length - padding
         sb ++= " " * padding
         sb ++= value_rep + (" " * extra_padding_size)

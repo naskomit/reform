@@ -20,13 +20,15 @@ object TestApp extends App {
 
 
   def test_sysmo_table() = {
-    import sysmo.reform.data.{table => dt}
+    //import sysmo.reform.data.table.{arrow => dt}
+    import sysmo.reform.shared.data.table.{default => dt}
     import sysmo.reform.shared.data.{table => sdt}
-    Using(dt.ArrowTableManager()) { tm => {
-      import dt.ArrowVector._
+    Using(dt.table_manager) { tm => {
+      import dt.implicits._
       val b1 = tm.incremental_vector_builder[Double]("v1")
-      b1.append(1.0)
-      b1 ++= Seq(3.0, 5.0, 8.0)
+      b1.append(Some(1.0))
+      b1.append(None)
+      b1 ++= Seq(3.0, 5.0, 8.0).map(Some(_))
       val v1 = b1.toVector
       println(v1)
       println(v1.map2(x => 2 * x))
@@ -49,8 +51,9 @@ object TestApp extends App {
 
       // Testing series
       val bs_1 = tm.incremental_series_builder(sdt.Field("bs_1", sdt.FieldType(sdt.VectorType.Real)))
-      bs_1 :+ 3.0
-      bs_1 :++ Seq(4.0, 5.0)
+      bs_1 :+ Some(3.0)
+      bs_1 :+ None
+      bs_1 :++ Seq(4.0, 5.0).map(Some(_))
       val s1 = bs_1.toSeries
       println(s1)
 
@@ -70,6 +73,8 @@ object TestApp extends App {
         )
         tb_1 :+ row_data
       }
+
+      tb_1 :+ Map("real" -> None, "int" -> None, "bool" -> None, "char" -> None)
 
       val tbl_1 = tb_1.toTable
       println(tbl_1.pprint)

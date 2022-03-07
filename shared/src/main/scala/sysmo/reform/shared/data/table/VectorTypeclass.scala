@@ -10,7 +10,8 @@ object VectorType extends Enumeration {
 
 trait VectorTypeclass[V] {
   type ValueType = V
-  type Storage <: VectorStorage[ValueType]
+  type MutableStorage <: VectorStorage[ValueType]
+  type ImmutableStorage <: VectorStorage[ValueType]
   val tpe: VectorType.VectorType
-  def create_storage(manager: TableManager, name: String): Storage
+  def create_mutable_storage(manager: TableManager, name: String): MutableStorage
 }

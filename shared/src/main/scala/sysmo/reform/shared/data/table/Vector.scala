@@ -2,34 +2,42 @@ package sysmo.reform.shared.data.table
 
 abstract class VectorStorage[ValueT](val manager: TableManager) {
   def set_safe(index: Int, v: ValueT)
-  def get(index: Int): ValueT
+  def get(index: Int): Option[ValueT]
   def set_value_count(i: Int): Unit
   def get_value_count: Int
   def range_view(start: Int, length: Int): VectorStorage[ValueT]
+  /** Finalize mutations and convert to immutable */
+  def seal: VectorStorage[ValueT]
   def close(): Unit
   def name: String
 }
 
 class Vector[V, +Storage <: VectorStorage[V]](storage: Storage)(implicit tci: VectorTypeclass[V])
-    extends Iterable[V] with AutoCloseable {
+    extends Iterable[Option[V]] with AutoCloseable {
   type ValueType = V
 //  type VecT = Vector[V, Storage]
   def name: String = storage.name
-  def apply(i: Int): ValueType = storage.get(i)
+  def apply(i: Int): Option[ValueType] = storage.get(i)
   def length: Int = storage.get_value_count
   def iterator = new VectorIterator[V](this)
   def range(start: Int, length: Int): Vector[V, Storage] =
     // Not sure why this conversion is necessary, but doesn't work otherwise
     new Vector[V, Storage](storage.range_view(start, length).asInstanceOf[Storage])
 
-  def map2[B](f: V => B)(implicit tci_out: VectorTypeclass[B]): Vector[B, tci_out.Storage] = {
-    val builder = new IncrementalVectorBuilder[B, tci_out.Storage](storage.manager.create_storage("")(tci_out))
-    this.foreach(el => builder :+ f(el))
+  def map2[B](f: V => B)(implicit tci_out: VectorTypeclass[B]): Vector[B, VectorStorage[B]] = {
+    val builder = new IncrementalVectorBuilder[B, tci_out.MutableStorage](storage.manager.create_mutable_storage("")(tci_out))
+    this.foreach {
+      case Some(v) => builder :+ Some(f(v))
+      case None => builder :+ None
+    }
     builder.toVector
   }
 
   def tpe: VectorType.Value = tci.tpe
-  def show: String = f"${tpe}(" + this.mkString(", ") + ")"
+  def show: String = f"${tpe}(" + this.map {
+    case Some(x) => x.toString
+    case None => "N/A"
+  }.mkString(", ") + ")"
   override def toString: String = show
 
   override def close(): Unit = {
@@ -38,10 +46,10 @@ class Vector[V, +Storage <: VectorStorage[V]](storage: Storage)(implicit tci: Ve
   }
 }
 
-class VectorIterator[V](vec: Vector[V, _]) extends Iterator[V] {
+class VectorIterator[V](vec: Vector[V, _]) extends Iterator[Option[V]] {
   var index = 0
   override def hasNext: Boolean = index < vec.length
-  override def next(): V = {
+  override def next(): Option[V] = {
     index += 1
     vec(index - 1)
   }
@@ -50,7 +58,7 @@ class VectorIterator[V](vec: Vector[V, _]) extends Iterator[V] {
 // TODO Not safe (not auto close-able)
 abstract class VectorBuilder[V, Storage <: VectorStorage[V]](storage: Storage)(implicit tci: VectorTypeclass[V]) {
   def tpe: VectorType.Value = tci.tpe
-  def toVector: Vector[V, Storage]
+  def toVector: Vector[V, VectorStorage[V]]
 }
 
 //trait RandomAccessVectorBuilder[VecT <: TypedVector, V] extends VectorBuilder[VecT, V] {
@@ -61,16 +69,20 @@ class IncrementalVectorBuilder[V, Storage <: VectorStorage[V]]
   (storage: Storage)(implicit tci: VectorTypeclass[V])
     extends VectorBuilder[V, Storage](storage) {
   var num_elements: Int = 0
-  def append(value: V): Unit = {
+  def append(value: Option[V]): Unit = {
     num_elements += 1
-    storage.set_safe(num_elements - 1, value)
+    value match {
+      case Some(v) => storage.set_safe(num_elements - 1, v)
+      case None =>
+    }
+
   }
 
-  override def toVector: Vector[V, Storage] = {
+  override def toVector: Vector[V, VectorStorage[V]] = {
     storage.set_value_count(num_elements)
-    new Vector[V, Storage](storage)
+    new Vector[V, VectorStorage[V]](storage.seal)
   }
 
-  def :+(value: V) = append(value)
-  def ++= (value: Seq[V]) = value.foreach(x => append(x))
+  def :+(value: Option[V]): Unit = append(value)
+  def ++= (value: Seq[Option[V]]): Unit = value.foreach(append)
 }
