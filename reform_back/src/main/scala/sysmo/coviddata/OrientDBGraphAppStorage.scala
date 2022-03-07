@@ -1,20 +1,17 @@
 package sysmo.coviddata
 
-import java.util
-
-import org.apache.tinkerpop.gremlin.jsr223.JavaTranslator
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
 import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import sysmo.coviddata.shared.data.PatientRecord
 import sysmo.reform.db.GraphAppStorage
-import sysmo.reform.db.GremlinIO.{readValue, writeValueAsString}
 import sysmo.reform.shared.data.RecordWithMeta
 import sysmo.reform.shared.data.{table => sdt}
-import sysmo.reform.shared.query.Query2GremlinCompiler
+import sysmo.reform.data.{table => dt}
 
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 object OrientDBGraphAppStorage {
   val uri: String = "remote:localhost/covid"
@@ -53,8 +50,8 @@ object OrientDBGraphAppStorage {
       .select("first_name", "father_name", "last_name", "gender", "age", "education")
 //      .by(__.unfold)
 
-    val data_in = t2.asScala.map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
-    println(data_in.toSeq)
+//    val data_in = t2.asScala.map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
+//    println(data_in.toSeq)
 
     import sdt.{VectorType => VT}
     val schema = sdt.Schema(Seq(
@@ -62,6 +59,23 @@ object OrientDBGraphAppStorage {
       sdt.Field("last_name", sdt.FieldType(VT.Char)), sdt.Field("gender", sdt.FieldType(VT.Char)),
       sdt.Field("age", sdt.FieldType(VT.Int)), sdt.Field("education", sdt.FieldType(VT.Char))
     ))
+
+    Using(dt.ArrowTableManager()) { tm => {
+      val tb_1 = tm.incremental_table_builder(schema)
+      t2.asScala.foreach(x => {
+        val prop_map = x.asInstanceOf[java.util.Map[String, Any]].asScala.toMap
+            .view.mapValues {
+              case el: java.util.List[Any] => el.get(0)
+              case x => x
+            }.toMap
+
+        tb_1 :+ prop_map
+      })
+      val tbl_1 = tb_1.toTable
+      println(tbl_1.pprint)
+    }}.get
+
+    println()
 
 //      for (x <- t2.iterator().asScala) {
 //        println(x)

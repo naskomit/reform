@@ -1,13 +1,13 @@
 package sysmo.reform.shared.data.table
 
 trait TableBuilder {
-  def :+(row_data: Map[String, _]): Unit
+  def :+(row_data: Map[String, Any]): Unit
   def toTable: Table
 }
 
 class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) extends TableBuilder {
   private val column_map = col_builders.zip(schema.fields).map(x => (x._2.name, x._1)).toMap
-  override def :+(row_data: Map[String, _]): Unit = {
+  override def :+(row_data: Map[String, Any]): Unit = {
     for (field <- schema.fields) {
       column_map(field.name) :+ row_data(field.name)
     }
