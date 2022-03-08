@@ -23,15 +23,26 @@ class SeriesBuilderImpl(field: Field, vb: IncrementalVectorBuilder[_, _]) extend
   override def toSeries: Series = new SeriesImpl(field, vb.toVector)
 }
 
-trait Series {
+trait Series extends Iterable[Value] {
   val field: Field
   def length: Int
   def get(i: Int): Value
   override def toString: String
 }
 
+class SeriesIterator(s: Series) extends Iterator[Value] {
+  var index = 0
+  override def hasNext: Boolean = index < s.length
+  override def next(): Value = {
+    index += 1
+    s.get(index - 1)
+  }
+}
+
 class SeriesImpl(val field: Field, val data: Vector[_, _]) extends Series {
   def length: Int = data.length
   def get(i: Int): Value = new Value(data(i), field.field_type.tpe)
   override def toString: String = data.toString
+
+  override def iterator: Iterator[Value] = new SeriesIterator(this)
 }

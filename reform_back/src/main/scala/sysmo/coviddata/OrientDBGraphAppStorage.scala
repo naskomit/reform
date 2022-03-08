@@ -72,7 +72,8 @@ object OrientDBGraphAppStorage {
         tb_1 :+ prop_map
       })
       val tbl_1 = tb_1.toTable
-      println(tbl_1.pprint)
+      import sdt.Printers._
+      println(sdt.pprint(tbl_1))
     }}.get
 
     println()

@@ -20,11 +20,12 @@ object TestApp extends App {
 
 
   def test_sysmo_table() = {
-    //import sysmo.reform.data.table.{arrow => dt}
-    import sysmo.reform.shared.data.table.{default => dt}
+    import sysmo.reform.data.table.{arrow => dt}
+//    import sysmo.reform.shared.data.table.{default => dt}
     import sysmo.reform.shared.data.{table => sdt}
-    Using(dt.table_manager) { tm => {
+    sdt.with_table_manager(dt.create_table_manager) { tm => {
       import dt.implicits._
+      import sdt.Printers._
       val b1 = tm.incremental_vector_builder[Double]("v1")
       b1.append(Some(1.0))
       b1.append(None)
@@ -77,11 +78,26 @@ object TestApp extends App {
       tb_1 :+ Map("real" -> None, "int" -> None, "bool" -> None, "char" -> None)
 
       val tbl_1 = tb_1.toTable
-      println(tbl_1.pprint)
+      println(sdt.pprint(tbl_1))
+
+      // JSON encoding/decoding
+      println(s1)
+      import io.circe.syntax._
+      import sdt.Transport._
+
+      println("==================== Test Vector Serialization ====================")
+      round_trip(s1)
+      println("==================== Test Table Serialization ====================")
+      round_trip(tbl_1)
+//      val s1_json = s1.asJson
+//      val s1_back = s1_json.as[sdt.Series]
+//      println(s1)
+//      println(s1_json)
+//      println(s1_back)
 
 
 
-    }}.get
+    }}
   }
 
 

@@ -22,9 +22,17 @@ trait Table {
   def ncol: Int
   def get(row: Int, col: Int): Value
   def column(index: Int): Series
+  def column(name: String): Series
   def row(row_id: Int): Row
-
-  def pprint: String
+  def row_iter: Iterator[Row]
+  def column_iter: Iterator[Series] = new Iterator[Series] {
+    var index = 0
+    override def hasNext: Boolean = index < ncol
+    override def next(): Series = {
+      index += 1
+      column(index - 1)
+    }
+  }
 }
 
 class TableImpl(var schema: Schema, var column_data: Seq[Series]) extends Table {
@@ -35,51 +43,9 @@ class TableImpl(var schema: Schema, var column_data: Seq[Series]) extends Table 
   def ncol: Int = column_data.size
   def get(row: Int, col: Int): Value = column_data(col).get(row)
   def column(index: Int): Series = column_data(index)
+  def column(name: String): Series = columnMap(name)
   def row(row_id: Int): Row = {
     new Row(this, column_data.map(cd => cd.get(row_id)))
   }
-
   def row_iter: Iterator[Row] = new RowIterator(this)
-
-  def pprint: String = {
-    val max_field_width = 10
-    val v_delim = "="
-    val h_delim = "|"
-    val sb = new StringBuilder("")
-    val padding = 3
-    val field_width = schema.fields.map(f => f.name.length + 2 * padding)
-    val vdelim = v_delim * (field_width.sum + schema.fields.length + 1)
-    // top line
-    sb ++= vdelim
-    sb ++= "\n"
-    // col names
-    sb ++= h_delim
-    schema.fields.foreach(f => {
-      sb ++= " " * padding
-      sb ++= f.name
-      sb ++= " " * padding
-      sb ++= h_delim
-    })
-    sb ++= "\n"
-    // header line
-    sb ++= vdelim
-    sb ++= "\n"
-    for (row <- row_iter) {
-      sb ++= h_delim
-      for (col <- 0 until schema.fields.size) {
-        val value_rep = row.get(col).as_char match {
-          case Some(x) => x
-          case None => "N/A"
-        }
-        val extra_padding_size = field_width(col) - value_rep.length - padding
-        sb ++= " " * padding
-        sb ++= value_rep + (" " * extra_padding_size)
-        sb ++= h_delim
-      }
-      sb ++= "\n"
-      sb ++= vdelim
-      sb ++= "\n"
-    }
-    sb.toString()
-  }
 }
