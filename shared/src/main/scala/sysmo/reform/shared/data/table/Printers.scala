@@ -1,5 +1,7 @@
 package sysmo.reform.shared.data.table
 
+import sysmo.reform.shared.util.pprint.PrettyPrinter
+
 object Printers {
   implicit val vector_printer = new PrettyPrinter[Series] {
     override def pprint(v: Series): String = {

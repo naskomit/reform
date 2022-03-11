@@ -1,8 +1,7 @@
 package sysmo.reform.shared.data.table.default_impl
 
-import sysmo.reform.shared.data.{table => sdt}
-
 import scala.collection.{mutable => mut}
+import sysmo.reform.shared.data.{table => sdt}
 
 object DefaultVector {
   type RootAllocator = Null

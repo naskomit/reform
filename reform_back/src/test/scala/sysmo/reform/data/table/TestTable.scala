@@ -1,28 +1,12 @@
-package sysmo.coviddata
+package sysmo.reform.data.table
 
-import java.nio.charset.StandardCharsets
+import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.util.pprint._
 
-import org.apache.arrow.vector.VectorSchemaRoot
-
-import scala.jdk.CollectionConverters._
-import scala.util.Using
-
-object TestApp extends App {
-//  CSVDataSource.test_read_write_csv()
-//  SQLiteAppStorage.test_import()
-//  SQLiteAppStorage.test_query()
-//  SQLiteAppStorage.test_task
-
-//  OrientDBGraphAppStorage.test_import()
-    OrientDBGraphAppStorage.query_data()
-//  ExcelReader.test1()
-
-
-
+object TestTable {
   def test_sysmo_table() = {
     import sysmo.reform.data.table.{arrow => dt}
-//    import sysmo.reform.shared.data.table.{default => dt}
-    import sysmo.reform.shared.data.{table => sdt}
+    //    import sysmo.reform.shared.data.table.{default => dt}
     sdt.with_table_manager(dt.create_table_manager) { tm => {
       import dt.implicits._
       import sdt.Printers._
@@ -45,10 +29,10 @@ object TestApp extends App {
         tm.vec_from(Seq(true, true, false), "v3_real"),
         tm.vec_from(Seq("John", "Peter", "James"), "v3_real")
       )
-//      v3_seq.foreach(v => {
-//        println(v)
-//        v.close()
-//      })
+      //      v3_seq.foreach(v => {
+      //        println(v)
+      //        v.close()
+      //      })
 
       // Testing series
       val bs_1 = tm.incremental_series_builder(sdt.Field("bs_1", sdt.FieldType(sdt.VectorType.Real)))
@@ -78,7 +62,7 @@ object TestApp extends App {
       tb_1 :+ Map("real" -> None, "int" -> None, "bool" -> None, "char" -> None)
 
       val tbl_1 = tb_1.toTable
-      println(sdt.pprint(tbl_1))
+      pprint(tbl_1)
 
       // JSON encoding/decoding
       println(s1)
@@ -89,19 +73,14 @@ object TestApp extends App {
       round_trip(s1)
       println("==================== Test Table Serialization ====================")
       round_trip(tbl_1)
-//      val s1_json = s1.asJson
-//      val s1_back = s1_json.as[sdt.Series]
-//      println(s1)
-//      println(s1_json)
-//      println(s1_back)
+      //      val s1_json = s1.asJson
+      //      val s1_back = s1_json.as[sdt.Series]
+      //      println(s1)
+      //      println(s1_json)
+      //      println(s1_back)
 
 
 
     }}
   }
-
-
-  test_sysmo_table()
 }
-
-

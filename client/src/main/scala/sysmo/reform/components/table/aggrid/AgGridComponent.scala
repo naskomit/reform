@@ -9,10 +9,11 @@ import sysmo.reform.data.TableDatasource
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import scala.util.{Failure, Success}
+import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.{query => Q}
 
-
-
-class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
+class AgGridSourceAgaptor(ds: TableDatasource, source: QuerySource, schema: sdt.Schema) {
   private def process_filter(filter_model : AgGridFacades.FilterModel): Option[QueryFilter] = {
     val filter_seq = filter_model.toMap.map {case (k, v) =>
       val extractor = new AgGridFacades.FilterModelJSExtractor(k)
@@ -37,8 +38,10 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
       ))
   }
 
-  var total_rows : Int = -1
-  ds.row_count.foreach(x => total_rows = x)
+//  var total_rows : Int = -1
+//  ds.row_count.foreach(x => total_rows = x)
+
+  val columns = schema.fields.map(field => Q.ColumnRef(field.name))
 
   val native : AgGridFacades.TableDatasource = {
     val ag_ds = (new js.Object).asInstanceOf[AgGridFacades.TableDatasource]
@@ -47,13 +50,27 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
       dom.console.log(params)
       val filter = process_filter(params.filterModel)
       var sort = process_sort(params.sortModel)
-      var range = Some(QueryRange(params.startRow, params.endRow - params.startRow))
+      var range = QueryRange(params.startRow, params.endRow - params.startRow)
       val query = BasicQuery(
-        source, filter, sort, range
+        source = source, columns = Some(columns), filter = filter, sort = sort, range = Some(range)
       )
-      ds.run_query(query).foreach(
-        data => params.successCallback(data.toJSArray, total_rows)
-      )
+
+      ds.query_table(query).onComplete {
+        case Success(table) => {
+          val data_proxy = agf.table_proxy(table)
+//          val data = table.row_iter.toJSArray
+          val requested_rows = params.endRow - params.startRow
+          val total_rows = if (table.nrow < requested_rows)
+            params.startRow + table.nrow
+          else
+            -1
+          params.successCallback(data_proxy, total_rows)
+        }
+        case Failure(e) => {
+          params.failCallback()
+          throw new RuntimeException("Failed fetching table data", e)
+        }
+      }
     }
     ag_ds
   }
@@ -62,13 +79,14 @@ class AgGridSourceAgaptor[U](ds: TableDatasource[U], source: QuerySource) {
 }
 
 object AgGridSourceAgaptor {
-  def apply[U](ds: TableDatasource[U], source: QuerySource): AgGridSourceAgaptor[U] = new AgGridSourceAgaptor(ds, source)
+  def apply(ds: TableDatasource, source: QuerySource, schema: sdt.Schema): AgGridSourceAgaptor =
+    new AgGridSourceAgaptor(ds, source, schema)
 }
 
 object AgGridComponent {
   import japgolly.scalajs.react.ScalaComponent
   import japgolly.scalajs.react.component.Scala.BackendScope
-  case class Props(ds : AgGridSourceAgaptor[_], columns : Seq[agf.Column])
+  case class Props(ds : AgGridSourceAgaptor, columns : Seq[agf.ColumnProps])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -97,7 +115,7 @@ object AgGridComponent {
     .renderBackend[Backend]
     .build
 
-  def apply(ds : TableDatasource[_], table: QuerySource, columns : Seq[agf.Column]) =
-    component(Props(AgGridSourceAgaptor(ds, table), columns))
+  def apply(ds: TableDatasource, table: QuerySource, schema: sdt.Schema, columns: Seq[agf.ColumnProps]) =
+    component(Props(AgGridSourceAgaptor(ds, table, schema), columns))
 
 }

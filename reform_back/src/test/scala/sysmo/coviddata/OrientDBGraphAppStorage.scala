@@ -1,17 +1,22 @@
 package sysmo.coviddata
 
+import scala.util.Using
+import scala.jdk.CollectionConverters._
+
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
-import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
+import org.apache.tinkerpop.gremlin.process.traversal.{Order, P}
+
 import sysmo.coviddata.shared.data.PatientRecord
 import sysmo.reform.db.GraphAppStorage
 import sysmo.reform.shared.data.RecordWithMeta
 import sysmo.reform.shared.data.{table => sdt}
 import sysmo.reform.data.{table => dt}
-
-import scala.jdk.CollectionConverters._
-import scala.util.Using
+import sysmo.reform.shared.{query => Q}
+import sdt.{VectorType => VT}
+import sysmo.reform.shared.util.pprint._
+import sdt.Printers._
 
 object OrientDBGraphAppStorage {
   val uri: String = "remote:localhost/covid"
@@ -52,13 +57,12 @@ object OrientDBGraphAppStorage {
 
 //    val data_in = t2.asScala.map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
 //    println(data_in.toSeq)
-
-    import sdt.{VectorType => VT}
     val schema = sdt.Schema(Seq(
       sdt.Field("first_name", sdt.FieldType(VT.Char)), sdt.Field("father_name", sdt.FieldType(VT.Char)),
       sdt.Field("last_name", sdt.FieldType(VT.Char)), sdt.Field("gender", sdt.FieldType(VT.Char)),
       sdt.Field("age", sdt.FieldType(VT.Int)), sdt.Field("education", sdt.FieldType(VT.Char))
     ))
+
 
     Using(dt.arrow.ArrowTableManager()) { tm => {
       val tb_1 = tm.incremental_table_builder(schema)
@@ -72,58 +76,24 @@ object OrientDBGraphAppStorage {
         tb_1 :+ prop_map
       })
       val tbl_1 = tb_1.toTable
-      import sdt.Printers._
-      println(sdt.pprint(tbl_1))
+      pprint(tbl_1)
     }}.get
 
     println()
 
-//      for (x <- t2.iterator().asScala) {
-//        println(x)
-//      }
-//      t2.asScala.foreach(println)
-
-//    val bc = t2.asAdmin().getBytecode
-//    val bc_out = writeValueAsString(bc)
-
-//    println(bc)
-//    println(bc_out)
-//    t2.asScala.foreach(println)
-//
-//    val bc = t2.asAdmin().getBytecode
-//    val bc_out = writeValueAsString(bc)
-//    val bc_in = readValue(bc_out, classOf[Bytecode])
-//    //    println(bc)
-//    //    println(bc_in)
-//
-//    println("============================== Reference ==============================")
-//    println(bc_out)
-//    println(bc_in)
-//    import sysmo.reform.shared.{gremlin => smo_gr}
-//    println("============================== Test Serialization ==============================")
-//    val remote_bytecode_1 = smo_gr.Bytecode.prog1
-//    val remote_graphson_1 = smo_gr.Bytecode.test_serialization(remote_bytecode_1)
-//    val local_bytecode_1 = readValue(remote_graphson_1, classOf[Bytecode])
-//    println(remote_graphson_1)
-//    println(local_bytecode_1)
-//
-//    val trav: Traversal.Admin[_, _] = JavaTranslator.of(g).translate(local_bytecode_1)
-//    trav.asScala.foreach(println)
-//
-//    println("============================== Test Compilation from Query ==============================")
-//    val remote_bytecode_2 = Query2GremlinCompiler.test1()
-//    val remote_graphson_2 = smo_gr.Bytecode.test_serialization(remote_bytecode_2)
-//    val local_bytecode_2 = readValue(remote_graphson_2, classOf[Bytecode])
-//    println(remote_graphson_2)
-//    println(local_bytecode_2)
-//    val trav2: Traversal.Admin[_, _] = JavaTranslator.of(g).translate(local_bytecode_1)
-//    trav2.asScala.foreach(println)
-//
-//
-//    println(remote_bytecode_1)
-//
-//    println(remote_bytecode_2)
-//
     graph.close()
+  }
+
+  def test_query_table(): Unit = {
+    Using(dt.arrow.ArrowTableManager()) { tm => {
+      val q = Q.BasicQuery(
+        source = Q.SingleTable("PatientRecord")
+//        filter = None, //Option[QueryFilter]
+//        sort = None, //: Option[QuerySort],
+//        range = None, //: Option[QueryRange]
+      )
+      val result = app_storage.query_table(q, tm)
+      pprint(result)
+    }}.get
   }
 }

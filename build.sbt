@@ -47,6 +47,25 @@ lazy val reform_back = project
     libraryDependencies += "org.apache.poi" % "poi" % "5.2.0",
     libraryDependencies += "org.apache.poi" % "poi-ooxml" % "5.2.0",
 
+    libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
+
+
+//    libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
+    //    libraryDependencies += {
+//      val version = scalaBinaryVersion.value match {
+//        case "2.10" => "1.0.3"
+//        case "2.11" => "1.6.7"
+//        case _ ⇒ "2.5.2"
+//      }
+//      "com.lihaoyi" % "ammonite" % version % "test" cross CrossVersion.full
+//    },
+//
+//    sourceGenerators in Test += Def.task {
+//      val file = (sourceManaged in Test).value / "amm.scala"
+//      IO.write(file, """object amm extends App { ammonite.AmmoniteMain.main(args) }""")
+//      Seq(file)
+//    }.taskValue,
+
   ).dependsOn(shared.jvm)
 
 lazy val server = project
@@ -54,8 +73,7 @@ lazy val server = project
     scalaJSProjects := Seq(client),
     libraryDependencies += guice,
     libraryDependencies += "com.vmunier" %% "scalajs-scripts" % "1.2.0",
-    libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
-    libraryDependencies += "com.lihaoyi" %% "upickle" % "1.4.3",
+//    libraryDependencies += "com.lihaoyi" %% "upickle" % "1.4.3",
     Assets / pipelineStages  := Seq(scalaJSPipeline),
     pipelineStages := Seq(digest, gzip),
     // triggers scalaJSPipeline when using compile or continuous compilation
@@ -71,7 +89,7 @@ lazy val client = project
     libraryDependencies += "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
     libraryDependencies += "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
     libraryDependencies += "com.lihaoyi" %%% "autowire" % "0.3.3",
-    libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.3",
+//    libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.3",
 //    libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.3.5",
 //    libraryDependencies += "co.fs2" %%% "fs2-core" % "3.2.0",
     libraryDependencies += "io.monix" %%% "monix" % "3.4.0",
@@ -101,10 +119,19 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic",
-      "io.circe" %% "circe-parser"
+      "io.circe" %% "circe-parser",
+      "io.circe" %% "circe-generic-extras"
     ).map(_ % circeVersion)
   ).jvmSettings(
     libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided"
+  ).jsSettings(
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-core",
+      "io.circe" %%% "circe-generic",
+      "io.circe" %%% "circe-parser",
+      "io.circe" %%% "circe-generic-extras"
+    ).map(_ % circeVersion)
+
   )
 
 

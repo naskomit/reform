@@ -8,7 +8,7 @@ import scala.collection.mutable
 object Query2GremlinCompiler {
   def compile(q: Query): bc.Bytecode = {
     q match {
-      case BasicQuery(source, filter, sort, range) => {
+      case BasicQuery(source, columns, filter, sort, range) => {
 
         // Create bytecode step buffer and add source
         val steps = mutable.ArrayBuffer[bc.Instruction](
@@ -117,13 +117,14 @@ object Query2GremlinCompiler {
 
   def test1() = {
     val q = BasicQuery(
-      SingleTable("PatientRecord", None, None),
-      Some(QueryFilter(LogicalOr(
+      source = SingleTable("PatientRecord", None, None),
+      columns = None,
+      filter = Some(QueryFilter(LogicalOr(
         NumericalPredicate(NumericalPredicateOp.<, ColumnRef("age"), Val(35.0)),
         StringPredicate(StringPredicateOp.Equal, ColumnRef("gender"), Val("жена"))
       ))),
-      Some(QuerySort(ColumnSort(ColumnRef("age"), false))),
-      Some(QueryRange(0, 100))
+      sort = Some(QuerySort(ColumnSort(ColumnRef("age"), false))),
+      range = Some(QueryRange(0, 100))
     )
     val g = compile(q)
     println(q)

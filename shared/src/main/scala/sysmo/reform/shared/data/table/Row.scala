@@ -3,6 +3,7 @@ package sysmo.reform.shared.data.table
 class Row(table: Table, row_data: Seq[Value]) {
   def schema: Schema = table.schema
   def get(col: Int): Value = row_data(col)
+  def get(col: String): Value = row_data(schema.field_index(col))
 }
 
 class RowIterator(table: Table, var current_row: Int = 0) extends Iterator[Row] {

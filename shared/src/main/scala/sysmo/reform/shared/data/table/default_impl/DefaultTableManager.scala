@@ -1,8 +1,6 @@
 package sysmo.reform.shared.data.table.default_impl
 
 import sysmo.reform.shared.data.{table => sdt}
-import sysmo.reform.shared.data.table.VectorStorage
-
 import scala.collection.mutable
 
 class DefaultTableManager extends sdt.TableManager {
@@ -11,7 +9,7 @@ class DefaultTableManager extends sdt.TableManager {
   private val allocated = mutable.Set[sdt.VectorStorage[_]]()
 
   override def incremental_series_builder(field: sdt.Field): sdt.SeriesBuilder = {
-    import sysmo.reform.shared.data.table.default_impl.DefaultVector._
+    import sdt.default_impl.DefaultVector._
     val vec_builder = field.field_type.tpe match {
       case sdt.VectorType.Real => incremental_vector_builder[Double](field.name)
       case sdt.VectorType.Int => incremental_vector_builder[Int](field.name)
@@ -33,10 +31,10 @@ class DefaultTableManager extends sdt.TableManager {
 //    allocator.close()
   }
 
-  override def on_allocate_storage(storage: VectorStorage[_]): Unit = {
+  override def on_allocate_storage(storage: sdt.VectorStorage[_]): Unit = {
     allocated.add(storage)
   }
-  override def on_free_storage(storage: VectorStorage[_]): Unit = {
+  override def on_free_storage(storage: sdt.VectorStorage[_]): Unit = {
     allocated.remove(storage)
   }
 }

@@ -48,7 +48,7 @@ class CovidDatabaseStorage(override val db_config: DBConfiguration
   override def all_tables = Seq(patients)
 
   def query_patient_records(q: Q.BasicQuery): Seq[PatientRecord] = {
-    val Q.BasicQuery(source, filter, sort, range) = q
+    val Q.BasicQuery(source, columns, filter, sort, range) = q
 
     val slick_query123 = patients.filter(x => {
       x.age > 10 && x.gender == "мъж"

@@ -1,11 +1,9 @@
 package sysmo.reform.data.table.arrow
 
 import org.apache.arrow.memory.RootAllocator
-import sysmo.reform.shared.data.{table => sdt}
-import sysmo.reform.shared.data.table.VectorStorage
 import sysmo.reform.util.Logging
-
 import scala.collection.mutable
+import sysmo.reform.shared.data.{table => sdt}
 
 class ArrowTableManager extends sdt.TableManager with Logging{
   override type Allocator = RootAllocator
@@ -35,10 +33,10 @@ class ArrowTableManager extends sdt.TableManager with Logging{
     allocator.close()
   }
 
-  override def on_allocate_storage(storage: VectorStorage[_]): Unit = {
+  override def on_allocate_storage(storage: sdt.VectorStorage[_]): Unit = {
     allocated.add(storage)
   }
-  override def on_free_storage(storage: VectorStorage[_]): Unit = {
+  override def on_free_storage(storage: sdt.VectorStorage[_]): Unit = {
     allocated.remove(storage)
   }
 }

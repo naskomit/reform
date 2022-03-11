@@ -3,6 +3,7 @@ package sysmo.coviddata.panels
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.table.RecordTableViewer
 import sysmo.coviddata.data.DemoServerDataSource
+import sysmo.coviddata.shared.data.PatientRecord
 
 object HomePanel {
 
@@ -14,7 +15,7 @@ object HomePanel {
 
   final class Backend($: BackendScope[Props, State]) {
     def render(p: Props, s: State): VdomElement = {
-      RecordTableViewer(DemoServerDataSource, "PatientRecord")
+      RecordTableViewer[PatientRecord](DemoServerDataSource, "PatientRecord")
     }
   }
 

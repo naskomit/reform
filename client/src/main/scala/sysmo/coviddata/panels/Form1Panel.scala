@@ -39,5 +39,7 @@ object Form1Panel {
     .renderBackend[Backend]
     .build
 
-  def apply() = component(Props())
+  def apply() = {
+    component(Props())
+  }
 }

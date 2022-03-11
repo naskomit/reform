@@ -1,9 +1,7 @@
 package sysmo.reform.data.table.arrow
 
-import sysmo.reform.shared.data.{table => sdt}
 import org.apache.arrow.{vector => av}
-import sysmo.reform.data.table.arrow.ArrowVector.ev_real
-import sysmo.reform.shared.data.table.VectorStorage
+import sysmo.reform.shared.data.{table => sdt}
 
 object ArrowVector {
   type RootAllocator = org.apache.arrow.memory.RootAllocator

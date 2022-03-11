@@ -2,27 +2,43 @@ package sysmo.reform.shared.data
 
 import sysmo.reform.shared.data.table.default_impl.{DefaultTableManager, DefaultVector}
 
+import scala.util.Using
+
 package object table {
-  trait PrettyPrinter[V] {
-    def pprint(v: V): String
+  private var global_table_manager: Option[TableManager] = None
+
+  private val dynamic_table_managers = new scala.util.DynamicVariable[Option[TableManager]](None)
+
+  def enable_global_manager(flag: Boolean): Unit = {
+    global_table_manager match {
+      case Some(tm) if !flag => {
+        tm.close()
+        global_table_manager = None
+      }
+      case None if flag => {
+        global_table_manager = Some(default.create_table_manager)
+      }
+      case _ => // Do nothing
+    }
   }
 
-  val table_managers = new scala.util.DynamicVariable[TableManager](null)
-  def with_table_manager(tm: TableManager = null)(f: TableManager => Unit): Unit = {
-    val manager = if (tm == null) default.create_table_manager else tm
-    table_managers.withValue(manager)(f(manager))
-    manager.close()
+  def with_table_manager[A](tm: TableManager = null)(f: TableManager => A): A = {
+    Using(if (tm == null) default.create_table_manager else tm)(manager => {
+      dynamic_table_managers.withValue(Some(manager))(
+        f(manager)
+      )
+    }).get
   }
 
   def table_manager: TableManager =
-    if (table_managers.value == null)
-      throw new IllegalStateException("No active table manager! Use 'with_table_manager'")
+    if (dynamic_table_managers.value.isEmpty)
+      if (global_table_manager.isEmpty)
+        throw new IllegalStateException("No active table manager! Use 'with_table_manager' and/or enable_global_manager(true)")
+      else
+        global_table_manager.get
     else
-      table_managers.value
+      dynamic_table_managers.value.get
 
-  def pprint[V : PrettyPrinter](v: V)(implicit pp: PrettyPrinter[V]): String = {
-    pp.pprint(v)
-  }
 
   object default {
     def create_table_manager: DefaultTableManager = DefaultTableManager()

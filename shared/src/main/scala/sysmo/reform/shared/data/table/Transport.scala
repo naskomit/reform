@@ -1,21 +1,9 @@
 package sysmo.reform.shared.data.table
 
-import cats.implicits._
-import io.circe.Decoder.Result
-
-
 object Transport {
   import io.circe._
   import io.circe.generic.semiauto._
   import io.circe.syntax._
-//  type TypedVector[V] = Vector[V, VectorStorage[V]]
-//  type VectorEncoder[V] = Encoder[Vector[V, VectorStorage[V]]]
-//
-//  implicit val encode_vector: VectorEncoder[Double]  = new VectorEncoder[Double] {
-//    override def apply(a: Vector[_, _]): Json = Json.JObject(
-//      ("data", a.toVector.map())
-//    )
-//  }
 
   implicit val enc_value: Encoder[Value] = new Encoder[Value] {
     override def apply(a: Value): Json = {
@@ -38,7 +26,7 @@ object Transport {
   }
 
   implicit val dec_field_type: Decoder[FieldType] = new Decoder[FieldType] {
-    override def apply(c: HCursor): Result[FieldType] = for {
+    override def apply(c: HCursor): Decoder.Result[FieldType] = for {
       tpe <- c.downField("tpe").as[String]
       nullable <- c.downField("nullable").as[Boolean]
       metadata <- c.downField("metadata").as[Map[String, String]]
@@ -57,7 +45,7 @@ object Transport {
   }
 
   implicit val dec_series: Decoder[Series] = new Decoder[Series] {
-    override def apply(c: HCursor): Result[Series] = {
+    override def apply(c: HCursor): Decoder.Result[Series] = {
 
       val field_opt = c.downField("field").as[Field]
       field_opt.map(field => {
@@ -88,7 +76,7 @@ object Transport {
   }
 
   implicit val dec_table: Decoder[Table] = new Decoder[Table] {
-    override def apply(c: HCursor): Result[Table] = {
+    override def apply(c: HCursor): Decoder.Result[Table] = {
       c.downField("columns").as[Seq[Series]].map(columns => {
         val schema = Schema(columns.map(x => x.field))
         new TableImpl(schema, columns)
@@ -96,11 +84,12 @@ object Transport {
     }
   }
 
-  def round_trip[A : PrettyPrinter](x : A)(implicit ev_enc: Encoder[A], ev_dec: Decoder[A]): Unit = {
+  import sysmo.reform.shared.util.pprint
+  def round_trip[A : pprint.PrettyPrinter](x : A)(implicit ev_enc: Encoder[A], ev_dec: Decoder[A]): Unit = {
     val x_json = x.asJson
     val x_back = x_json.as[A]
-    println(pprint(x))
+    pprint.pprint(x)
     println(x_json)
-    x_back.map((x : A) => println(pprint(x)))
+    x_back.map((x : A) => pprint.pprint(x))
   }
 }

@@ -7,6 +7,8 @@ trait Record extends Equals
 sealed trait FieldType
 case class StringType() extends FieldType
 case class IntegerType() extends FieldType
+case class RealType() extends FieldType
+case class BoolType() extends FieldType
 
 sealed trait Domain
 
