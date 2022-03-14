@@ -173,6 +173,7 @@ object TransportCirce {
     case Val(y: Double) => y.asJson
     case Val(y: Boolean) => y.asJson
     case Val(y: String) => y.asJson
+    case Val(y) => throw new IllegalStateException(f"Cannot handle value $y")
   }
 
   implicit val dec_Value: Decoder[Val] = Decoder.instance (x => {

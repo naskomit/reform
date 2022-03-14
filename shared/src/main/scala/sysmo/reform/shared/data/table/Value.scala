@@ -37,3 +37,4 @@ case class Value(v: Option[_], tpe: VectorType.Value) {
   }
 }
 
+object Empty extends Value(None, VectorType.Int)

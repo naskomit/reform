@@ -14,6 +14,9 @@ object TestApp extends App {
 //  OrientDBGraphAppStorage.query_data()
 //    OrientDBGraphAppStorage.test_query_table()
 
-    import sysmo.reform.query.QueryTest
-    QueryTest.test_serialization()
+//    import sysmo.reform.query.QueryTest
+//    QueryTest.test_serialization()
+
+      OrientDBGraphAppStorage.test_import_2()
+//    sysmo.coviddata.io.ExcelImporter.test1()
 }

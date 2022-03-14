@@ -19,6 +19,7 @@ import upickle.default._
 import scala.jdk.CollectionConverters._
 import scala.util.{Try, Success, Failure, Using}
 import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.data.{graph => G}
 
 class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
   import sysmo.reform.shared.{data => RM}
@@ -49,6 +50,46 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
       }
     }
   }.get
+
+  def apply_schemas(schemas: Seq[G.EntitySchema]): Unit = {
+    logger.info("========== Creating database schema ==========")
+    Using(graph_factory.getTx) { graph =>
+      for (schema <- schemas) {
+        if (graph.existClass(schema.name))
+          throw new IllegalStateException(f"Class ${schema.name} already exists")
+//          logger.warn()
+        else {
+          schema match {
+            case x: G.VertexSchema => {
+              logger.info(f"Creating vertex class ${schema.name}")
+              graph.createVertexClass(schema.name)
+            }
+            case x: G.EdgeSchema => {
+              logger.info(f"Creating edge class ${schema.name}")
+              graph.createEdgeClass(schema.name)
+            }
+          }
+
+          val vertex_class = graph.database.getMetadata.getSchema.getClass(schema.name)
+          vertex_class.setStrictMode(true)
+          schema.props.foreach(prop => {
+            val prop_type = prop.prop_type match {
+              case G.StringType() => OType.STRING
+              case G.IntegerType() => OType.INTEGER
+              case G.RealType() => OType.DOUBLE
+              case G.BoolType() => OType.BOOLEAN
+              case _ => throw new IllegalStateException(f"Cannot handle property ${prop}")
+            }
+            vertex_class.createProperty(prop.name, prop_type)
+          })
+
+        }
+
+
+
+      }
+    }.get
+  }
 
   def drop_schema: Unit = {
     logger.info("========== Dropping classes ==========")
@@ -95,6 +136,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
   }
 
   def drop_data: Unit = {
+    logger.info("========== Dropping graph data ==========")
     Using(graph_factory.getTx) { graph =>
       graph.traversal().V().drop().iterate()
     }.get
@@ -115,6 +157,42 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
     graph.close()
   }
 
+  def import_vertices(graph_schema: G.VertexSchema, table: sdt.Table, id_column: String): Unit = {
+    val graph = graph_factory.getTx
+    for (row <- table.row_iter) {
+      val vertex_props = table.schema.fields.foldLeft(
+        Seq[(String, Any)]()
+      )((acc, field) => {
+        graph_schema.prop(field.name).map(prop => {
+          row.get(field.name).v match {
+            case Some(x) => acc :+ (prop.name, x)
+            case None => acc
+          }
+        }).getOrElse(acc)
+      })
+
+      val g = graph.traversal()
+      val vertex_trav = g.V().has(T.label, graph_schema.name).has(id_column, row.get(id_column).v.get)
+      val vertex = if (vertex_trav.hasNext) {
+        logger.info(f"Updating vetex with `$id_column` = ${row.get(id_column).v.get}")
+        vertex_trav.next()
+      } else {
+        logger.info(f"Adding vetex with `$id_column` = ${row.get(id_column).v.get}")
+        graph.addVertex(List[Any](T.label, graph_schema.name): _*)
+      }
+
+      vertex_props.foldLeft(g.V(vertex))((trav, kv) => trav.property(kv._1, kv._2)).iterate()
+
+
+
+
+//      graph.
+
+    }
+    graph.commit()
+    graph.close()
+  }
+
   def query_table(q: Q.Query, tm: sdt.TableManager): sdt.Table = {
     val gremlin_scala_bc = Q.Query2GremlinCompiler.compile(q)
     val gremlin_str = write(GraphsonEncoder.to_value(gremlin_scala_bc))
@@ -127,7 +205,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
           case Q.SingleTable(id, _, _) => {
             columns_opt.map(columns => {
               val db_table_schema = read_schema(id)
-              columns.map(col => db_table_schema.field(col.id))
+              columns.map(col => db_table_schema.field(col.id).get)
             }).map(columns => sdt.Schema(columns)).orElse(Some(read_schema(id))).get
           }
           case _ => throw new IllegalArgumentException("Can only handle query with a single table source")

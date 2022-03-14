@@ -2,6 +2,7 @@ package sysmo.reform.shared.data.table
 
 trait SeriesBuilder {
   def append(x: Option[Any]): Unit
+  def append_value(x: Value): Unit
   def :+(x: Option[Any]): Unit = append(x)
   def :++(xs: Seq[Option[Any]]): Unit = xs.foreach(append)
   def toSeries: Series
@@ -14,11 +15,14 @@ class SeriesBuilderImpl(field: Field, vb: IncrementalVectorBuilder[_, _]) extend
   override def append(x: Option[Any]): Unit = x match {
     case None => vb.append(None)
     case Some(v: Int) if field.field_type.tpe == VectorType.Int => vb.asInstanceOf[IVB[Int]] :+ Some(v)
+    case Some(v: Long) if field.field_type.tpe == VectorType.Int => vb.asInstanceOf[IVB[Int]] :+ Some(v.toInt)
     case Some(v: Double) if field.field_type.tpe == VectorType.Real => vb.asInstanceOf[IVB[Double]] :+ Some(v)
     case Some(v: Boolean) if field.field_type.tpe == VectorType.Bool => vb.asInstanceOf[IVB[Boolean]] :+ Some(v)
     case Some(v: String) if field.field_type.tpe == VectorType.Char => vb.asInstanceOf[IVB[String]] :+ Some(v)
     case _ => throw new IllegalArgumentException(f"Cannot add value $x to series of type ${field.field_type.tpe}")
   }
+
+  def append_value(x: Value): Unit = append(x.v)
 
   override def toSeries: Series = new SeriesImpl(field, vb.toVector)
 }

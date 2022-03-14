@@ -13,6 +13,7 @@ object Transport {
         case Some(x : Int) => Json.fromInt(x)
         case Some(x : Boolean) => Json.fromBoolean(x)
         case Some(x : String) => Json.fromString(x)
+        case Some(x) => throw new IllegalStateException(f"Cannot encode value $x")
       }
     }
   }
@@ -62,6 +63,7 @@ object Transport {
             }
           }
           case x if x.isString => builder :+ x.asString
+          case x => throw new IllegalStateException(f"Cannot decode value $x")
         })
         builder.toSeries
       })

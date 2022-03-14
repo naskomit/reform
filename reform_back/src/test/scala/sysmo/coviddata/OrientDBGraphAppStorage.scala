@@ -2,12 +2,10 @@ package sysmo.coviddata
 
 import scala.util.Using
 import scala.jdk.CollectionConverters._
-
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Order, P}
-
 import sysmo.coviddata.shared.data.PatientRecord
 import sysmo.reform.db.GraphAppStorage
 import sysmo.reform.shared.data.RecordWithMeta
@@ -17,11 +15,18 @@ import sysmo.reform.shared.{query => Q}
 import sdt.{VectorType => VT}
 import sysmo.reform.shared.util.pprint._
 import sdt.Printers._
+import sysmo.coviddata.shared.{data => CD}
+import sysmo.coviddata.io.ExcelImporter
+import sysmo.reform.io.excel.{TableCollectionRead, WorkbookReader}
+import sysmo.reform.util.Logging
 
-object OrientDBGraphAppStorage {
+object OrientDBGraphAppStorage extends Logging {
   val uri: String = "remote:localhost/covid"
   val factory = new OrientGraphFactory(uri, "nasko", "nasko")
   val app_storage = new GraphAppStorage(factory)
+
+  val doc_path = "doc/SampleData_3.xlsx"
+
 
   def test_import()  = {
     val patient_data = CSVDataSource.read_patient_data()
@@ -31,6 +36,30 @@ object OrientDBGraphAppStorage {
     app_storage.list_schema
     app_storage.drop_data
     app_storage.import_batch(patient_data)
+  }
+
+  def test_import_2() = {
+    app_storage.drop_schema
+    app_storage.drop_data
+    app_storage.apply_schemas(Seq(
+      CD.SocioDemographic.schema,
+      CD.Clinical.schema
+    ))
+    sdt.with_table_manager()(tm => {
+      val reader = new WorkbookReader(doc_path, tm)
+      val data = reader.read_table_collection(TableCollectionRead(Map(
+        "SocioDemographic" -> ExcelImporter.read_sociodemographic,
+        "Clinical_1" -> ExcelImporter.read_clinical_1,
+        "Clinical_2" -> ExcelImporter.read_clinical_2,
+        "Clinical_4" -> ExcelImporter.read_clinical_4,
+      )))
+      logger.info("Excel data read")
+      app_storage.import_vertices(CD.SocioDemographic.schema, data("SocioDemographic"), "1")
+      app_storage.import_vertices(CD.Clinical.schema, data("Clinical_1"), "1")
+      app_storage.import_vertices(CD.Clinical.schema, data("Clinical_2"), "1")
+      app_storage.import_vertices(CD.Clinical.schema, data("Clinical_4"), "1")
+      logger.info("Data imported into the database")
+    })
   }
 
   def query_data() = {

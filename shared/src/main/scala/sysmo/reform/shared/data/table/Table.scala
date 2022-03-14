@@ -2,6 +2,7 @@ package sysmo.reform.shared.data.table
 
 trait TableBuilder {
   def :+(row_data: Map[String, Option[Any]]): Unit
+  def append_value_map(row_data: Map[String, Value]): Unit
   def toTable: Table
 }
 
@@ -10,6 +11,16 @@ class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) 
   override def :+(row_data: Map[String, Option[Any]]): Unit = {
     for (field <- schema.fields) {
       column_map(field.name) :+ row_data(field.name)
+    }
+  }
+
+  def append_value_map(row_data: Map[String, Value]): Unit = {
+    for (field <- schema.fields) {
+      row_data.get(field.name) match {
+        case Some(x) => column_map(field.name).append_value(x)
+        case None => column_map(field.name).append(None)
+      }
+
     }
   }
 

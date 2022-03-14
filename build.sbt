@@ -50,7 +50,7 @@ lazy val reform_back = project
     libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
 
 
-//    libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
+    libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
     //    libraryDependencies += {
 //      val version = scalaBinaryVersion.value match {
 //        case "2.10" => "1.0.3"
@@ -60,11 +60,11 @@ lazy val reform_back = project
 //      "com.lihaoyi" % "ammonite" % version % "test" cross CrossVersion.full
 //    },
 //
-//    sourceGenerators in Test += Def.task {
-//      val file = (sourceManaged in Test).value / "amm.scala"
-//      IO.write(file, """object amm extends App { ammonite.AmmoniteMain.main(args) }""")
-//      Seq(file)
-//    }.taskValue,
+    Test / sourceGenerators += Def.task {
+      val file = (Test / sourceManaged).value / "amm.scala"
+      IO.write(file, """object amm extends App { ammonite.AmmoniteMain.main(args) }""")
+      Seq(file)
+    }.taskValue,
 
   ).dependsOn(shared.jvm)
 
