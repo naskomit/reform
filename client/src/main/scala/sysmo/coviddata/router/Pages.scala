@@ -1,13 +1,23 @@
 package sysmo.coviddata.router
 
-sealed trait Pages {
-  def name : String
+import sysmo.coviddata.panels.{HomePanel, PlotPanel}
+import sysmo.reform.router.{Page, PageCollection}
+
+case object HomePage extends Page {
+  def name = "Home"
+  def icon = "fa fa-desktop"
+  def panel = HomePanel
 }
 
-case object HomePage extends Pages {
-  def name : String = "Home"
+case object Plots extends Page {
+  def name = "Plots"
+  def icon = "fa fa-pencil"
+  def panel = PlotPanel
 }
 
-case object Form1Page extends Pages {
-  def name : String = "Form1"
+object Pages {
+  val collection = PageCollection(
+    HomePage,
+    Plots
+  )
 }

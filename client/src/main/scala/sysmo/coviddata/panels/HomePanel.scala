@@ -5,9 +5,10 @@ import sysmo.reform.components.table.RecordTableViewer
 import sysmo.coviddata.data.DemoServerDataSource
 import sysmo.reform.shared.data.{graph => G}
 import sysmo.coviddata.shared.{data => CD}
+import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.shared.{query => Q}
 
-object HomePanel {
+object HomePanel extends ApplicationPanel {
 
   import japgolly.scalajs.react._
 

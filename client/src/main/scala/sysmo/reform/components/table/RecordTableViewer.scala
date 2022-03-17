@@ -33,8 +33,8 @@ object RecordTableViewer {
             }
 
             val value_getter: agf.ValueGetter = (x : agf.ValueGetterParams) => {
-              println("Value getter")
-              dom.console.log(x)
+//              println("Value getter")
+//              dom.console.log(x)
               x.data.toOption match {
                 case Some(Some(row_data)) => row_data.get(field.name) match {
                   case y if y.is_na => "N/A"

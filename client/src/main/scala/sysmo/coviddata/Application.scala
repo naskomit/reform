@@ -1,22 +1,20 @@
 package sysmo.coviddata
 
-import org.scalajs.dom
+
+import router.Pages
+import sysmo.reform.ReactApplication
+import sysmo.reform.components.layouts.{IntuitiveLayout}
 import org.scalajs.dom.Event
-import japgolly.scalajs.react.extra.router.{BaseUrl, Router}
-import router.RouterConfiguration
 import sysmo.reform.shared.data.{table => sdt}
 
-object Application {
-    def main(args: Array[String]): Unit = {
-      dom.window.addEventListener("load", initApp)
-    }
+object Application extends ReactApplication {
+  val react_node = "mainApp"
+  val pages = Pages.collection
+  val layout = IntuitiveLayout
 
-  def initApp(e: Event): Unit = {
-    println("Initializing application")
+  override def init_react(e: Event): Unit = {
     sdt.enable_global_manager(true)
-    val app_node = dom.document.getElementById("mainApp")
-
-    val router = Router(BaseUrl.fromWindowOrigin / "", RouterConfiguration.config)
-    router().renderIntoDOM(app_node)
+    super.init_react(e)
   }
+
 }
