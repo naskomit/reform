@@ -1,5 +1,7 @@
 package sysmo.reform.components.table
 
+import java.text.SimpleDateFormat
+
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 
@@ -14,11 +16,11 @@ import sysmo.reform.shared.data.{table => sdt}
 object RecordTableViewer {
   import japgolly.scalajs.react._
 
-  case class Props[U](ds: TableDatasource, source: Q.QuerySource, schema: sdt.Schema)
+  case class Props(ds: TableDatasource, source: Q.QuerySource, schema: sdt.Schema)
   case class State()
 
-  final class Backend[U]($: BackendScope[Props[U], State]) {
-    def render (p: Props[U], s: State): VdomElement = {
+  final class Backend($: BackendScope[Props, State]) {
+    def render (p: Props, s: State): VdomElement = {
       <.div(^.style:=js.Dictionary("marginLeft" -> "100px", "marginRight" -> "100px"),
         AgGridComponent(
           p.ds, p.source, p.schema,
@@ -34,7 +36,19 @@ object RecordTableViewer {
               println("Value getter")
               dom.console.log(x)
               x.data.toOption match {
-                case Some(Some(x)) => x.get(field.name).v.get.asInstanceOf[js.Any]
+                case Some(Some(row_data)) => row_data.get(field.name) match {
+                  case y if y.is_na => "N/A"
+                  case y => {
+                    val transformed = field.field_type.ext_class match {
+                      case Some("date") => {
+                        val date = y.as_date.get
+                        (new scala.scalajs.js.Date(date.getTime)).toDateString()
+                      }
+                      case None => y.v.get
+                    }
+                    transformed.asInstanceOf[js.Any]
+                  }
+                }
                 case _ => "N/A!!!"
               }
             }
@@ -52,25 +66,29 @@ object RecordTableViewer {
   }
 
   def component[U] =
-    ScalaComponent.builder[Props[U]]("RecordTableViewer")
+    ScalaComponent.builder[Props]("RecordTableViewer")
     .initialState(State())
-    .renderBackend[Backend[U]]
+    .renderBackend[Backend]
     .build
 
-  def apply[U](ds : TableDatasource, table : String)(implicit meta_holder: RecordWithMeta[U]) = {
-    val meta = meta_holder._meta
-    val fields = meta.field_keys.map(x => {
-      val field = meta.fields(x)
-      val field_type = field.tpe match {
-        case StringType() => sdt.VectorType.Char
-        case IntegerType() => sdt.VectorType.Int
-        case RealType() => sdt.VectorType.Real
-        case BoolType() => sdt.VectorType.Bool
-      }
-      sdt.Field(field.name, sdt.FieldType(field_type), label = Some(field.label))
-    })
-    val schema = sdt.Schema(fields)
-    val source = Q.SingleTable(table)
-    component[U](Props(ds, source, schema))
+//  def apply[U](ds : TableDatasource, table : String)(implicit meta_holder: RecordWithMeta[U]) = {
+//    val meta = meta_holder._meta
+//    val fields = meta.field_keys.map(x => {
+//      val field = meta.fields(x)
+//      val field_type = field.tpe match {
+//        case StringType() => sdt.VectorType.Char
+//        case IntegerType() => sdt.VectorType.Int
+//        case RealType() => sdt.VectorType.Real
+//        case BoolType() => sdt.VectorType.Bool
+//      }
+//      sdt.Field(field.name, sdt.FieldType(field_type), label = Some(field.label))
+//    })
+//    val schema = sdt.Schema(fields)
+//    val source = Q.SingleTable(table)
+//    component[U](Props(ds, source, schema))
+//  }
+
+  def apply(ds : TableDatasource, schema: sdt.Schema, source: Q.QuerySource) = {
+    component(Props(ds, source, schema))
   }
 }

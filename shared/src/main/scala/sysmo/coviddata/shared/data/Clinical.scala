@@ -60,7 +60,7 @@ object Clinical {
     .prop(Prop.string("1b").label("Презиме"))
     .prop(Prop.string("1c").label("Фамилия"))
     .prop(Prop.string("14").label("Хоспитализиран"))
-    .prop(Prop.string("14a").label("Дата на хоспитализация"))
+    .prop(Prop.date("14a").label("Дата на хоспитализация"))
     .prop(Prop.int("15").label("Болничен престой, дни"))
     .prop(Prop.string("16").label("Изход от заболяването"))
     .prop(Prop.string("17").label("Потвърждаване на диагнозата"))
@@ -149,5 +149,7 @@ object Clinical {
     .prop(Prop.string("48").label("Вид усложнения"))
     .prop(Prop.string("49").label("Клинично влошаване"))
     .prop(Prop.string("50").label("Ден от влошаването"))
+
+//    .prop(Prop.string("").label(""))
     .build
 }

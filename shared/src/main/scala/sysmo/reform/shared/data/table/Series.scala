@@ -19,6 +19,7 @@ class SeriesBuilderImpl(field: Field, vb: IncrementalVectorBuilder[_, _]) extend
     case Some(v: Double) if field.field_type.tpe == VectorType.Real => vb.asInstanceOf[IVB[Double]] :+ Some(v)
     case Some(v: Boolean) if field.field_type.tpe == VectorType.Bool => vb.asInstanceOf[IVB[Boolean]] :+ Some(v)
     case Some(v: String) if field.field_type.tpe == VectorType.Char => vb.asInstanceOf[IVB[String]] :+ Some(v)
+    case Some(v: java.util.Date) if field.field_type.tpe == VectorType.Real => vb.asInstanceOf[IVB[Double]] :+ Some(v.getTime.toDouble)
     case _ => throw new IllegalArgumentException(f"Cannot add value $x to series of type ${field.field_type.tpe}")
   }
 
@@ -45,7 +46,7 @@ class SeriesIterator(s: Series) extends Iterator[Value] {
 
 class SeriesImpl(val field: Field, val data: Vector[_, _]) extends Series {
   def length: Int = data.length
-  def get(i: Int): Value = new Value(data(i), field.field_type.tpe)
+  def get(i: Int): Value = Value(data(i), field.field_type.tpe)
   override def toString: String = data.toString
 
   override def iterator: Iterator[Value] = new SeriesIterator(this)

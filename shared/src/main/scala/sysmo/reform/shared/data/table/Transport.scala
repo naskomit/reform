@@ -22,6 +22,7 @@ object Transport {
     override def apply(a: FieldType): Json = Json.obj(
       "tpe" -> a.tpe.toString.asJson,
       "nullable" -> a.nullable.asJson,
+      "ext_class" -> a.ext_class.asJson,
       "metadata" -> a.metadata.asJson
     )
   }
@@ -30,9 +31,10 @@ object Transport {
     override def apply(c: HCursor): Decoder.Result[FieldType] = for {
       tpe <- c.downField("tpe").as[String]
       nullable <- c.downField("nullable").as[Boolean]
+      ext_class <- c.downField("ext_class").as[Option[String]]
       metadata <- c.downField("metadata").as[Map[String, String]]
 
-    } yield FieldType(VectorType.withName(tpe), nullable, metadata)
+    } yield FieldType(VectorType.withName(tpe), nullable, ext_class, metadata)
   }
 
   implicit val codec_field: Codec[Field] = deriveCodec[Field]

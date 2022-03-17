@@ -8,6 +8,7 @@ case class IntegerType() extends PropType
 case class RealType() extends PropType
 case class BoolType() extends PropType
 case class DateType() extends PropType
+case class DateTimeType() extends PropType
 //case class RefType(to: EntitySchema) extends PropType
 
 sealed trait Domain
@@ -34,12 +35,12 @@ object Prop {
       multiplicity = 1, domain = None
     )
     def label(value: String): Builder = {
-      prop.copy(label = Some(value))
+      prop = prop.copy(label = Some(value))
       this
     }
 
     def mult(value: Int): Builder = {
-      prop.copy(multiplicity = value)
+      prop = prop.copy(multiplicity = value)
       this
     }
     def build: Prop = {
@@ -55,6 +56,7 @@ object Prop {
   def bool(name: String) = new Builder(name, BoolType())
   def string(name: String) = new Builder(name, StringType())
   def date(name: String) = new Builder(name, DateType())
+  def datetime(name: String) = new Builder(name, DateTimeType())
 //  def ref(name: String, to: EntitySchema) = new Builder(name, RefType(to))
 }
 

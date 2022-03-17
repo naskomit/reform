@@ -118,6 +118,56 @@ object ExcelImporter {
       read_row
     )
   }
+
+  def read_therapy_2 = {
+    val schema: T.Schema = G.Schema
+      .table_schema_builder(cd.Therapy.schema)
+      .build
+    val read_row = ReadRow.builder(schema)
+      .read("1").shift_read("1a").shift_read("1b").shift_read("1c")
+      .shift_read("45").shift_2_read("45a")
+      .shift_2_read("45b").shift_2_read("45c")
+      .shift_2_read("46").shift_2_read("47")
+      .shift_2_read("48").shift_2_read("49")
+      .shift_2_read("50")
+      .build
+
+    ReadBlock(
+      schema,
+      "Част 8-Терап.III",
+      PositionAt(4, 0),
+      read_row
+    )
+  }
+
+  def read_immunology = {
+    val schema: T.Schema = G.Schema
+      .table_schema_builder(cd.Immunology.schema)
+      .build
+    val read_row = ReadRow.builder(schema)
+      .read("1").shift_read("1a").shift_read("1b").shift_read("1c")
+      .shift_read("2").col("P").read("3")
+      .col("BH").read("day")
+      .shift_read("25").shift_2_read("26")
+      .shift_2_read("27").shift_2_read("28")
+      .shift_2_read("29").shift_2_read("30")
+      .shift_2_read("31").shift_2_read("32")
+      .shift_2_read("33").shift_2_read("34")
+      .shift_2_read("35").shift_2_read("36")
+      .shift_2_read("37").shift_2_read("38")
+      .shift_2_read("39").shift_2_read("40")
+      .shift_2_read("41").shift_2_read("42")
+      .build
+
+    ReadBlock(
+      schema,
+      "Част 9-Имун.",
+      PositionAt(4, 0),
+      read_row
+    )
+  }
+
+
   import sdt.Printers._
 
   def test1(): Unit = {

@@ -1,6 +1,7 @@
 package sysmo.reform.shared.data.table
 
-case class FieldType(tpe: VectorType.Value, nullable: Boolean = true, metadata: Map[String, String] = Map())
+case class FieldType(tpe: VectorType.Value, nullable: Boolean = true,
+                     ext_class: Option[String] = None, metadata: Map[String, String] = Map())
 
 case class Field(name: String, field_type: FieldType, label: Option[String] = None)
 

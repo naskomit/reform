@@ -35,6 +35,15 @@ case class Value(v: Option[_], tpe: VectorType.Value) {
     case Some(v: String) => Some(v)
     case None => None
   }
+
+  def as_date: Option[java.util.Date] = v match {
+    case Some(v: Double) => Some(new java.util.Date(v.toLong))
+    case _ => None
+  }
 }
 
-object Empty extends Value(None, VectorType.Int)
+object Value {
+  def apply(v: Option[_], tpe: VT.Value): Value = new Value(v, tpe)
+  object Empty extends Value(None, VectorType.Int)
+}
+

@@ -12,10 +12,17 @@ object Graph2TableSchema {
         case IntegerType() => T.VectorType.Int
         case RealType() => T.VectorType.Real
         case BoolType() => T.VectorType.Bool
+        case DateType() => T.VectorType.Real
+        case DateTimeType() => T.VectorType.Real
         case _ => throw new IllegalArgumentException(f"Cannot handle prop $prop")
       }
-      val field_type = T.FieldType(tpe)
-      T.Field(name = prop.name, field_type = field_type, label = None)
+      val ext_class = prop.prop_type match {
+        case DateType() => Some("date")
+        case DateTimeType() => Some("datetime")
+        case _ => None
+      }
+      val field_type = T.FieldType(tpe, ext_class = ext_class)
+      T.Field(name = prop.name, field_type = field_type, label = prop.label)
     }
 
     def build: T.Schema = {

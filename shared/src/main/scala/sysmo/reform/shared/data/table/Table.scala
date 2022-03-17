@@ -10,7 +10,11 @@ class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) 
   private val column_map = col_builders.zip(schema.fields).map(x => (x._2.name, x._1)).toMap
   override def :+(row_data: Map[String, Option[Any]]): Unit = {
     for (field <- schema.fields) {
-      column_map(field.name) :+ row_data(field.name)
+      row_data.get(field.name) match {
+        case Some(v) => column_map(field.name) :+ v
+        case None => column_map(field.name) :+ None
+      }
+
     }
   }
 

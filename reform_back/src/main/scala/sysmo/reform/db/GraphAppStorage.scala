@@ -17,39 +17,41 @@ import sysmo.reform.util.Logging
 import upickle.default._
 
 import scala.jdk.CollectionConverters._
-import scala.util.{Try, Success, Failure, Using}
+import scala.util.{Failure, Success, Try, Using}
 import sysmo.reform.shared.data.{table => sdt}
+import sdt.Printers._
 import sysmo.reform.shared.data.{graph => G}
+import sysmo.reform.shared.util.pprint
 
 class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
   import sysmo.reform.shared.{data => RM}
 
   def classes(graph: OrientGraph): Iterable[OClass] = graph.database.getMetadata.getSchema.getClasses.asScala
 
-  def create_schema(rec_meta_list: Seq[RecordMeta[_]]): Unit = {
-    logger.info("========== Creating classes ==========")
-    Using(graph_factory.getTx)  { graph =>
-      for (rec_meta <- rec_meta_list) {
-        if (graph.existClass(rec_meta.id))
-          logger.warn(f"Class ${rec_meta.id} already exists")
-        else
-          logger.info(f"Creating node class ${rec_meta.id}")
-          graph.createVertexClass(rec_meta.id)
-        val vertex_class = graph.database.getMetadata.getSchema.getClass(rec_meta.id)
-        vertex_class.setStrictMode(true)
-        rec_meta.field_keys.foreach(field => {
-          val prop_type = rec_meta.fields(field).tpe match {
-            case RM.StringType() => OType.STRING
-            case RM.IntegerType() => OType.INTEGER
-            case RM.RealType() => OType.DOUBLE
-            case RM.BoolType() => OType.BOOLEAN
-          }
-          vertex_class.createProperty(field.toString, prop_type)
-        })
-
-      }
-    }
-  }.get
+//  def create_schema(rec_meta_list: Seq[RecordMeta[_]]): Unit = {
+//    logger.info("========== Creating classes ==========")
+//    Using(graph_factory.getTx)  { graph =>
+//      for (rec_meta <- rec_meta_list) {
+//        if (graph.existClass(rec_meta.id))
+//          logger.warn(f"Class ${rec_meta.id} already exists")
+//        else
+//          logger.info(f"Creating node class ${rec_meta.id}")
+//          graph.createVertexClass(rec_meta.id)
+//        val vertex_class = graph.database.getMetadata.getSchema.getClass(rec_meta.id)
+//        vertex_class.setStrictMode(true)
+//        rec_meta.field_keys.foreach(field => {
+//          val prop_type = rec_meta.fields(field).tpe match {
+//            case RM.StringType() => OType.STRING
+//            case RM.IntegerType() => OType.INTEGER
+//            case RM.RealType() => OType.DOUBLE
+//            case RM.BoolType() => OType.BOOLEAN
+//          }
+//          vertex_class.createProperty(field.toString, prop_type)
+//        })
+//
+//      }
+//    }
+//  }.get
 
   def apply_schemas(schemas: Seq[G.EntitySchema]): Unit = {
     logger.info("========== Creating database schema ==========")
@@ -78,6 +80,8 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
               case G.IntegerType() => OType.INTEGER
               case G.RealType() => OType.DOUBLE
               case G.BoolType() => OType.BOOLEAN
+              case G.DateType() => OType.DATE
+              case G.DateTimeType() => OType.DATETIME
               case _ => throw new IllegalStateException(f"Cannot handle property ${prop}")
             }
             vertex_class.createProperty(prop.name, prop_type)
@@ -127,9 +131,17 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
           case OType.INTEGER => sdt.VectorType.Int
           case OType.DOUBLE => sdt.VectorType.Real
           case OType.BOOLEAN => sdt.VectorType.Bool
+          case OType.DATE => sdt.VectorType.Real
+          case OType.DATETIME => sdt.VectorType.Real
+
           case x => throw new IllegalStateException(f"Cannot handle type $x")
         }
-        sdt.Field(p.getName, sdt.FieldType(field_type))
+        val ext_class = p.getType match {
+          case OType.DATE => Some("date")
+          case OType.DATETIME => Some("datetime")
+          case _ => None
+        }
+        sdt.Field(p.getName, sdt.FieldType(field_type, ext_class = ext_class))
       }).toSeq
       sdt.Schema(fields)
     }}.get
@@ -157,8 +169,9 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
     graph.close()
   }
 
-  def import_vertices(graph_schema: G.VertexSchema, table: sdt.Table, id_column: String): Unit = {
+  def upsurt_vertices(graph_schema: G.VertexSchema, table: sdt.Table, id_column: String): Unit = {
     val graph = graph_factory.getTx
+    val g = graph.traversal()
     for (row <- table.row_iter) {
       val vertex_props = table.schema.fields.foldLeft(
         Seq[(String, Any)]()
@@ -171,22 +184,23 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
         }).getOrElse(acc)
       })
 
-      val g = graph.traversal()
-      val vertex_trav = g.V().has(T.label, graph_schema.name).has(id_column, row.get(id_column).v.get)
-      val vertex = if (vertex_trav.hasNext) {
-        logger.info(f"Updating vetex with `$id_column` = ${row.get(id_column).v.get}")
-        vertex_trav.next()
-      } else {
-        logger.info(f"Adding vetex with `$id_column` = ${row.get(id_column).v.get}")
-        graph.addVertex(List[Any](T.label, graph_schema.name): _*)
+      row.get(id_column).v match {
+        case None => {
+          println(row)
+          throw new IllegalStateException(f"No value for `id` attribute in column $id_column")
+        }
+        case Some(id_value) => {
+          val vertex_trav = g.V().has(T.label, graph_schema.name).has(id_column, id_value)
+          val vertex = if (vertex_trav.hasNext) {
+            logger.info(f"Updating vetex with `$id_column` = ${row.get(id_column).v.get}")
+            vertex_trav.next()
+          } else {
+            logger.info(f"Adding vetex with `$id_column` = ${row.get(id_column).v.get}")
+            graph.addVertex(List[Any](T.label, graph_schema.name): _*)
+          }
+          vertex_props.foldLeft(g.V(vertex))((trav, kv) => trav.property(kv._1, kv._2)).iterate()
+        }
       }
-
-      vertex_props.foldLeft(g.V(vertex))((trav, kv) => trav.property(kv._1, kv._2)).iterate()
-
-
-
-
-//      graph.
 
     }
     graph.commit()

@@ -28,22 +28,24 @@ object OrientDBGraphAppStorage extends Logging {
   val doc_path = "doc/SampleData_3.xlsx"
 
 
-  def test_import()  = {
-    val patient_data = CSVDataSource.read_patient_data()
-    val patient_record_meta = implicitly[RecordWithMeta[PatientRecord]]._meta
-    app_storage.drop_schema
-    app_storage.create_schema(Seq(patient_record_meta))
-    app_storage.list_schema
-    app_storage.drop_data
-    app_storage.import_batch(patient_data)
-  }
+//  def test_import()  = {
+//    val patient_data = CSVDataSource.read_patient_data()
+//    val patient_record_meta = implicitly[RecordWithMeta[PatientRecord]]._meta
+//    app_storage.drop_schema
+//    app_storage.create_schema(Seq(patient_record_meta))
+//    app_storage.list_schema
+//    app_storage.drop_data
+//    app_storage.import_batch(patient_data)
+//  }
 
   def test_import_2() = {
     app_storage.drop_schema
     app_storage.drop_data
     app_storage.apply_schemas(Seq(
       CD.SocioDemographic.schema,
-      CD.Clinical.schema
+      CD.Clinical.schema,
+      CD.Therapy.schema,
+      CD.Immunology.schema
     ))
     sdt.with_table_manager()(tm => {
       val reader = new WorkbookReader(doc_path, tm)
@@ -52,12 +54,19 @@ object OrientDBGraphAppStorage extends Logging {
         "Clinical_1" -> ExcelImporter.read_clinical_1,
         "Clinical_2" -> ExcelImporter.read_clinical_2,
         "Clinical_4" -> ExcelImporter.read_clinical_4,
+        "Therapy 2" -> ExcelImporter.read_therapy_2,
+        "Immunology" -> ExcelImporter.read_immunology
       )))
+
+//      pprint(data("Immunology"))
+//      println(data("Clinical_1").column("14a").iterator.foreach(x => println(x.as_real, x.as_date)))
       logger.info("Excel data read")
-      app_storage.import_vertices(CD.SocioDemographic.schema, data("SocioDemographic"), "1")
-      app_storage.import_vertices(CD.Clinical.schema, data("Clinical_1"), "1")
-      app_storage.import_vertices(CD.Clinical.schema, data("Clinical_2"), "1")
-      app_storage.import_vertices(CD.Clinical.schema, data("Clinical_4"), "1")
+      app_storage.upsurt_vertices(CD.SocioDemographic.schema, data("SocioDemographic"), "1")
+      app_storage.upsurt_vertices(CD.Clinical.schema, data("Clinical_1"), "1")
+      app_storage.upsurt_vertices(CD.Clinical.schema, data("Clinical_2"), "1")
+      app_storage.upsurt_vertices(CD.Clinical.schema, data("Clinical_4"), "1")
+      app_storage.upsurt_vertices(CD.Therapy.schema, data("Therapy 2"), "1")
+      app_storage.upsurt_vertices(CD.Immunology.schema, data("Immunology"), "1")
       logger.info("Data imported into the database")
     })
   }
