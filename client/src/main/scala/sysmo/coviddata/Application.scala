@@ -3,7 +3,7 @@ package sysmo.coviddata
 
 import router.Pages
 import sysmo.reform.ReactApplication
-import sysmo.reform.components.layouts.{IntuitiveLayout}
+import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
 import sysmo.reform.shared.data.{table => sdt}
 
