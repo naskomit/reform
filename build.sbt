@@ -12,7 +12,6 @@ lazy val macros = project
     libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
   )
 
-
 lazy val reform_back = project
   .settings(
     // Logging
@@ -47,19 +46,12 @@ lazy val reform_back = project
     libraryDependencies += "org.apache.poi" % "poi" % "5.2.0",
     libraryDependencies += "org.apache.poi" % "poi-ooxml" % "5.2.0",
 
+    // Plotly
+    libraryDependencies += "org.plotly-scala" %% "plotly-almond" % "0.8.1",
+
     libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
-
-
     libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
-    //    libraryDependencies += {
-//      val version = scalaBinaryVersion.value match {
-//        case "2.10" => "1.0.3"
-//        case "2.11" => "1.6.7"
-//        case _ ⇒ "2.5.2"
-//      }
-//      "com.lihaoyi" % "ammonite" % version % "test" cross CrossVersion.full
-//    },
-//
+
     Test / sourceGenerators += Def.task {
       val file = (Test / sourceManaged).value / "amm.scala"
       IO.write(file, """object amm extends App { ammonite.AmmoniteMain.main(args) }""")

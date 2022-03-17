@@ -31,3 +31,5 @@ shared/.jvm
 .target
 bin/
 .bsp
+/data/orientdb/databases
+/log
