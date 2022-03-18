@@ -2,6 +2,7 @@ package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
+import sysmo.reform.components.plots.Plotly
 import sysmo.reform.components.{ApplicationPanel, ReactComponent}
 
 object PlotPanel extends ApplicationPanel {
@@ -12,7 +13,7 @@ object PlotPanel extends ApplicationPanel {
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      <.div("This is a plot")
+      <.div("This is a plot", Plotly("800", "600"))
     }
   }
 

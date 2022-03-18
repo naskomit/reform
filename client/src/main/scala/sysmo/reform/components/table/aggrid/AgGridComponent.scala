@@ -2,6 +2,7 @@ package sysmo.reform.components.table.aggrid
 
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
+import sysmo.reform.components.ReactComponent
 import sysmo.reform.shared.query._
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 import sysmo.reform.data.TableDatasource
@@ -78,34 +79,25 @@ class AgGridSourceAgaptor(ds: TableDatasource, source: QuerySource, schema: sdt.
 
 }
 
-object AgGridSourceAgaptor {
+object AgGridSourceAgaptor{
   def apply(ds: TableDatasource, source: QuerySource, schema: sdt.Schema): AgGridSourceAgaptor =
     new AgGridSourceAgaptor(ds, source, schema)
 }
 
-object AgGridComponent {
+object AgGridComponent extends ReactComponent {
   import japgolly.scalajs.react.ScalaComponent
   import japgolly.scalajs.react.component.Scala.BackendScope
-  case class Props(ds : AgGridSourceAgaptor, columns : Seq[agf.ColumnProps])
+  case class Props(ds : AgGridSourceAgaptor, columns : Seq[agf.ColumnProps], height: String)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
 
     def render(p: Props, s: State): VdomElement = {
       <.div(
-        <.div(^.className:="row row-condensed",
-          <.div(^.className:="page-subtitle",
-            <.div(<.h2("AGGrid")),
-          )
-        ),
-        <.div(^.className:="row",
-          <.div(
-            ^.cls := "ag-theme-alpine",
-            ^.height := "800px",
-            ^.width := "100%",
-            agf.AgGridNativeComponent(p.ds.native, p.columns)
-          )
-        )
+        ^.cls := "ag-theme-alpine",
+        ^.height := p.height,
+        ^.width := "100%",
+        agf.AgGridNativeComponent(p.ds.native, p.columns)
       )
     }
   }
@@ -115,7 +107,7 @@ object AgGridComponent {
     .renderBackend[Backend]
     .build
 
-  def apply(ds: TableDatasource, table: QuerySource, schema: sdt.Schema, columns: Seq[agf.ColumnProps]) =
-    component(Props(AgGridSourceAgaptor(ds, table, schema), columns))
+  def apply(ds: TableDatasource, table: QuerySource, schema: sdt.Schema, columns: Seq[agf.ColumnProps], height: String): Unmounted =
+    component(Props(AgGridSourceAgaptor(ds, table, schema), columns, height))
 
 }

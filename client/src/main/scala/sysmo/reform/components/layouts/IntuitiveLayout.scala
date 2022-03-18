@@ -77,8 +77,8 @@ object IntuitiveLayout extends ApplicationLayout {
     }
 
     def render (p: Props, s: State): VdomElement = {
-      println("Rendered")
-      println(s)
+//      println("Rendered")
+//      println(s)
       <.div(
         <.div(^.className:=(if (s.menu_expanded) "dev-page dev-page-loaded" else "dev-page dev-page-loaded dev-page-sidebar-collapsed"),
           header(p),

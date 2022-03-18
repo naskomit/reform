@@ -1,14 +1,14 @@
 package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.components.table.RecordTableViewer
 import sysmo.coviddata.data.DemoServerDataSource
-import sysmo.reform.shared.data.{graph => G}
 import sysmo.coviddata.shared.{data => CD}
 import sysmo.reform.components.ApplicationPanel
+import sysmo.reform.components.table.RecordTableViewer
+import sysmo.reform.shared.data.{graph => G}
 import sysmo.reform.shared.{query => Q}
 
-object HomePanel extends ApplicationPanel {
+object ClinicalDataPanel extends ApplicationPanel {
 
   import japgolly.scalajs.react._
 
@@ -24,10 +24,10 @@ object HomePanel extends ApplicationPanel {
         .build
       <.div(
         <.div(^.cls:= "page-title",
-          <.h1("COVID-19 Project")
+          <.h1("Clinical Data")
         ),
         <.div(^.cls:= "wrapper wrapper-white",
-          "Description"
+          RecordTableViewer(DemoServerDataSource, schema, Q.SingleTable(CD.Clinical.schema.name))
         )
       )
     }
