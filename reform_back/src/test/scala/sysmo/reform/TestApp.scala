@@ -21,5 +21,6 @@ object TestApp extends App {
 //  OrientDBGraphAppStorage.test_import_2()
 
   import sysmo.reform.plots.TestPlotly
-  TestPlotly.test_bar()
+//  TestPlotly.test_bar()
+  sysmo.typelevel.JsonCats.test1()
 }

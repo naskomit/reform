@@ -1,40 +1,39 @@
-package sysmo.coviddata.data
+package sysmo.reform.services
 
 import autowire.Core.Request
-import sysmo.reform.shared.data.table.Table
-//import autowire._
 import io.circe.syntax._
 import sysmo.reform.data.TableDatasource
-import sysmo.reform.shared.query.Query
+import sysmo.reform.shared.{query => Q}
 import sysmo.reform.shared.data.{table => sdt}
-import sysmo.reform.services.TableApiClient
+
 import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import sysmo.reform.util.log.Logging
 
-
-object DemoServerDataSource extends TableDatasource {
-  import sysmo.reform.shared.query.TransportCirce._
+object ServerTableDataSource extends TableDatasource with Logging {
   import sdt.Transport._
+  import Q.Transport._
 
-  val base_path: Seq[String] = Seq("sysmo", "reform", "shared", "data", "TableData")
+  val api_client = ApiClient("api/table")
+  val base_path: Seq[String] = Seq("sysmo", "reform", "services", "TableDataService")
 
   override def row_count: Future[Int] = {
-    println("DataApiClient / row_count")
-    TableApiClient.doCall(Request(
+    logger.info("row_count")
+    api_client.doCall(Request(
       base_path :+ "row_count",
       Map()
     )).map(x => x.as[Int].getOrElse(throw new RuntimeException(f"Expected integer, got $x")))
   }
 
-  override def query_table(q : Query): RemoteBatch = {
-    println("DataApiClient / run_query")
-    println(q)
+  override def query_table(q : Q.Query): RemoteBatch = {
+    logger.info("run_query")
+    logger.info(q.toString)
 
-    val resp = TableApiClient.doCall(Request(
+    val resp = api_client.doCall(Request(
       base_path :+ "query_table",
       Map("query" -> q.asJson)
     ))
-    resp.map(x => x.as[Table] match {
+    resp.map(x => x.as[sdt.Table] match {
       case Left(err) =>  throw new RuntimeException(f"Expected Table , got $x")
       case Right(v) => v
     })

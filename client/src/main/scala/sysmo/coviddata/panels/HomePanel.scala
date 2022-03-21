@@ -2,10 +2,10 @@ package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.table.RecordTableViewer
-import sysmo.coviddata.data.DemoServerDataSource
 import sysmo.reform.shared.data.{graph => G}
 import sysmo.coviddata.shared.{data => CD}
 import sysmo.reform.components.ApplicationPanel
+import sysmo.reform.services.ServerTableDataSource
 import sysmo.reform.shared.{query => Q}
 
 object HomePanel extends ApplicationPanel {

@@ -5,8 +5,6 @@ package sysmo.reform.plots
 import plotly.layout.Layout
 import plotly.{Histogram, Scatter, Plotly, Config}
 
-
-
 object TestPlotly {
   import Plotly._
 

@@ -1,0 +1,53 @@
+package sysmo.reform.shared.chart
+
+import io.circe.Json
+
+import scala.collection.mutable
+import sysmo.reform.shared.util.Named
+import sysmo.reform.shared.{query => Q}
+
+/** Request */
+sealed trait ChartData
+case class QuerySource(q: Q.Query) extends ChartData
+
+sealed trait ChartDefinition
+case class Histogram(data_id: String, column_id: String) extends ChartDefinition
+
+case class ChartRequest(data: Map[String, ChartData], charts: Seq[ChartDefinition])
+
+
+
+/** Response */
+sealed trait ChartObject
+case class Plotly(content: Json) extends ChartObject
+case class PlotlyAsText(content: String) extends ChartObject
+
+
+case class ChartResult(items: Seq[Named[ChartObject]])
+
+object ChartResult {
+  class Builder {
+    val items = new mutable.ArrayBuffer[Named[ChartObject]]
+    def add(item: Product2[String, ChartObject]): this.type = {
+      items += Named(item._1, None, item._2)
+      this
+    }
+
+    def label(value: String): this.type = {
+      items.takeRight(1).headOption match {
+        case Some(item) => items(items.length - 1) = item.copy(label = Some(value))
+        case None =>
+      }
+      this
+    }
+
+    def ++ (result_list: ChartResult): this.type = {
+      result_list.items.foreach(item => items += item)
+      this
+    }
+
+    def build: ChartResult = ChartResult(items.toSeq)
+  }
+
+  def builder: Builder = new Builder
+}

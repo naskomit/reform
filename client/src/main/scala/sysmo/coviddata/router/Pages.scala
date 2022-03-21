@@ -12,7 +12,7 @@ case object HomePage extends Page {
 case object Plots extends Page {
   def name = "Plots"
   def icon = "fa fa-pencil"
-  def panel = P.PlotPanel
+  def panel = P.ChartPanel
 }
 
 

@@ -1,6 +1,5 @@
 package sysmo.reform.components
 
-import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
 
 object ComponentTemplate extends ReactComponent {
@@ -11,7 +10,7 @@ object ComponentTemplate extends ReactComponent {
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      <.div("This is a plot")
+      <.div("This is a template component")
     }
   }
 
@@ -23,7 +22,7 @@ object ComponentTemplate extends ReactComponent {
     .build
 
   //
-  def apply(): Scala.Unmounted[Props, State, Backend] = {
+  def apply(): Unmounted = {
     component(Props())
   }
 }

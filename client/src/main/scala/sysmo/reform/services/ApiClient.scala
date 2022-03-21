@@ -8,7 +8,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import org.scalajs.dom
 
-object TableApiClient extends autowire.Client[Json, Decoder, Encoder] {
+class ApiClient(url: String) extends autowire.Client[Json, Decoder, Encoder] {
   def write[Result](r: Result)(implicit enc : Encoder[Result]) = enc.apply(r)
   def read[Result](p: Json)(implicit dec : Decoder[Result]) = p.as[Result] match {
     case Left(e) => throw e
@@ -23,9 +23,13 @@ object TableApiClient extends autowire.Client[Json, Decoder, Encoder] {
       "args" -> req.args.asJson
     )
     req_opts.body = write(body).toString
-    dom.fetch("data/api", req_opts).toFuture.flatMap(x => {
+    dom.fetch(url, req_opts).toFuture.flatMap(x => {
       x.text().toFuture
     }).map(x => parse(x).getOrElse(throw new RuntimeException("Cannot parse the response!")))
   }
 
+}
+
+object ApiClient {
+  def apply(url: String): ApiClient = new ApiClient(url)
 }

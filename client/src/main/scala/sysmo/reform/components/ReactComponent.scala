@@ -1,10 +1,9 @@
 package sysmo.reform.components
 
 import japgolly.scalajs.react.component.Scala
-import sysmo.reform.components.plots.Plotly.{Backend, Props, State}
+import sysmo.reform.util.log.Logging
 
-
-trait ReactComponent {
+trait ReactComponent extends Logging {
   type Props <: Product
   type State <: Product
   type Backend

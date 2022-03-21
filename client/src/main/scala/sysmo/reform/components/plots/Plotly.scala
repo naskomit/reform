@@ -4,6 +4,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 import org.scalajs.dom.html
 import sysmo.reform.components.ReactComponent
+import sysmo.reform.shared.{chart => Ch}
+import sysmo.reform.util.json.circe_2_js
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -22,7 +24,7 @@ object PlotlyNative {
 object Plotly extends ReactComponent {
   import japgolly.scalajs.react._
 
-  case class Props(width: String, height: String, definition: js.Object)
+  case class Props(width: String, height: String, plt_def: Ch.Plotly)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -33,8 +35,9 @@ object Plotly extends ReactComponent {
 
     def init(p: Props): Callback = Callback {
       outerRef.raw.current match {
-        case elem : html.Element =>
-          PlotlyNative.Plotly.newPlot(elem, p.definition)
+        case elem : html.Element => {
+          PlotlyNative.Plotly.newPlot(elem, circe_2_js(p.plt_def.content))
+        }
       }
       ()
     }
@@ -49,12 +52,7 @@ object Plotly extends ReactComponent {
     .build
 
   // , definition: js.Object
-  def apply(width: String, height: String): Unmounted = {
-    val definition =
-      """
-        |{"data":[{"type":"histogram","x":[1.0,1.0,4.0,2.0,1.0,4.0,2.0,1.0,3.0]}],"layout":{"title":"Bars"},"config":{}}
-      """.stripMargin
-    val json = js.JSON.parse(definition).asInstanceOf[js.Object]
-    component(Props(width, height, json))
+  def apply(width: String, height: String, plt_def: Ch.Plotly): Unmounted = {
+    component(Props(width, height, plt_def))
   }
 }

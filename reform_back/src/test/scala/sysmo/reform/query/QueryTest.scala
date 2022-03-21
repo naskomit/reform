@@ -6,7 +6,7 @@ import io.circe.parser.parse
 import sysmo.reform.shared.util.pprint
 import sysmo.reform.shared.{query => Q}
 
-import Q.TransportCirce._
+import Q.Transport._
 
 object QueryTest {
   def round_trip[A](x : A)(implicit ev_enc: Encoder[A], ev_dec: Decoder[A]): Unit = {

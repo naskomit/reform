@@ -5,8 +5,9 @@ import org.scalajs.dom.Event
 import japgolly.scalajs.react.extra.router.{BaseUrl, Router}
 import sysmo.reform.components.layouts.ApplicationLayout
 import sysmo.reform.router.{PageCollection, RouterConfiguration}
+import sysmo.reform.util.log.Logging
 
-trait ReactApplication {
+trait ReactApplication extends Logging {
   val react_node: String
   val pages: PageCollection
   val layout: ApplicationLayout
@@ -16,7 +17,7 @@ trait ReactApplication {
   }
 
   def init_react(e: Event): Unit = {
-    println("Initializing application")
+    logger.info("Initializing application")
     val app_node = dom.document.getElementById(react_node)
     val router = Router(
       BaseUrl.fromWindowOrigin / "",
