@@ -30,16 +30,12 @@ object RecordTableViewer {
           x.data.toOption match {
             case Some(Some(row_data)) => row_data.get(field.name) match {
               case y if y.is_na => "N/A"
-              case y => {
-                val transformed = field.field_type.ext_class match {
-                  case Some("date") => {
-                    val date = y.as_date.get
-                    (new scala.scalajs.js.Date(date.getTime)).toDateString()
-                  }
-                  case None => y.v.get
-                }
-                transformed.asInstanceOf[js.Any]
+              case y: sdt.DateValue => {
+                val date = y.as_date.get
+                (new scala.scalajs.js.Date(date.getTime)).toDateString()
+
               }
+              case y => y.get.asInstanceOf[js.Any]
             }
             case _ => "N/A!!!"
           }

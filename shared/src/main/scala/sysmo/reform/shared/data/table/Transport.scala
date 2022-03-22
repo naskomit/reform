@@ -1,47 +1,73 @@
 package sysmo.reform.shared.data.table
 
-object Transport {
-  import io.circe._
+import sysmo.reform.shared.util.CirceTransport
+
+object Transport extends CirceTransport {
   import io.circe.generic.semiauto._
   import io.circe.syntax._
 
-  implicit val enc_value: Encoder[Value] = new Encoder[Value] {
-    override def apply(a: Value): Json = {
-      a.v match {
-        case None => Json.Null
-        case Some(x : Double) => Json.fromDoubleOrNull(x)
-        case Some(x : Int) => Json.fromInt(x)
-        case Some(x : Boolean) => Json.fromBoolean(x)
-        case Some(x : String) => Json.fromString(x)
-        case Some(x) => throw new IllegalStateException(f"Cannot encode value $x")
-      }
-    }
-  }
+//  implicit val enc_value: Encoder[Value[_]] = new Encoder[Value[_]] {
+//    override def apply(a: Value[_]): Json = {
+//      a match {
+//        case _ if a.is_na => Json.Null
+//        case RealValue(x) => Json.fromDoubleOrNull(x.get)
+//        case IntValue(x) => Json.fromInt(x.get)
+//        case BoolValue(x) => Json.fromBoolean(x.get)
+//        case CharValue(x) => Json.fromString(x.get)
+//        case x => throw new IllegalStateException(f"Cannot encode value $x")
+//      }
+//    }
+//  }
 
   implicit val enc_field_type: Encoder[FieldType] = new Encoder[FieldType] {
     override def apply(a: FieldType): Json = Json.obj(
       "tpe" -> a.tpe.toString.asJson,
       "nullable" -> a.nullable.asJson,
       "ext_class" -> a.ext_class.asJson,
+      "categories" -> a.categories.asJson,
       "metadata" -> a.metadata.asJson
     )
   }
+
+//  sealed trait ExtClass
+//  case object Same extends ExtClass
+//  case object Categorical extends ExtClass
+//  case object Date extends ExtClass
+//  case object DateTime extends ExtClass
+  implicit val codec_ExtClass: Codec[ExtClass] = deriveCodec[ExtClass]
+//  implicit val codec_Same: Codec[Same] = deriveCodec[]
+//  implicit val codec_: Codec[] = deriveCodec[]
+//  implicit val codec_: Codec[] = deriveCodec[]
+//  implicit val codec_: Codec[] = deriveCodec[]
+//  implicit val codec_: Codec[] = deriveCodec[]
+//  implicit val codec_: Codec[] = deriveCodec[]
+//  implicit val codec_: Codec[] = deriveCodec[]
 
   implicit val dec_field_type: Decoder[FieldType] = new Decoder[FieldType] {
     override def apply(c: HCursor): Decoder.Result[FieldType] = for {
       tpe <- c.downField("tpe").as[String]
       nullable <- c.downField("nullable").as[Boolean]
-      ext_class <- c.downField("ext_class").as[Option[String]]
+      ext_class <- c.downField("ext_class").as[ExtClass]
+      categories <- c.downField("categories").as[Seq[String]]
       metadata <- c.downField("metadata").as[Map[String, String]]
 
-    } yield FieldType(VectorType.withName(tpe), nullable, ext_class, metadata)
+    } yield FieldType(VectorType.withName(tpe), nullable, ext_class, categories, metadata)
   }
 
   implicit val codec_field: Codec[Field] = deriveCodec[Field]
 
   implicit val enc_series: Encoder[Series] = new Encoder[Series] {
     override def apply(a: Series): Json = Json.obj(
-      "data" -> a.map(x => x.asJson).asJson,
+      "data" -> a.map {
+        case x if x.is_na => Json.Null
+        case RealValue(x) => Json.fromDoubleOrNull(x.get)
+        case IntValue(x) => Json.fromInt(x.get)
+        case BoolValue(x) => Json.fromBoolean(x.get)
+        case CharValue(x) => Json.fromString(x.get)
+        case DateValue(x) => Json.fromDoubleOrNull(x.get)
+        case CategoricalValue(x, _) => Json.fromInt(x.get)
+        case x => throw new IllegalStateException(f"Cannot encode value $x")
+      }.asJson,
       "$type" -> "Series".asJson,
       "field" -> Encoder[Field].apply(a.field)
     )

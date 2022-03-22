@@ -83,30 +83,30 @@ class WorkbookReader(file_path: String, table_manager: sdt.TableManager) extends
     case None => throw new IllegalStateException("No current sheet!")
   }
 
-  def parse_value(cell: XSSFCell, cell_type: CellType, field_type: sdt.FieldType): sdt.Value = {
+  def parse_value(cell: XSSFCell, cell_type: CellType, field_type: sdt.FieldType): sdt.Value[_] = {
     val tpe = field_type.tpe
     cell_type match {
       case CellType.STRING => {
         val content = cell.getStringCellValue
          tpe match {
-          case sdt.VectorType.Char => sdt.Value(Some(content), tpe)
-          case sdt.VectorType.Bool => sdt.Value(None, tpe)
-          case sdt.VectorType.Int => sdt.Value(content.toIntOption, tpe)
-          case sdt.VectorType.Real => sdt.Value(content.toDoubleOption, tpe)
+          case sdt.VectorType.Char => sdt.Value.char(Some(content))
+          case sdt.VectorType.Bool => sdt.Value.empty(field_type)
+          case sdt.VectorType.Int => sdt.Value.int(content.toIntOption)
+          case sdt.VectorType.Real => sdt.Value.real(content.toDoubleOption)
         }
       }
       case CellType.NUMERIC => {
         val content = cell.getNumericCellValue
         tpe match {
-          case sdt.VectorType.Char => sdt.Value(Some(content.toString), tpe)
-          case sdt.VectorType.Bool => sdt.Value(None, tpe)
-          case sdt.VectorType.Int => sdt.Value(Some(content.round), tpe)
+          case sdt.VectorType.Char => sdt.Value.char(Some(content.toString))
+          case sdt.VectorType.Bool => sdt.Value.empty(field_type)
+          case sdt.VectorType.Int => sdt.Value.int(Some(content.round.toInt))
           case sdt.VectorType.Real => {
             field_type.ext_class match {
-              case None => sdt.Value(Some(content), tpe)
-              case Some("datetime") | Some("date") => {
+              case sdt.Same => sdt.Value.real(Some(content))
+              case sdt.DateTime | sdt.Date => {
                 val date = DateUtil.getJavaDate(content)
-                sdt.Value(Some(date.getTime.toDouble), tpe)
+                sdt.Value.date(date)
               }
             }
           }
@@ -117,29 +117,29 @@ class WorkbookReader(file_path: String, table_manager: sdt.TableManager) extends
 //      }
       case x => {
         logger.warn(f"Other field type found $x")
-        sdt.Value(None, tpe)
+        sdt.Value.empty
       }
     }
   }
 
 
-  def read_value(row: Int, col: Int, field_def: sdt.Field): sdt.Value = {
+  def read_value(row: Int, col: Int, field_def: sdt.Field): sdt.Value[_] = {
     val cell = current_sheet.getRow(row).getCell(col)
     val field_type = field_def.field_type
     if (cell == null)
-      return sdt.Value(None, field_type.tpe)
+      return sdt.Value.empty(field_type)
     val cell_type = cell.getCellType
     cell_type match {
       case CellType.FORMULA => parse_value(cell, cell.getCachedFormulaResultType, field_type)
-      case CellType.BLANK => sdt.Value(None, field_type.tpe)
+      case CellType.BLANK => sdt.Value.empty(field_type)
       case _ => parse_value(cell, cell_type, field_type)
     }
   }
 
-  def read_row(prog: ReadRow, schema: sdt.Schema, start: PositionAt): Map[String, sdt.Value] = {
+  def read_row(prog: ReadRow, schema: sdt.Schema, start: PositionAt): Map[String, sdt.Value[_]] = {
     var row = start.row
     var col = start.col
-    prog.actions.foldLeft(Map[String, sdt.Value]()) {(acc, action) => {
+    prog.actions.foldLeft(Map[String, sdt.Value[_]]()) {(acc, action) => {
       action match {
         case Left(n) => {col -= n; acc}
         case Right(n) => {col += n; acc}

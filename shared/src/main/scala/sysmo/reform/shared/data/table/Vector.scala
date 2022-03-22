@@ -19,12 +19,13 @@ class Vector[V, +Storage <: VectorStorage[V]](storage: Storage)(implicit tci: Ve
   def name: String = storage.name
   def apply(i: Int): Option[ValueType] = storage.get(i)
   def length: Int = storage.get_value_count
+  def manager: TableManager = storage.manager
   def iterator = new VectorIterator[V](this)
   def range(start: Int, length: Int): Vector[V, Storage] =
     // Not sure why this conversion is necessary, but doesn't work otherwise
     new Vector[V, Storage](storage.range_view(start, length).asInstanceOf[Storage])
 
-  def map2[B](f: V => B)(implicit tci_out: VectorTypeclass[B]): Vector[B, VectorStorage[B]] = {
+  def vmap[B](f: V => B)(implicit tci_out: VectorTypeclass[B]): Vector[B, VectorStorage[B]] = {
     val builder = new IncrementalVectorBuilder[B, tci_out.MutableStorage](storage.manager.create_mutable_storage("")(tci_out))
     this.foreach {
       case Some(v) => builder :+ Some(f(v))

@@ -4,7 +4,7 @@ import sysmo.reform.shared.data.{table => T}
 import sysmo.reform.shared.data.{graph => G}
 
 object Graph2TableSchema {
-  class SchemaVertex2TableBuilder(schema: VertexSchema) {
+  class SchemaVertex2TableBuilder(schema: VertexSchema, categorical: Boolean) {
 
     def prop2field(prop: G.Prop): T.Field = {
       val tpe = prop.prop_type match {
@@ -16,12 +16,22 @@ object Graph2TableSchema {
         case DateTimeType() => T.VectorType.Real
         case _ => throw new IllegalArgumentException(f"Cannot handle prop $prop")
       }
-      val ext_class = prop.prop_type match {
-        case DateType() => Some("date")
-        case DateTimeType() => Some("datetime")
-        case _ => None
+      val ext_class = (prop.prop_type, prop.domain) match {
+        case (DateType(), _) => T.Date
+        case (DateTimeType(), _) => T.DateTime
+        case (_, Some(CategoricalDomain(_))) if categorical => T.Categorical
+        case _ => T.Same
       }
-      val field_type = T.FieldType(tpe, ext_class = ext_class)
+
+      val categories = if (ext_class == T.Categorical) {
+        prop.domain match {
+          case Some(CategoricalDomain(Some(cats))) => cats.map(_.name)
+          case Some(CategoricalDomain(None)) => Seq[String]()
+        }
+      } else {
+        Seq[String]()
+      }
+      val field_type = T.FieldType(tpe, ext_class = ext_class, categories = categories)
       T.Field(name = prop.name, field_type = field_type, label = prop.label)
     }
 
@@ -30,5 +40,5 @@ object Graph2TableSchema {
     }
   }
 
-  def builder(schema: VertexSchema): SchemaVertex2TableBuilder = new SchemaVertex2TableBuilder(schema)
+  def builder(schema: VertexSchema, categorical: Boolean = false): SchemaVertex2TableBuilder = new SchemaVertex2TableBuilder(schema, categorical)
 }

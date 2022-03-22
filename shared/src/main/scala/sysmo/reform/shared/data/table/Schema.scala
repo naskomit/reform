@@ -1,7 +1,13 @@
 package sysmo.reform.shared.data.table
 
+sealed trait ExtClass
+case object Same extends ExtClass
+case object Categorical extends ExtClass
+case object Date extends ExtClass
+case object DateTime extends ExtClass
+
 case class FieldType(tpe: VectorType.Value, nullable: Boolean = true,
-                     ext_class: Option[String] = None, metadata: Map[String, String] = Map())
+                     ext_class: ExtClass = Same, categories: Seq[String] = Seq(), metadata: Map[String, String] = Map())
 
 case class Field(name: String, field_type: FieldType, label: Option[String] = None)
 
@@ -12,10 +18,10 @@ case class FieldBuilder(field: Field) {
 
 object Field {
 //  def apply(name: String, field_type: FieldType, label: Option[String] = None): Field = new Field(name, field_type, label)
-  def Int(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Int)))
-  def Real(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Real)))
-  def Bool(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Bool)))
-  def Char(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Char)))
+  def int(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Int)))
+  def real(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Real)))
+  def bool(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Bool)))
+  def char(name: String): FieldBuilder = FieldBuilder(Field(name, FieldType(VectorType.Char)))
 }
 
 

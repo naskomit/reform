@@ -137,9 +137,9 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
           case x => throw new IllegalStateException(f"Cannot handle type $x")
         }
         val ext_class = p.getType match {
-          case OType.DATE => Some("date")
-          case OType.DATETIME => Some("datetime")
-          case _ => None
+          case OType.DATE => sdt.Date
+          case OType.DATETIME => sdt.DateTime
+          case _ => sdt.Same
         }
         sdt.Field(p.getName, sdt.FieldType(field_type, ext_class = ext_class))
       }).toSeq

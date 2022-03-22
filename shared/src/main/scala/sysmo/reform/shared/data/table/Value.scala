@@ -1,49 +1,74 @@
 package sysmo.reform.shared.data.table
 
-import sysmo.reform.shared.data.table.{VectorType => VT}
+sealed trait Value[T] {
+  val v: Option[T]
 
-case class Value(v: Option[_], tpe: VectorType.Value) {
+  def get: T = v.get
+  def get_opt: Option[T] = v
+  def get_or_else(x: T): T = v.getOrElse(x)
+
   def is_set: Boolean = v.isDefined
   def not_set: Boolean = v.isEmpty
   def is_na: Boolean = v.isEmpty
 
+  def as_real: Option[Double] = None
+  def as_int: Option[Int] = None
+  def as_bool: Option[Boolean] = None
+  def as_char: Option[String] = v.map(_.toString)
+  def as_date: Option[java.util.Date] = None
+}
+case class RealValue(v: Option[Double]) extends Value[Double] {
+  override def as_real: Option[Double] = v
+  override def as_int: Option[Int] = v.map(_.round.toInt)
+}
 
+case class IntValue(v: Option[Int]) extends Value[Int] {
+  override def as_real: Option[Double] = v.map(_.toDouble)
+  override def as_int: Option[Int] = v
+  override def as_bool: Option[Boolean] = v.map(_ != 0)
+}
 
-  def as_real: Option[Double] = v match {
-    case Some(v: Double) => Some(v)
-    case Some(v: Int) => Some(v.toDouble)
-    case _ => None
-  }
+case class BoolValue(v: Option[Boolean]) extends Value[Boolean] {
+  override def as_int: Option[Int] = v.map(if (_) 1 else 0)
+  override def as_bool: Option[Boolean] = v
 
-  def as_int: Option[Int] = v match {
-    case Some(v: Double) => Some(v.round.toInt)
-    case Some(v: Int) => Some(v)
-    case _ => None
-  }
+}
 
-  def as_bool: Option[Boolean] = v match {
-//    case v: Double => if (v == 0.0) Some(false) else Some(true)
-    case Some(v: Int) => if (v == 0) Some(false) else Some(true)
-    case Some(v: Boolean) => Some(v)
-    case _ => None
-  }
+case class CharValue(v: Option[String]) extends Value[String] {
+  override def as_char: Option[String] = v
+}
 
-  def as_char: Option[String] = v match {
-    case Some(v: Double) => Some(v.toString)
-    case Some(v: Int) => Some(v.toString)
-    case Some(v: Boolean) => Some(v.toString)
-    case Some(v: String) => Some(v)
+case class DateValue(v: Option[Double]) extends Value[Double] {
+  override def as_date: Option[java.util.Date] = v.map(x => new java.util.Date(x.toLong))
+}
+
+case class CategoricalValue(v: Option[Int], categories: Seq[String]) extends Value[Int] {
+  override def as_int: Option[Int] = v
+  override def as_char: Option[String] = v match {
+    case Some(x: Int) => Some(categories(x))
     case None => None
-  }
-
-  def as_date: Option[java.util.Date] = v match {
-    case Some(v: Double) => Some(new java.util.Date(v.toLong))
-    case _ => None
   }
 }
 
+
 object Value {
-  def apply(v: Option[_], tpe: VT.Value): Value = new Value(v, tpe)
-  object Empty extends Value(None, VectorType.Int)
+  def real(x: Option[Double]) = RealValue(x)
+  def real(x: Double) = RealValue(Some(x))
+  def int(x: Option[Int]) = IntValue(x)
+  def int(x: Int) = IntValue(Some(x))
+  def bool(x: Option[Boolean]) = BoolValue(x)
+  def bool(x: Boolean) = BoolValue(Some(x))
+  def char(x: Option[String]) = CharValue(x)
+  def char(x: String) = CharValue(Some(x))
+  def date(x: Option[Double]) = DateValue(x)
+  def date(x: Double) = DateValue(Some(x))
+  def date(x: java.util.Date) = DateValue(Some(x.getTime.toDouble))
+  def empty(fieldType: FieldType) = fieldType.tpe match {
+    case VectorType.Int => int(None)
+    case VectorType.Real => real(None)
+    case VectorType.Bool => bool(None)
+    case VectorType.Char => char(None)
+  }
+  def empty = IntValue(None)
 }
 

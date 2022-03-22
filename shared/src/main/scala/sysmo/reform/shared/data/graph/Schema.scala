@@ -1,6 +1,7 @@
 package sysmo.reform.shared.data.graph
 
 import scala.collection.mutable
+import sysmo.reform.shared.util.{Named, TNamed}
 
 sealed trait PropType
 case class StringType() extends PropType
@@ -12,12 +13,12 @@ case class DateTimeType() extends PropType
 //case class RefType(to: EntitySchema) extends PropType
 
 sealed trait Domain
-case class DomainItem(value: String, label: Option[String])
-case class DiscreteDomain(options: Seq[DomainItem]) extends Domain
+//case class Category(value: String, label: Option[String])
+case class CategoricalDomain(categories: Option[Seq[Named]] = None) extends Domain
 
-object DiscreteDomain {
-  def unlabelled(options: Seq[String]): DiscreteDomain =
-    DiscreteDomain(options.map(x => DomainItem(x, Some(x))))
+object CategoricalDomain {
+  def unlabelled(categories: Seq[String]): CategoricalDomain =
+    CategoricalDomain(Some(categories.map(x => Named(x, Some(x)))))
 }
 
 case class Prop
@@ -25,7 +26,7 @@ case class Prop
   name: String, label: Option[String],
   prop_type: PropType,
   multiplicity: Int,
-  domain: Option[DiscreteDomain]
+  domain: Option[Domain]
 )
 
 object Prop {
@@ -43,10 +44,24 @@ object Prop {
       prop = prop.copy(multiplicity = value)
       this
     }
+    def categorical: Builder = {
+      prop = prop.copy(domain = Some(CategoricalDomain()))
+      this
+    }
+    def categorical[T: TNamed](items: T*): Builder = {
+      val categories = items.map {
+        case x: String => Named(x, Some(x))
+        case x: Named => x
+        case x => throw new IllegalArgumentException("Either string or Category must be passed to categorical")
+      }.toSeq
+      prop = prop.copy(domain = Some(CategoricalDomain(Some(categories))))
+      this
+    }
     def build: Prop = {
       // check
       prop
     }
+
 
 
   }

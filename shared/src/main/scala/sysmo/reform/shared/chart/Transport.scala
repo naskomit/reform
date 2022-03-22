@@ -1,6 +1,6 @@
 package sysmo.reform.shared.chart
 
-import sysmo.reform.shared.util.{Named, CirceTransport}
+import sysmo.reform.shared.util.{NamedValue, CirceTransport}
 
 object Transport extends CirceTransport {
   import sysmo.reform.shared.query.Transport._

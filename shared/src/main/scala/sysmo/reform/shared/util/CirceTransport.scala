@@ -16,4 +16,6 @@ trait CirceTransport {
   val Encoder = circe.Encoder
   val Decoder = circe.Decoder
   type HCursor = circe.HCursor
+  type Json = circe.Json
+  val Json = circe.Json
 }

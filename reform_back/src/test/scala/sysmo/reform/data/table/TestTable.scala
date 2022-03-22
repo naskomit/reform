@@ -16,7 +16,7 @@ object TestTable {
       b1 ++= Seq(3.0, 5.0, 8.0).map(Some(_))
       val v1 = b1.toVector
       println(v1)
-      println(v1.map2(x => 2 * x))
+      println(v1.vmap(x => 2 * x))
       val v2 = v1.range(1, 1)
       println(v2)
 
@@ -24,15 +24,11 @@ object TestTable {
       v2.close()
 
       val v3_seq = Seq(
-        tm.vec_from(Seq(1.0, 2.0, 4.0), "v3_real"),
-        tm.vec_from(Seq(1, 2, 4), "v3_real"),
-        tm.vec_from(Seq(true, true, false), "v3_real"),
-        tm.vec_from(Seq("John", "Peter", "James"), "v3_real")
+        tm.vec_from(Seq(1.0, 2.0, 4.0, 2.0), "v3_real"),
+        tm.vec_from(Seq(1, 2, 4, 2), "v3_real"),
+        tm.vec_from(Seq(true, true, false, true), "v3_real"),
+        tm.vec_from(Seq("John", "Peter", "James", "Peter"), "v3_real")
       )
-      //      v3_seq.foreach(v => {
-      //        println(v)
-      //        v.close()
-      //      })
 
       // Testing series
       val bs_1 = tm.incremental_series_builder(sdt.Field("bs_1", sdt.FieldType(sdt.VectorType.Real)))
@@ -51,7 +47,7 @@ object TestTable {
       ))
 
       val tb_1 = tm.incremental_table_builder(schema)
-      for (i <- 0 until 3) {
+      for (i <- 0 until 4) {
         var row_data = Map(
           "real" -> v3_seq(0)(i), "int" -> v3_seq(1)(i),
           "bool" -> v3_seq(2)(i), "char" -> v3_seq(3)(i)
@@ -64,23 +60,21 @@ object TestTable {
       val tbl_1 = tb_1.toTable
       pprint(tbl_1)
 
-      // JSON encoding/decoding
-      println(s1)
-      import io.circe.syntax._
       import sdt.Transport._
 
       println("==================== Test Vector Serialization ====================")
       round_trip(s1)
       println("==================== Test Table Serialization ====================")
       round_trip(tbl_1)
-      //      val s1_json = s1.asJson
-      //      val s1_back = s1_json.as[sdt.Series]
-      //      println(s1)
-      //      println(s1_json)
-      //      println(s1_back)
 
 
-
+      println("==================== Test Categorical ====================")
+      val s_char = tbl_1.column("char")
+      val s_cat = s_char.to_categorical()
+      println(s_cat)
+      println(s_cat.categories)
+      println(s_cat.vmap(schema.field(3).get)(x => sdt.Value.char(x.as_char)))
     }}
+
   }
 }

@@ -2,7 +2,7 @@ package sysmo.reform.shared.data.table
 
 trait TableBuilder {
   def :+(row_data: Map[String, Option[Any]]): Unit
-  def append_value_map(row_data: Map[String, Value]): Unit
+  def append_value_map(row_data: Map[String, Value[_]]): Unit
   def toTable: Table
 }
 
@@ -18,7 +18,7 @@ class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) 
     }
   }
 
-  def append_value_map(row_data: Map[String, Value]): Unit = {
+  def append_value_map(row_data: Map[String, Value[_]]): Unit = {
     for (field <- schema.fields) {
       row_data.get(field.name) match {
         case Some(x) => column_map(field.name).append_value(x)
@@ -35,7 +35,7 @@ trait Table {
   var schema: Schema
   def nrow: Int
   def ncol: Int
-  def get(row: Int, col: Int): Value
+  def get(row: Int, col: Int): Value[_]
   def column(index: Int): Series
   def column(name: String): Series
   def row(row_id: Int): Row
@@ -56,7 +56,7 @@ class TableImpl(var schema: Schema, var column_data: Seq[Series]) extends Table 
 
   def nrow: Int = if (column_data.isEmpty) 0 else column_data(0).length
   def ncol: Int = column_data.size
-  def get(row: Int, col: Int): Value = column_data(col).get(row)
+  def get(row: Int, col: Int): Value[_] = column_data(col).get(row)
   def column(index: Int): Series = column_data(index)
   def column(name: String): Series = columnMap(name)
   def row(row_id: Int): Row = {

@@ -3,7 +3,7 @@ package sysmo.reform.shared.chart
 import io.circe.Json
 
 import scala.collection.mutable
-import sysmo.reform.shared.util.Named
+import sysmo.reform.shared.util.NamedValue
 import sysmo.reform.shared.{query => Q}
 
 /** Request */
@@ -23,13 +23,13 @@ case class Plotly(content: Json) extends ChartObject
 case class PlotlyAsText(content: String) extends ChartObject
 
 
-case class ChartResult(items: Seq[Named[ChartObject]])
+case class ChartResult(items: Seq[NamedValue[ChartObject]])
 
 object ChartResult {
   class Builder {
-    val items = new mutable.ArrayBuffer[Named[ChartObject]]
+    val items = new mutable.ArrayBuffer[NamedValue[ChartObject]]
     def add(item: Product2[String, ChartObject]): this.type = {
-      items += Named(item._1, None, item._2)
+      items += NamedValue(item._1, None, item._2)
       this
     }
 

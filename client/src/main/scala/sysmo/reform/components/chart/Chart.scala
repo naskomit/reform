@@ -3,7 +3,7 @@ package sysmo.reform.components.chart
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.plots.Plotly
-import sysmo.reform.shared.util.Named
+import sysmo.reform.shared.util.NamedValue
 import sysmo.reform.shared.{chart => Ch}
 
 object Chart extends ReactComponent {
@@ -17,7 +17,7 @@ object Chart extends ReactComponent {
       val children: Seq[TagMod] = p.chart_result match {
         case None => Seq(<.div("Nothing to show"))
         case Some(Ch.ChartResult(items)) => items.map {
-          case child@ Named(name, label, content: Ch.Plotly) => {
+          case child@ NamedValue(name, label, content: Ch.Plotly) => {
             val label = child.make_label
             <.div(<.h2(label), Plotly("800", "600", content))
           }
