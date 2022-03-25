@@ -26,12 +26,18 @@ object ChartPanel extends ApplicationPanel {
           <.div(^.cls:= "page-title",
             <.h1("Charts")
           ),
-          <.div(^.cls:= "wrapper wrapper-white",
-            ChartContainer(
-              ChartManager.distribution(
-                Ch.DistributionSettings("Clinical", "18"),
-                Map("Data" -> clin_schema)
-              ), height = 600
+          <.div(^.className:= "row",
+            <.div(^.className:= "col-md-1"),
+            <.div(^.className:= "col-md-10",
+              <.div(^.cls:= "wrapper wrapper-white",
+                ChartContainer(
+                  ChartManager.distribution(
+                    Ch.DistributionSettings("Clinical", "18"),
+                    Map("Data" -> clin_schema)
+                  ), height = 600
+                )
+              )
+
             )
           )
         )

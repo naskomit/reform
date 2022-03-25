@@ -73,10 +73,10 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
         <.div(
           ^.style := js.Dictionary("height" -> 50),
           s.active match {
-            case ActiveChart => <.div(
+            case ActiveChart => <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
               <.button(^.cls := "btn btn-primary", "Settings", ^.onClick --> dsp(ActivateSettins))
             )
-            case ActiveSettings => <.div(
+            case ActiveSettings => <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
               <.button(^.cls := "btn btn-primary", "Ok", ^.onClick --> dsp(OkSettings)),
               <.button(^.cls := "btn btn-primary", "Cancel", ^.onClick --> dsp(CancelSettings))
             )
