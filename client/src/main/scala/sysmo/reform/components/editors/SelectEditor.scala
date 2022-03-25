@@ -19,27 +19,9 @@ object SelectEditor extends AbstractEditor {
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
-    println("Created SelectEditor backend")
+//    println("Created SelectEditor backend")
     val action_generator : ActionStreamGenerator[EditorAction] =
       ActionStreamGenerator[EditorAction]
-
-//    val choices_listener : Observer[Seq[EnumeratedOption]] =
-//      new Observer[Seq[EnumeratedOption]] {
-//        override def onNext(choices: Seq[EnumeratedOption]): Future[Ack] = {
-//          $.modState(s => s.copy(choices = choices)).runNow()
-//          Ack.Continue
-//        }
-//
-//        override def onError(ex: Throwable): Unit = ???
-//
-//        override def onComplete(): Unit = ???
-//      }
-//
-//    private var choice_subscription: Cancelable = _
-//
-//    def subscribe_to_choices(p: Props): Callback = Callback {
-//      choice_subscription = p.choice_stream.subscribe(choices_listener)
-//    }
 
     def render(p: Props, s: State) : VdomElement = {
       <.div(^.className:= "form-group", ^.key:= p.id,

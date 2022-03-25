@@ -19,7 +19,7 @@ object Chart extends ReactComponent {
         case Some(Ch.ChartResult(items)) => items.map {
           case child@ NamedValue(name, label, content: Ch.Plotly) => {
             val label = child.make_label
-            <.div(<.h2(label), Plotly("800", "600", content))
+            <.div(<.h2(label), Plotly("100%", "100%", content))
           }
 
         }
@@ -31,7 +31,7 @@ object Chart extends ReactComponent {
 
   // : Scala.Component[Props, State, Backend, _]
   val component =
-    ScalaComponent.builder[Props]("Form1")
+    ScalaComponent.builder[Props]("Chart")
     .initialState(State())
     .renderBackend[Backend]
     .build

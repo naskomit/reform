@@ -10,7 +10,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Trave
 import org.apache.tinkerpop.gremlin.structure.T
 import sysmo.coviddata.CSVDataSource
 import sysmo.coviddata.shared.data.PatientRecord
-import sysmo.reform.shared.data.{RecordMeta, RecordWithMeta}
+import sysmo.reform.shared.data.{DummyOptionProvider, RecordMeta, RecordWithMeta, graph => G, table => sdt}
 import sysmo.reform.shared.gremlin.GraphsonEncoder
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.util.Logging
@@ -18,9 +18,7 @@ import upickle.default._
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
-import sysmo.reform.shared.data.{table => sdt}
 import sdt.Printers._
-import sysmo.reform.shared.data.{graph => G}
 import sysmo.reform.shared.util.pprint
 
 class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {

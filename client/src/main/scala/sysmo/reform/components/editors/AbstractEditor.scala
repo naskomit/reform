@@ -1,5 +1,7 @@
 package sysmo.reform.components.editors
 
-trait AbstractEditor {
+import sysmo.reform.components.ReactComponent
+
+trait AbstractEditor extends ReactComponent {
 
 }

@@ -6,16 +6,16 @@ import scala.reflect.ClassTag
 import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
-import monix.execution.cancelables.SingleAssignCancelable
+import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.editors.{EditorAction, SelectEditor, StringEditor, ValueChanged}
-import sysmo.reform.data.{RecordAction, UpdateField}
 import sysmo.reform.components.actions.ActionHub
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, Record, RecordField, RecordMeta, RecordWithMeta}
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
+import sysmo.reform.util.TypeSingleton
 
 
 // TODO Handle premature component unmount
-class StreamingFormEditor[U <: Record] {
+class StreamingFormEditor[U <: Record] extends ReactComponent {
 
   import japgolly.scalajs.react._
   import japgolly.scalajs.react.vdom.html_<^._
@@ -65,12 +65,6 @@ class StreamingFormEditor[U <: Record] {
             val RecordField(f_name, f_label, f_tpe, f_domain) = p.meta.fields(k)
             (f_tpe, f_domain) match {
               case (_, Some(EnumeratedDomain(options))) => {
-//                val option_stream: Observable[Seq[EnumeratedOption]] = Observable.create(OverflowStrategy.Unbounded) {
-//                  sub => sub.onNext(options)
-//                  val c = SingleAssignCancelable()
-//
-//                  c := Cancelable(() => None)
-//                }
 
                 SelectEditor(
                   f_name, p.record_id, f_label,
@@ -111,32 +105,27 @@ class StreamingFormEditor[U <: Record] {
       .renderBackend
       .componentDidMount({
         println("FormEditor mounted")
-        f => f.backend.subscribe_to_records(f.props)})
+        f => f.backend.subscribe_to_records(f.props)
+      })
       .componentWillUnmount(f => f.backend.unsubscribe_from_records())
 //      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }
 
-object StreamingFormEditor {
-  case class Props[U <: Record](record_id: String, layout: FormLayout, rec_manager: StreamingRecordManager[U], meta: RecordMeta[U])
+object StreamingFormEditor extends TypeSingleton[StreamingFormEditor, Record] {
+  case class Props[U <: Record](record_id: String, layout: FormLayout,
+                                rec_manager: StreamingRecordManager[U],
+                                meta: RecordMeta[U])
   case class State[U <: Record](value: Option[U] = None,
                    state_subscription: Option[Cancelable] = None)
 
+  override def create_instance[U <: Record](implicit tag: ClassTag[U]): StreamingFormEditor[U] = new StreamingFormEditor[U]
 
-  val component_classes : mutable.Map[ClassTag[_], StreamingFormEditor[Record]] =
-    mutable.Map()
-
-  def get_component[U <: Record](tag: ClassTag[_]) =
-    component_classes.getOrElseUpdate(tag, {
-      println(f"Creating component for ${tag.runtimeClass}")
-      (new StreamingFormEditor[U]).asInstanceOf[StreamingFormEditor[Record]]
-    }).asInstanceOf[StreamingFormEditor[U]].component
-
-
-  def apply[U <: Record](rec_manager: StreamingRecordManager[U], record_id: String, layout : FormLayout = ColumnarLayout(2))
-                        (implicit meta_holder: RecordWithMeta[U], tag: ClassTag[U]) = {
-    get_component[U](tag)(Props[U](record_id, layout, rec_manager, meta_holder._meta))
+  def apply[U <: Record](rec_manager: StreamingRecordManager[U], record_id: String,
+                         meta: RecordMeta[U], layout : FormLayout = ColumnarLayout(2))
+                        (implicit tag: ClassTag[U]) = {
+    get_instance(tag).component(Props[U](record_id, layout, rec_manager, meta))
   }
 
 }

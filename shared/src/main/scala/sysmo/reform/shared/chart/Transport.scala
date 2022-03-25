@@ -11,7 +11,7 @@ object Transport extends CirceTransport {
   implicit val codec_QuerySource: Codec[QuerySource] = deriveCodec[QuerySource]
 
   implicit val codec_ChartDefinition: Codec[ChartDefinition] = deriveCodec[ChartDefinition]
-  implicit val codec_Histogram: Codec[Histogram] = deriveCodec[Histogram]
+  implicit val codec_Histogram: Codec[DistributionSettings] = deriveCodec[DistributionSettings]
 //  implicit val codec_: Codec[] = deriveCodec[]
 
   implicit val codec_ChartRequest: Codec[ChartRequest] = deriveCodec[ChartRequest]

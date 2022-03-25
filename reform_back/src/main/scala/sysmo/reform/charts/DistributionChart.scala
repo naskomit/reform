@@ -8,7 +8,7 @@ import plotly.{Config, Histogram, Plotly}
 
 
 object DistributionChart {
-  def generate(data: Map[String, sdt.Table], chart_def: Ch.Histogram): Ch.ChartResult = {
+  def generate(data: Map[String, sdt.Table], chart_def: Ch.DistributionSettings): Ch.ChartResult = {
 
     val x = data.get(chart_def.data_id)
       .map(table => table.column(chart_def.column_id))
@@ -28,7 +28,7 @@ object DistributionChart {
     val plot_json = parser.parse(plot).getOrElse(Json.obj())
 
     Ch.ChartResult.builder
-        .add("one" -> Ch.Plotly(plot_json)).label("First Plot")
+        .add("one" -> Ch.Plotly(plot_json)).label("Plot label")
         .build
   }
 }
