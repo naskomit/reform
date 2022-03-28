@@ -7,8 +7,10 @@ import org.scalajs.dom
 import sysmo.reform.components.ReactAction
 import sysmo.reform.components.actions.ActionStreamGenerator
 import sysmo.reform.components.select.ReactSelectFacades
-import sysmo.reform.shared.data.{EnumeratedOption, OptionFilter, OptionProvider, RecordField}
+import sysmo.reform.shared.data.{EnumeratedOption, FieldOptionProvider, FieldValue, NoFilter, NoValue, OptionFilter, OptionProvider, RecordField, SomeValue}
 
+import scala.concurrent.Future
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object AsyncSelectEditorFSM {
   sealed trait EditorMode
@@ -25,9 +27,10 @@ object AsyncSelectEditorFSM {
 
 object AsyncSelectEditor extends AbstractEditor {
   import sysmo.reform.components.editors.{AsyncSelectEditorFSM => fsm}
+  import ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 
-  case class Props(field : RecordField, record_id: String, values : Seq[String],
-                   action_listener: Observer[EditorAction])
+  case class Props(field : RecordField, record_id: String, value : FieldValue[String],
+                   action_listener: Observer[EditorAction], option_provider: FieldOptionProvider)
   case class State(mode: fsm.EditorMode, selection: fsm.Selection, choices: Seq[EnumeratedOption])
 
   final class Backend($: BackendScope[Props, State]) extends IBackend {
@@ -44,23 +47,30 @@ object AsyncSelectEditor extends AbstractEditor {
     // is_loading: Option[Boolean] = None,
     // is_clearable: Option[Boolean] = None,
     // is_searchable: Option[Boolean] = None
-    val on_input_changed = (x: String, y: Any) => {
-      println("On Input Changed")
-      dom.console.log(x)
-      dom.console.log(y)
+    def on_input_changed(p: Props, s: State): RSNC.OnInputChange = (x: String, y: Any) => {
     }
-    val on_menu_open = () => {
-      println("On menu open")
+
+    def on_menu_open(p: Props, s: State): RSNC.OnMenuOpen = () => {
+      p.option_provider.get(NoFilter)
+        .map(choices => {
+          $.modState(s => s.copy(choices = choices)).runNow()
+        })
+      ()
     }
+
     def render(p: Props, s: State) : VdomElement = {
       <.div(^.className:= "form-group", ^.key:= p.field.name,
         <.label(p.field.label),
         s.mode match {
-          case fsm.Unfocused => ReactSelectFacades.ReactSelectNativeComponent(
-            p.values.headOption.map(x => EnumeratedOption(x, x)),
+          case fsm.Unfocused => RSNC(
+            p.value match {
+              case SomeValue(x) => Some(EnumeratedOption(x, x))
+              case NoValue() => None
+            },
             s.choices,
-            on_input_changed = Some(on_input_changed),
-            on_menu_open = Some(on_menu_open)
+            on_input_changed = Some(on_input_changed(p, s)),
+            on_menu_open = Some(on_menu_open(p, s)),
+            is_clearable = Some(true)
           )
         }
       )
@@ -88,7 +98,7 @@ object AsyncSelectEditor extends AbstractEditor {
 //    .configure(Reusability.shouldComponentUpdate)
     .build
 
-  def apply(field : RecordField, record_id: String, values : Seq[String],
-            action_listener: Observer[EditorAction]) =
-    component(Props(field, record_id, values, action_listener))
+  def apply(field : RecordField, record_id: String, value : FieldValue[String],
+            action_listener: Observer[EditorAction], option_provider: FieldOptionProvider) =
+    component(Props(field, record_id, value, action_listener, option_provider))
 }

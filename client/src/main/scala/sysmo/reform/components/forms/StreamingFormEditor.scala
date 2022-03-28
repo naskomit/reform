@@ -7,28 +7,36 @@ import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, SelectEditor, StringEditor, ValueChanged}
+import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, SelectEditor, SetValue, StringEditor, UpdateValue}
 import sysmo.reform.components.actions.ActionHub
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, OptionFilter, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldOptionProvider, FieldValue, OptionFilter, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
 import sysmo.reform.util.TypeSingleton
 
 
 // TODO Handle premature component unmount
+object FormEditorModeFSM {
+  sealed trait FormEditorMode
+  case object Uninitialized extends FormEditorMode
+  case object Initialized extends FormEditorMode
+}
+
 class StreamingFormEditor[U <: Record] extends ReactComponent {
 
   import japgolly.scalajs.react._
   import japgolly.scalajs.react.vdom.html_<^._
+  import sysmo.reform.components.forms.{FormEditorModeFSM => fsm}
 
   type Props_ = StreamingFormEditor.Props[U]
-  type State_ = StreamingFormEditor.State[U]
+  type State_ = StreamingFormEditor.State
+
 
   final class Backend($: BackendScope[Props_, State_]) {
     println("Created StreamingFormEditor backend")
 
-    private val state_observer = new Observer[U] {
-      override def onNext(elem: U): Future[Ack] = {
-        $.modState(s => s.copy(value = Some(elem))).runNow()
+    private val state_observer = new Observer[Record.ValueMap] {
+      override def onNext(elem: Record.ValueMap): Future[Ack] = {
+        $.modState(s => s.copy(value = elem)).runNow()
         Ack.Continue
       }
 
@@ -42,7 +50,7 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
 
     def to_record_actions(key: String, editor_action: EditorAction): Seq[RecordAction] =
       editor_action match {
-        case ValueChanged(v) => Seq(UpdateField("Form1", key, v))
+        case a : UpdateValue => Seq(UpdateField("Form1", key, a))
         case _ => Seq()
       }
 
@@ -56,25 +64,28 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
       state_subscription.cancel()
     }
 
-    // TODO cancel subscription on unmount
-
     def render(p: Props_, s: State_): VdomElement = {
-      s.value match {
-        case Some(data) => {
+      s.mode match {
+        case fsm.Uninitialized => <.div("Initializing")
+        case fsm.Initialized => {
           val field_editors = p.meta.field_keys.map(k => {
             val field = p.meta.fields(k)
             val RecordField(f_name, f_label, f_tpe, f_domain) = field
             (f_tpe, f_domain) match {
               case (_, Some(EnumeratedDomainSource(option_provider, _))) => {
 
-//                val field_option_provider = (flt: OptionFilter) => {
-//                  option_provider.get(s.value, f_name, flt)
-//                }
+                //                val field_option_provider = (flt: OptionFilter) => {
+                //                  option_provider.get(s.value, f_name, flt)
+                //                }
 
                 AsyncSelectEditor(
                   field, p.record_id,
-                  Seq(p.meta.get_value(data, k).toString),
-                  action_hub.in_observers(k.toString)
+                  s.value(field.name).asInstanceOf[FieldValue[String]],
+                  action_hub.in_observers(k.toString),
+                  new FieldOptionProvider {
+                    override def get(flt: OptionFilter): Future[Seq[EnumeratedOption]] =
+                      p.meta.option_provider.get(s.value, field.name, flt)
+                  }
                 )
 
               }
@@ -82,19 +93,16 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
               case _ =>
                 StringEditor(
                   f_name, p.record_id, field.make_label,
-                  p.meta.get_value(data, k).toString,
+                  s.value(field.name).asInstanceOf[FieldValue[String]],
                   action_hub.in_observers(k.toString)
-              )
+                )
             }
           })
 
           <.form(^.className := "form",
             p.layout.to_component(field_editors.map(x => x.vdomElement)))
         }
-
-        case None => <.div("Loading form data")
       }
-
     }
   }
 
@@ -104,12 +112,14 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
 
   val component =
     ScalaComponent.builder[Props_]("FormEditor")
-      .initialState(StreamingFormEditor.State[U]())
+      .initialStateFromProps(p => StreamingFormEditor.State(p.rec_manager.state, mode = fsm.Uninitialized))
       .backend(new Backend(_))
       .renderBackend
       .componentDidMount({
         println("FormEditor mounted")
-        f => f.backend.subscribe_to_records(f.props)
+        f => {
+          f.backend.subscribe_to_records(f.props) >> f.modState(s => s.copy(mode = fsm.Initialized))
+        }
       })
       .componentWillUnmount(f => f.backend.unsubscribe_from_records())
 //      .configure(Reusability.shouldComponentUpdate)
@@ -118,11 +128,14 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
 }
 
 object StreamingFormEditor extends TypeSingleton[StreamingFormEditor, Record] {
+  import sysmo.reform.components.forms.{FormEditorModeFSM => fsm}
+
   case class Props[U <: Record](record_id: String, layout: FormLayout,
                                 rec_manager: StreamingRecordManager[U],
                                 meta: RecordMeta[U])
-  case class State[U <: Record](value: Option[U] = None,
-                   state_subscription: Option[Cancelable] = None)
+  case class State(value: Record.ValueMap,
+                   state_subscription: Option[Cancelable] = None,
+                   mode: fsm.FormEditorMode)
 
   override def create_instance[U <: Record](implicit tag: ClassTag[U]): StreamingFormEditor[U] = new StreamingFormEditor[U]
 

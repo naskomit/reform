@@ -16,7 +16,7 @@ sealed trait ChartDefinition
 case class DistributionSettings(data_id: String, column_id: String) extends ChartDefinition with ChartSettings
 object DistributionSettings {
   implicit val tometa: RecordWithMeta[DistributionSettings] = new RecordWithMeta[DistributionSettings] {
-    override def _meta(option_provider: OptionProvider[DistributionSettings]): RecordMeta[DistributionSettings] =
+    override def _meta(option_provider: OptionProvider): RecordMeta[DistributionSettings] =
       new DistributionMeta(option_provider)
   }
 }

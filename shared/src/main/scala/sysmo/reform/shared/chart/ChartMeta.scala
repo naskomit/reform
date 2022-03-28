@@ -1,8 +1,9 @@
 package sysmo.reform.shared.chart
 
-import sysmo.reform.shared.data.{EnumeratedDomain, NoFilter, OptionFilter, OptionProvider, RecordField, RecordMeta, RecordWithMeta, StringType}
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldValue, NoFilter, OptionFilter, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta, SomeValue, StringType}
 
 import scala.collection.immutable.VectorMap
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 //Distribution(data_id: String, column_id: String)
@@ -12,18 +13,52 @@ object DistributionMeta {
   }
 }
 
-class DistributionMeta(val option_provider: OptionProvider[DistributionSettings]) extends RecordMeta[DistributionSettings] {
+class DistributionMeta(val option_provider: OptionProvider) extends RecordMeta[DistributionSettings] {
   val FieldEnum = DistributionMeta.FieldEnum
   val id = "Distribution"
   override type FieldKey = FieldEnum.Value
+//  case class Companion(data_id: FieldValue[String], column_id: FieldValue[String])
+
+  override def value_map(u: RecordType): Record.ValueMap = {
+    Map[String, FieldValue[_]](
+      "data_id" -> SomeValue(u.data_id),
+      "column_id" -> SomeValue(u.column_id)
+    )
+  }
+
+  override def validate(c: Record.ValueMap): Either[Map[String, Throwable], RecordType] = {
+    val errors = mutable.HashMap[String, Throwable]()
+
+    val v1 = c("data_id") match {
+      case SomeValue(v : String) => Some(v)
+      case _ => {
+        errors("data_id") = new IllegalArgumentException("Incorrect value for 'data_id'")
+        None
+      }
+    }
+
+    val v2 = c("column_id") match {
+      case SomeValue(v : String) => Some(v)
+      case _ => {
+        errors("column_id") = new IllegalArgumentException("Incorrect value for 'column_id'")
+        None
+      }
+    }
+
+    if (errors.isEmpty) {
+      Right(DistributionSettings(v1.get, v2.get))
+    } else {
+      Left(errors.toMap)
+    }
+  }
 
   override val field_keys = Seq(FieldEnum.data_id, FieldEnum.column_id)
 
   override val fields = VectorMap(
-    FieldEnum.data_id -> RecordField(name = "data_id", label = "Data",
-      tpe = StringType(), domain = None),
-    FieldEnum.column_id -> RecordField(name = "column_id", label = "Column",
-      tpe = StringType(), domain = None)
+    FieldEnum.data_id -> RecordField(name = "data_id", label = Some("Data"),
+      tpe = StringType(), domain = Some(EnumeratedDomainSource(option_provider, "data_id"))),
+    FieldEnum.column_id -> RecordField(name = "column_id", label = Some("Column"),
+      tpe = StringType(), domain = Some(EnumeratedDomainSource(option_provider, "column_id")))
   )
 
   override def field_key(name: String): FieldKey = FieldEnum.withName(name)
@@ -42,14 +77,5 @@ class DistributionMeta(val option_provider: OptionProvider[DistributionSettings]
     }
   }
 
-  override def update_options(obj: DistributionSettings, key: FieldKey, flt: OptionFilter)(implicit ec: ExecutionContext): Future[Unit] = {
-    option_provider.get(obj, key.toString, NoFilter).map(opts => {
-      fields(key).domain = Some(EnumeratedDomain(opts))
-    })
-  }
-
-  def on_change(obj: DistributionSettings, key: FieldKey)(implicit ec: ExecutionContext): Future[Unit] = key match {
-    case FieldEnum.data_id => update_options(obj, FieldEnum.column_id, NoFilter)
-  }
 }
 

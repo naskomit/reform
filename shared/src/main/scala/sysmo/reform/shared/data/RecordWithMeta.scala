@@ -3,7 +3,17 @@ package sysmo.reform.shared.data
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
+
+sealed trait FieldValue[+V] extends Equals
+case class NoValue[V]() extends FieldValue[V]
+case class AllValues[V]() extends FieldValue[V]
+case class SomeValue[V](v: V) extends FieldValue[V]
+case class MultiValue[V](v: Seq[V]) extends FieldValue[V]
+
 trait Record extends Equals
+object Record {
+  type ValueMap = Map[String, FieldValue[_]]
+}
 
 sealed trait FieldType
 case class StringType() extends FieldType
@@ -16,34 +26,50 @@ sealed trait Domain
 case class EnumeratedOption(value: String, label: String)
 case class EnumeratedDomain(options: Seq[EnumeratedOption]) extends Domain {
 }
+
 object EnumeratedDomain {
   def apply[X: ClassTag](options: Seq[String]): EnumeratedDomain =
     EnumeratedDomain(options.map(x => EnumeratedOption(x, x)))
-
 }
 
-case class RecordField(name: String, label: String, tpe: FieldType, var domain: Option[Domain] = None)
+case class EnumeratedDomainSource[-U](option_provider: OptionProvider, field_id: String) extends Domain {
+  def get(record: Record.ValueMap, flt: OptionFilter): Future[Seq[EnumeratedOption]] = {
+    option_provider.get(record, field_id, flt)
+  }
+}
+
+case class RecordField(name: String, label: Option[String], tpe: FieldType, domain: Option[Domain] = None) {
+  def make_label: String = label.getOrElse(name)
+}
 
 
 sealed trait OptionFilter
 case object NoFilter extends OptionFilter
 case class StringFilter(exp: String) extends OptionFilter
 
-trait OptionProvider[-U] {
-  def get(record: U, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]]
+trait OptionProvider {
+  def get(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]]
 }
 
-object DummyOptionProvider extends OptionProvider[Any] {
-  def get(record: Any, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]] =
+object DummyOptionProvider extends OptionProvider {
+  def get(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]] =
     Future.successful(Seq())
 }
 
+trait FieldOptionProvider {
+  def get(flt: OptionFilter): Future[Seq[EnumeratedOption]]
+}
+
 trait RecordMeta[U] extends Equals {
+  type RecordType = U
   val id: String
   type FieldKey
   val field_keys: Seq[FieldKey]
   val fields : Map[FieldKey, RecordField]
-  val option_provider: OptionProvider[U]
+  val option_provider: OptionProvider
+
+  def value_map(u: RecordType): Record.ValueMap
+  def validate(c: Record.ValueMap): Either[Map[String, Throwable], RecordType]
 
   def field_key(name : String): FieldKey
 
@@ -65,7 +91,7 @@ trait RecordMeta[U] extends Equals {
 
   def update_value(obj: U, key : FieldKey, value : Any): U
 
-  def update_options(obj: U, key : FieldKey, flt: OptionFilter)(implicit ec: ExecutionContext): Future[Unit]
+//  def update_options(obj: U, key : FieldKey, flt: OptionFilter)(implicit ec: ExecutionContext): Future[Unit]
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[RecordMeta[U]]
 
@@ -75,9 +101,10 @@ trait RecordMeta[U] extends Equals {
   }
 }
 
+
 trait RecordWithMeta[U] {
   def _meta: RecordMeta[U] = _meta(DummyOptionProvider)
-  def _meta(option_provider: OptionProvider[U]): RecordMeta[U]
+  def _meta(option_provider: OptionProvider): RecordMeta[U]
 }
 
 

@@ -39,7 +39,7 @@ object ChartPanel extends ApplicationPanel {
                 ChartContainer(
                   ChartManager.distribution(
                     Ch.DistributionSettings("Clinical", "18"),
-                    Map("Data" -> clin_schema)
+                    Map("Clinical" -> clin_schema, "Socio-demographic" -> socio_demographic_schema)
                   ), height = 600
                 )
               )
@@ -53,7 +53,7 @@ object ChartPanel extends ApplicationPanel {
                 ChartContainer(
                   ChartManager.distribution(
                     Ch.DistributionSettings("SocioDemographic", "3"),
-                    Map("Data" -> socio_demographic_schema)
+                    Map("Clinical" -> clin_schema, "Socio-demographic" -> socio_demographic_schema)
                   ), height = 600
                 )
               )
