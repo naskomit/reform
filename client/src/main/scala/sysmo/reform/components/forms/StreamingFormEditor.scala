@@ -7,10 +7,10 @@ import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.editors.{EditorAction, SelectEditor, StringEditor, ValueChanged}
+import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, SelectEditor, StringEditor, ValueChanged}
 import sysmo.reform.components.actions.ActionHub
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedOption, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, OptionFilter, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
 import sysmo.reform.util.TypeSingleton
 
 
@@ -62,14 +62,18 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
       s.value match {
         case Some(data) => {
           val field_editors = p.meta.field_keys.map(k => {
-            val RecordField(f_name, f_label, f_tpe, f_domain) = p.meta.fields(k)
+            val field = p.meta.fields(k)
+            val RecordField(f_name, f_label, f_tpe, f_domain) = field
             (f_tpe, f_domain) match {
-              case (_, Some(EnumeratedDomain(options))) => {
+              case (_, Some(EnumeratedDomainSource(option_provider, _))) => {
 
-                SelectEditor(
-                  f_name, p.record_id, f_label,
-                  p.meta.get_value(data, k).toString,
-                  options,
+//                val field_option_provider = (flt: OptionFilter) => {
+//                  option_provider.get(s.value, f_name, flt)
+//                }
+
+                AsyncSelectEditor(
+                  field, p.record_id,
+                  Seq(p.meta.get_value(data, k).toString),
                   action_hub.in_observers(k.toString)
                 )
 
@@ -77,7 +81,7 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
 
               case _ =>
                 StringEditor(
-                  f_name, p.record_id, f_label,
+                  f_name, p.record_id, field.make_label,
                   p.meta.get_value(data, k).toString,
                   action_hub.in_observers(k.toString)
               )

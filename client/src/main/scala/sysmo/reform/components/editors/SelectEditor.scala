@@ -27,7 +27,7 @@ object SelectEditor extends AbstractEditor {
       <.div(^.className:= "form-group", ^.key:= p.id,
         <.label(p.label),
         ReactSelectFacades.ReactSelectNativeComponent(
-          p.choices(0),
+          Some(p.choices(0)),
           p.choices
         )
       )

@@ -28,7 +28,7 @@ object DistributionChart {
     val plot_json = parser.parse(plot).getOrElse(Json.obj())
 
     Ch.ChartResult.builder
-        .add("one" -> Ch.Plotly(plot_json)).label("Plot label")
+        .add("one" -> Ch.Plotly(plot_json)).label("Plot 1")
         .build
   }
 }

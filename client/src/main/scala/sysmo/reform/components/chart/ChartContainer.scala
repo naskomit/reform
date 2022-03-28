@@ -1,6 +1,8 @@
 package sysmo.reform.components.chart
 
 import japgolly.scalajs.react.vdom.html_<^.{<, _}
+import org.scalajs.dom
+import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.components.{ReactAction, ReactComponent}
 import sysmo.reform.managers.ChartManager
 import sysmo.reform.shared.chart.ChartSettings
@@ -44,7 +46,7 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
       def update_chart: AsyncCallback[Unit] = {
 
         future_effect[Ch.ChartResult](
-          delay_future(props.chart_manager.chart_service.chart(props.chart_manager.request()), 500),
+          props.chart_manager.chart_service.chart(props.chart_manager.request()),
           res => $.modState(s => s.copy(chart_result = Some(res))).asAsyncCallback,
           err => $.modState(s => s.copy(chart_result = None)).asAsyncCallback
         )
@@ -73,13 +75,14 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
         <.div(
           ^.style := js.Dictionary("height" -> 50),
           s.active match {
-            case ActiveChart => <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
-              <.button(^.cls := "btn btn-primary", "Settings", ^.onClick --> dsp(ActivateSettins))
-            )
-            case ActiveSettings => <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
-              <.button(^.cls := "btn btn-primary", "Ok", ^.onClick --> dsp(OkSettings)),
-              <.button(^.cls := "btn btn-primary", "Cancel", ^.onClick --> dsp(CancelSettings))
-            )
+            case ActiveChart => ButtonToolbar.builder
+                .button("Settings", dsp(ActivateSettins))
+                .build
+
+            case ActiveSettings => ButtonToolbar.builder
+                .button("Ok", dsp(OkSettings))
+                .button("Cancel", dsp(CancelSettings))
+                .build
 
             case Loading => <.div()
           }
@@ -112,7 +115,6 @@ object ChartContainer extends TypeSingleton[ChartContainer, ChartSettings] {
   import ChartContainerDefs._
 
   override def create_instance[U <: ChartSettings](implicit tag: ClassTag[U]): ChartContainer[U] = new ChartContainer[U]
-
   def apply[U <: ChartSettings : ClassTag](chart_manager: ChartManager[U], height: Int)(implicit tag: ClassTag[U]) = {
     get_instance(tag).component(Props[U](chart_manager, height))
   }
