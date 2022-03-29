@@ -1,7 +1,7 @@
 package sysmo.reform.shared.chart
 
 import io.circe.Json
-import sysmo.reform.shared.data.{OptionProvider, RecordMeta, RecordWithMeta, Record}
+import sysmo.reform.shared.data.{RecordOptionProvider, RecordMeta, RecordWithMeta, Record}
 import scala.collection.mutable
 import sysmo.reform.shared.util.NamedValue
 import sysmo.reform.shared.{query => Q}
@@ -16,8 +16,8 @@ sealed trait ChartDefinition
 case class DistributionSettings(data_id: String, column_id: String) extends ChartDefinition with ChartSettings
 object DistributionSettings {
   implicit val tometa: RecordWithMeta[DistributionSettings] = new RecordWithMeta[DistributionSettings] {
-    override def _meta(option_provider: OptionProvider): RecordMeta[DistributionSettings] =
-      new DistributionMeta(option_provider)
+    override def _meta(option_provider: RecordOptionProvider): RecordMeta[DistributionSettings] =
+      new DistributionChartMeta(option_provider)
   }
 }
 case class ChartRequest(data: Map[String, ChartData], charts: Seq[ChartDefinition])

@@ -3,25 +3,23 @@ package sysmo.reform.components.editors
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monix.reactive.Observer
-import org.scalajs.dom
 import sysmo.reform.components.ReactAction
 import sysmo.reform.components.actions.ActionStreamGenerator
 import sysmo.reform.components.select.ReactSelectFacades
-import sysmo.reform.shared.data.{EnumeratedOption, FieldOptionProvider, FieldValue, NoFilter, NoValue, OptionFilter, OptionProvider, RecordField, SomeValue}
+import sysmo.reform.shared.data.{EnumeratedOption, FieldOptionProvider, FieldValue, NoFilter, NoValue, OptionFilter, RecordOptionProvider, RecordField, SomeValue}
 
-import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object AsyncSelectEditorFSM {
-  sealed trait EditorMode
-  case object Unfocused extends EditorMode
-  case object LoadingChoices extends EditorMode
-  case object Focused extends EditorMode
-
-  sealed trait Selection
-  case object SelectedNone extends Selection
-  case object SelectedAll extends Selection
-  case object SelectedSome extends Selection
+//  sealed trait EditorMode
+//  case object Unfocused extends EditorMode
+//  case object LoadingChoices extends EditorMode
+//  case object Focused extends EditorMode
+//
+//  sealed trait Selection
+//  case object SelectedNone extends Selection
+//  case object SelectedAll extends Selection
+//  case object SelectedSome extends Selection
 
 }
 
@@ -31,23 +29,24 @@ object AsyncSelectEditor extends AbstractEditor {
 
   case class Props(field : RecordField, record_id: String, value : FieldValue[String],
                    action_listener: Observer[EditorAction], option_provider: FieldOptionProvider)
-  case class State(mode: fsm.EditorMode, selection: fsm.Selection, choices: Seq[EnumeratedOption])
+  case class State(choices: Seq[EnumeratedOption]) //selection: fsm.Selection,
 
   final class Backend($: BackendScope[Props, State]) extends IBackend {
-//    println("Created SelectEditor backend")
     val action_generator : ActionStreamGenerator[EditorAction] =
       ActionStreamGenerator[EditorAction]
 
-    case class Effects(props: Props) {
-//      def update_choices: AsyncCallback[Unit] = {
-//      }
+//    case class Effects(props: Props) {
+//    }
+
+    def on_change(p: Props, s: State): RSNC.OnChange = (choice: RSNC.Choice, action_meta: RSNC.ActionMeta) => {
+      action_meta.action match {
+        case "select-option" => action_generator.dispatch(SetValue(choice.value))
+      }
     }
 
-    // is_disabled: Option[Boolean] = None,
-    // is_loading: Option[Boolean] = None,
-    // is_clearable: Option[Boolean] = None,
-    // is_searchable: Option[Boolean] = None
-    def on_input_changed(p: Props, s: State): RSNC.OnInputChange = (x: String, y: Any) => {
+    def on_input_change(p: Props, s: State): RSNC.OnInputChange = (value: String, action_meta: RSNC.ActionMeta) => {
+//      dom.console.log(action_meta)
+//      println(value, action_meta.action)
     }
 
     def on_menu_open(p: Props, s: State): RSNC.OnMenuOpen = () => {
@@ -61,39 +60,35 @@ object AsyncSelectEditor extends AbstractEditor {
     def render(p: Props, s: State) : VdomElement = {
       <.div(^.className:= "form-group", ^.key:= p.field.name,
         <.label(p.field.label),
-        s.mode match {
-          case fsm.Unfocused => RSNC(
-            p.value match {
-              case SomeValue(x) => Some(EnumeratedOption(x, x))
-              case NoValue() => None
-            },
-            s.choices,
-            on_input_changed = Some(on_input_changed(p, s)),
-            on_menu_open = Some(on_menu_open(p, s)),
-            is_clearable = Some(true)
-          )
-        }
+        RSNC(
+          p.value match {
+            case SomeValue(x) => Some(EnumeratedOption(x, x))
+            case NoValue() => None
+          },
+          s.choices,
+          on_change = Some(on_change(p,s)),
+          on_input_change = Some(on_input_change(p, s)),
+          on_menu_open = Some(on_menu_open(p, s)),
+          is_clearable = Some(true)
+        )
       )
     }
 
 
     override def handle_action(props: Props, state: State)(action: ReactAction): AsyncSelectEditor.AsyncCallback[Unit] = ???
   }
-// TODO
-//  implicit val props_reuse = Reusability.byIterator((_ : Props).values)
-//  implicit val choices_reuse = Reusability.by_==[Seq[EnumeratedOption]]
-//  implicit val state_reuse = Reusability.derive[State]
+
+  implicit def FieldValue_reuse[A]: Reusability[FieldValue[A]]  = Reusability.by_==
+  implicit val props_reuse = Reusability.by((_ : Props).value)
+  implicit val choices_reuse = Reusability.by_==[Seq[EnumeratedOption]]
+  implicit val state_reuse = Reusability.derive[State]
 
   val component =
     ScalaComponent.builder[Props]("SelectEditor")
-    .initialState(State(fsm.Unfocused, fsm.SelectedNone, Seq()))
+    .initialState(State(Seq())) //fsm.SelectedNone
     .renderBackend[Backend]
-    .componentDidMount(f => {
-      println("SelectEditor mounted")
-//      f.backend.subscribe_to_choices(f.props) >>
-        Callback {
+    .componentDidMount(f => Callback {
           f.backend.action_generator.start(f.props.action_listener)
-      }
     })
 //    .configure(Reusability.shouldComponentUpdate)
     .build

@@ -10,7 +10,7 @@ import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, SelectEditor, SetValue, StringEditor, UpdateValue}
 import sysmo.reform.components.actions.ActionHub
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldOptionProvider, FieldValue, OptionFilter, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldOptionProvider, FieldValue, OptionFilter, RecordOptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
 import sysmo.reform.util.TypeSingleton
 
 
@@ -32,8 +32,6 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
 
 
   final class Backend($: BackendScope[Props_, State_]) {
-    println("Created StreamingFormEditor backend")
-
     private val state_observer = new Observer[Record.ValueMap] {
       override def onNext(elem: Record.ValueMap): Future[Ack] = {
         $.modState(s => s.copy(value = elem)).runNow()
@@ -116,7 +114,6 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
       .backend(new Backend(_))
       .renderBackend
       .componentDidMount({
-        println("FormEditor mounted")
         f => {
           f.backend.subscribe_to_records(f.props) >> f.modState(s => s.copy(mode = fsm.Initialized))
         }

@@ -42,12 +42,8 @@ object SelectEditor extends AbstractEditor {
     ScalaComponent.builder[Props]("SelectEditor")
     .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount(f => {
-      println("SelectEditor mounted")
-//      f.backend.subscribe_to_choices(f.props) >>
-        Callback {
-          f.backend.action_generator.start(f.props.action_listener)
-      }
+    .componentDidMount(f => Callback {
+      f.backend.action_generator.start(f.props.action_listener)
     })
     .configure(Reusability.shouldComponentUpdate)
     .build

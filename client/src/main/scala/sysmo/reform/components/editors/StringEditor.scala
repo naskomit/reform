@@ -54,7 +54,6 @@ object StringEditor extends AbstractEditor {
     .initialState(State())
     .renderBackend[Backend]
     .componentDidMount(f => Callback {
-      println("StringEditor mounted")
       f.backend.action_generator.start(f.props.action_listener)
     })
     .configure(Reusability.shouldComponentUpdate)

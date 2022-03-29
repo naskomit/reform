@@ -6,11 +6,13 @@ import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import sysmo.reform.components.editors.SetValue
 import sysmo.reform.shared.chart.DistributionSettings
-import sysmo.reform.shared.data.{OptionProvider, Record, RecordMeta, RecordWithMeta, SomeValue}
+import sysmo.reform.shared.data.{NoValue, Record, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, ValueDependency}
+import sysmo.reform.util.log.Logging
 
+import scala.collection.mutable
 import scala.concurrent.Future
 
-class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U]) {
+class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U]) extends Logging {
   type State = Record.ValueMap
   var on_new_state: Option[Function1[State, Ack]] = None
   var state: State = meta.value_map(initial_value)
@@ -26,6 +28,14 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
     }
   }
 
+  private def resolve_field_dependencies(field_id: String) = {
+    val unresolved = mutable.Set()
+    val affected = meta.field_dependencies.collect {
+      case x: ValueDependency if x.sources.contains(field_id) => x.sink
+    }
+    affected.foreach(id => state = state + (id -> NoValue[String]()))
+  }
+
   val action_handler: Observer[RecordAction] = new Observer[RecordAction] {
     override def onNext(action: RecordAction): Future[Ack] = {
       println(f"StreamingRecordManager: $action")
@@ -36,6 +46,9 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
               case SetValue(v) => SomeValue(v)
             }
             state = state + (field_id -> new_value)
+            resolve_field_dependencies(field_id)
+            logger.info("New state:")
+            logger.info(state.toString())
             f(state)
           }
         }

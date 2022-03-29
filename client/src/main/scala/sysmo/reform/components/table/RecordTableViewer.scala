@@ -1,12 +1,12 @@
 package sysmo.reform.components.table
 
 import japgolly.scalajs.react.vdom.html_<^._
+
 import scala.scalajs.js
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.components.table.aggrid.AgGridComponent
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
-import sysmo.reform.data.TableDatasource
-import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.data.{TableDatasource, table => sdt}
 
 object RecordTableViewer {
   import japgolly.scalajs.react._

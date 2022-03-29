@@ -4,7 +4,7 @@ import japgolly.scalajs.react.vdom.html_<^.{<, _}
 import org.scalajs.dom
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.components.{ReactAction, ReactComponent}
-import sysmo.reform.managers.ChartManager
+import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.chart.ChartSettings
 import sysmo.reform.shared.{chart => Ch}
 import sysmo.reform.util.TypeSingleton
@@ -25,8 +25,8 @@ object ChartContainerDefs {
   case object OkSettings extends ChartAction
   case object CancelSettings extends ChartAction
 
-  case class Props[U <: ChartSettings](chart_manager: ChartManager[U], height: Int)
-  case class State(chart_result: Option[Ch.ChartResult], active: ActiveMode)
+  case class Props[U <: ChartSettings](chart_manager: ChartController[U], height: Int)
+  case class State(chart_result: Option[Ch.ChartResult], mode: ActiveMode)
 
 }
 
@@ -53,7 +53,7 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
       }
 
       def activate_mode(mode: ActiveMode): AsyncCallback[Unit] =
-        $.modState(s => s.copy(active = mode)).asAsyncCallback
+        $.modState(s => s.copy(mode = mode)).asAsyncCallback
     }
 
     def render(p: Props, s: State): VdomElement = {
@@ -61,7 +61,7 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
       <.div(
         <.div(
           ^.style := js.Dictionary("height" -> p.height),
-          s.active match {
+          s.mode match {
             case ActiveChart => <.div(Chart(s.chart_result))
             case ActiveSettings => <.div(
               ChartSettingsForm(p.chart_manager)
@@ -74,7 +74,7 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
         ),
         <.div(
           ^.style := js.Dictionary("height" -> 50),
-          s.active match {
+          s.mode match {
             case ActiveChart => ButtonToolbar.builder
                 .button("Settings", dsp(ActivateSettins))
                 .build
@@ -115,7 +115,7 @@ object ChartContainer extends TypeSingleton[ChartContainer, ChartSettings] {
   import ChartContainerDefs._
 
   override def create_instance[U <: ChartSettings](implicit tag: ClassTag[U]): ChartContainer[U] = new ChartContainer[U]
-  def apply[U <: ChartSettings : ClassTag](chart_manager: ChartManager[U], height: Int)(implicit tag: ClassTag[U]) = {
+  def apply[U <: ChartSettings : ClassTag](chart_manager: ChartController[U], height: Int)(implicit tag: ClassTag[U]) = {
     get_instance(tag).component(Props[U](chart_manager, height))
   }
 }

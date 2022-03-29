@@ -47,7 +47,7 @@ object ColumnarLayoutComponent {
     .render_PC((p, c) =>
       <.div(^.className:="wrapper wrapper-white", build_grid(c, p.num_columns))
     )
-    .componentDidMount(f => Callback {println("Layout did mount")})
+//    .componentDidMount(f => Callback {})
     .build
 
   def apply(num_columns : Int)(field_editors : Seq[VdomElement]) =

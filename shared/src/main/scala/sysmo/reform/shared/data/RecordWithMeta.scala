@@ -32,7 +32,7 @@ object EnumeratedDomain {
     EnumeratedDomain(options.map(x => EnumeratedOption(x, x)))
 }
 
-case class EnumeratedDomainSource[-U](option_provider: OptionProvider, field_id: String) extends Domain {
+case class EnumeratedDomainSource[-U](option_provider: RecordOptionProvider, field_id: String) extends Domain {
   def get(record: Record.ValueMap, flt: OptionFilter): Future[Seq[EnumeratedOption]] = {
     option_provider.get(record, field_id, flt)
   }
@@ -47,11 +47,11 @@ sealed trait OptionFilter
 case object NoFilter extends OptionFilter
 case class StringFilter(exp: String) extends OptionFilter
 
-trait OptionProvider {
+trait RecordOptionProvider {
   def get(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]]
 }
 
-object DummyOptionProvider extends OptionProvider {
+object DummyRecordOptionProvider$ extends RecordOptionProvider {
   def get(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]] =
     Future.successful(Seq())
 }
@@ -60,13 +60,23 @@ trait FieldOptionProvider {
   def get(flt: OptionFilter): Future[Seq[EnumeratedOption]]
 }
 
+trait Interdependency
+trait ValueDependencyHandler {
+  def value(v: Record.ValueMap) = NoValue
+  def choices(v: Record.ValueMap)
+}
+case class ValueDependency(sink: String, sources: Seq[String]) extends Interdependency
+case class ActivationDependency(sink: String, sources: Seq[String]) extends Interdependency
+case class VisibilityDependency(sink: String, sources: Seq[String]) extends Interdependency
+
 trait RecordMeta[U] extends Equals {
   type RecordType = U
   val id: String
   type FieldKey
   val field_keys: Seq[FieldKey]
   val fields : Map[FieldKey, RecordField]
-  val option_provider: OptionProvider
+  val option_provider: RecordOptionProvider
+  val field_dependencies: Seq[Interdependency] = Seq()
 
   def value_map(u: RecordType): Record.ValueMap
   def validate(c: Record.ValueMap): Either[Map[String, Throwable], RecordType]
@@ -103,8 +113,8 @@ trait RecordMeta[U] extends Equals {
 
 
 trait RecordWithMeta[U] {
-  def _meta: RecordMeta[U] = _meta(DummyOptionProvider)
-  def _meta(option_provider: OptionProvider): RecordMeta[U]
+  def _meta: RecordMeta[U] = _meta(DummyRecordOptionProvider$)
+  def _meta(option_provider: RecordOptionProvider): RecordMeta[U]
 }
 
 

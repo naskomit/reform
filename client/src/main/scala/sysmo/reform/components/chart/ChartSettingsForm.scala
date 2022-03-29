@@ -3,13 +3,13 @@ package sysmo.reform.components.chart
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms.StreamingFormEditor
-import sysmo.reform.managers.ChartManager
+import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.chart.ChartSettings
 import sysmo.reform.util.TypeSingleton
 import scala.reflect.ClassTag
 
 object ChartSettingsFormDefs {
-  case class Props[U <: ChartSettings](chart_manager: ChartManager[U])
+  case class Props[U <: ChartSettings](chart_manager: ChartController[U])
 }
 
 class ChartSettingsForm[U <: ChartSettings : ClassTag] extends ReactComponent {
@@ -46,7 +46,7 @@ class ChartSettingsForm[U <: ChartSettings : ClassTag] extends ReactComponent {
 object ChartSettingsForm extends TypeSingleton[ChartSettingsForm, ChartSettings] {
   import ChartSettingsFormDefs._
   override def create_instance[U <: ChartSettings](implicit tag: ClassTag[U]): ChartSettingsForm[U] = new ChartSettingsForm[U]
-  def apply[U <: ChartSettings : ClassTag](chart_manager: ChartManager[U])(implicit tag: ClassTag[U]) = {
+  def apply[U <: ChartSettings : ClassTag](chart_manager: ChartController[U])(implicit tag: ClassTag[U]) = {
     get_instance(tag).component(Props[U](chart_manager))
   }
 }

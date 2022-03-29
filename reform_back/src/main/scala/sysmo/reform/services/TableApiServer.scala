@@ -14,17 +14,17 @@ class TableApiServer
   (implicit val ec: ExecutionContext) extends APIServer {
 
     val route_map = Map(
-      (base_path :+ "row_count") ->
-        (_ => row_count().map(_.asJson)),
+//      (base_path :+ "row_count") ->
+//        (_ => row_count().map(_.asJson)),
       (base_path :+ "query_table") ->
         (args => args("query").as[Q.Query].toTry.toFuture
           .flatMap(query_table).map(_.asJson)),
     )
 
-    def row_count(): Future[Int] = {
-      val result = 11
-      Future.successful(result)
-    }
+//    def row_count(): Future[Int] = {
+//      val result = 11
+//      Future.successful(result)
+//    }
 
     def query_table(q: Q.Query): Future[sdt.Table] = {
       try {

@@ -4,17 +4,18 @@ import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.chart.ChartContainer
 import sysmo.reform.components.ApplicationPanel
-import sysmo.reform.managers.ChartManager
+import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.{chart => Ch}
-import sysmo.reform.shared.data.{graph => G}
+import sysmo.reform.shared.data.{TableDatasource, graph => G}
 import sysmo.coviddata.shared.{data => CD}
+import sysmo.reform.ApplicationConfiguration
 
 import scala.scalajs.js
 
 object ChartPanel extends ApplicationPanel {
   import japgolly.scalajs.react._
 
-  case class Props()
+  case class Props(table_service: TableDatasource)
   case class State()
   val clin_schema = G.Schema
     .table_schema_builder(CD.Clinical.schema)
@@ -37,31 +38,15 @@ object ChartPanel extends ApplicationPanel {
             <.div(^.className:= "col-md-10",
               <.div(^.cls:= "wrapper wrapper-white",
                 ChartContainer(
-                  ChartManager.distribution(
+                  ChartController.distribution(
                     Ch.DistributionSettings("Clinical", "18"),
-                    Map("Clinical" -> clin_schema, "Socio-demographic" -> socio_demographic_schema)
-                  ), height = 600
-                )
-              )
-
-            )
-          ),
-          <.div(^.className:= "row", ^.style:= js.Dictionary("margin-top" -> vmargin, "margin-bottom" -> vmargin),
-            <.div(^.className:= "col-md-1"),
-            <.div(^.className:= "col-md-10",
-              <.div(^.cls:= "wrapper wrapper-white",
-                ChartContainer(
-                  ChartManager.distribution(
-                    Ch.DistributionSettings("SocioDemographic", "3"),
-                    Map("Clinical" -> clin_schema, "Socio-demographic" -> socio_demographic_schema)
+                    p.table_service
                   ), height = 600
                 )
               )
 
             )
           )
-
-
         )
       )
     }
@@ -80,8 +65,8 @@ object ChartPanel extends ApplicationPanel {
       .componentDidMount(f => f.backend.init(f.props))
       .build
 
-  def apply(): Scala.Unmounted[Props, State, Backend] = {
-    component(Props())
+  def apply(app_config: ApplicationConfiguration): Scala.Unmounted[Props, State, Backend] = {
+    component(Props(app_config.table_source))
   }
 }
 

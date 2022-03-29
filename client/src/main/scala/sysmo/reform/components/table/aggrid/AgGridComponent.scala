@@ -5,13 +5,12 @@ import org.scalajs.dom
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.shared.query._
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
-import sysmo.reform.data.TableDatasource
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.util.{Failure, Success}
-import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.data.{TableDatasource, table => sdt}
 import sysmo.reform.shared.{query => Q}
 
 class AgGridSourceAgaptor(ds: TableDatasource, source: QuerySource, schema: sdt.Schema) {

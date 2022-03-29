@@ -1,23 +1,49 @@
 package sysmo.reform.shared.chart
 
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldValue, NoFilter, OptionFilter, OptionProvider, Record, RecordField, RecordMeta, RecordWithMeta, SomeValue, StringType}
+import sysmo.reform.shared.data.Record.ValueMap
+import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldValue, NoFilter, OptionFilter, Record, RecordField, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, StringType, TableDatasource, ValueDependency, ValueDependencyHandler}
 
 import scala.collection.immutable.VectorMap
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 //Distribution(data_id: String, column_id: String)
-object DistributionMeta {
+class DistributionOptionProvider(table_service: TableDatasource)(implicit ec: ExecutionContext) extends RecordOptionProvider {
+  override def get(record: ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]] = {
+    field_id match {
+      case "data_id" => table_service.list_tables(NoFilter)
+        .map(x => x.map(item => EnumeratedOption(item.name, item.make_label)))
+      case "column_id" => {
+        record("data_id") match {
+          case SomeValue(v: String) => {
+            table_service.table_schema(v)
+              .map(schema => schema.fields.map(x => EnumeratedOption(x.name, x.label.getOrElse(x.name))))
+          }
+
+          case _ => Future.successful(Seq())
+        }
+      }
+    }
+  }
+}
+
+
+object DistributionChartMeta {
   object FieldEnum extends Enumeration {
     val data_id, column_id = Value
   }
 }
 
-class DistributionMeta(val option_provider: OptionProvider) extends RecordMeta[DistributionSettings] {
-  val FieldEnum = DistributionMeta.FieldEnum
+class DistributionChartMeta(val option_provider: RecordOptionProvider)
+  extends RecordMeta[DistributionSettings] {
+
+  val FieldEnum = DistributionChartMeta.FieldEnum
   val id = "Distribution"
+
   override type FieldKey = FieldEnum.Value
-//  case class Companion(data_id: FieldValue[String], column_id: FieldValue[String])
+  override val field_dependencies = Seq(
+    ValueDependency("column_id", Seq("data_id"))
+  )
 
   override def value_map(u: RecordType): Record.ValueMap = {
     Map[String, FieldValue[_]](

@@ -10,7 +10,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Trave
 import org.apache.tinkerpop.gremlin.structure.T
 import sysmo.coviddata.CSVDataSource
 import sysmo.coviddata.shared.data.PatientRecord
-import sysmo.reform.shared.data.{DummyOptionProvider, RecordMeta, RecordWithMeta, graph => G, table => sdt}
+import sysmo.reform.shared.data.{DummyRecordOptionProvider$, RecordMeta, RecordWithMeta, graph => G, table => sdt}
 import sysmo.reform.shared.gremlin.GraphsonEncoder
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.util.Logging

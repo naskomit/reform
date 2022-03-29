@@ -3,17 +3,16 @@ package sysmo.coviddata.panels
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.components.table.RecordTableViewer
-import sysmo.reform.services.ServerTableDataSource
 import sysmo.reform.shared.{query => Q}
-import sysmo.reform.shared.data.{graph => G}
+import sysmo.reform.shared.data.{TableDatasource, graph => G}
 import sysmo.coviddata.shared.{data => CD}
+import sysmo.reform.ApplicationConfiguration
 
 object ClinicalDataPanel extends ApplicationPanel {
 
   import japgolly.scalajs.react._
 
-  case class Props()
-
+  case class Props(table_data_source: TableDatasource)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -27,7 +26,7 @@ object ClinicalDataPanel extends ApplicationPanel {
           <.h1("Clinical Data")
         ),
         <.div(^.cls:= "wrapper wrapper-white",
-          RecordTableViewer(ServerTableDataSource, schema, Q.SingleTable(CD.Clinical.schema.name))
+          RecordTableViewer(p.table_data_source, schema, Q.SingleTable(CD.Clinical.schema.name))
         )
       )
     }
@@ -38,5 +37,6 @@ object ClinicalDataPanel extends ApplicationPanel {
     .renderBackend[Backend]
     .build
 
-  def apply() = component(Props())
+  def apply(app_config: ApplicationConfiguration) =
+    component(Props(app_config.table_source))
 }

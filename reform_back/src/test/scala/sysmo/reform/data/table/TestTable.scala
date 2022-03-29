@@ -72,7 +72,7 @@ object TestTable {
       val s_char = tbl_1.column("char")
       val s_cat = s_char.to_categorical()
       println(s_cat)
-      println(s_cat.categories)
+//      println(s_cat.categories)
       println(s_cat.vmap(schema.field(3).get)(x => sdt.Value.char(x.as_char)))
     }}
 

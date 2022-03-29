@@ -7,7 +7,7 @@ object TestApp extends App {
 //  SQLiteAppStorage.test_task
 
 //  ExcelReader.test1()
-    sysmo.reform.data.table.TestTable.test_sysmo_table()
+//    sysmo.reform.data.table.TestTable.test_sysmo_table()
 
     import sysmo.coviddata.OrientDBGraphAppStorage
 //  OrientDBGraphAppStorage.test_import()
@@ -23,4 +23,5 @@ object TestApp extends App {
   import sysmo.reform.plots.TestPlotly
 //  TestPlotly.test_bar()
 //  sysmo.typelevel.JsonCats.test1()
+  sysmo.typelevel.ScalaWithCats.run()
 }
