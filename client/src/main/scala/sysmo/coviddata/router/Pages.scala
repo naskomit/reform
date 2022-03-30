@@ -1,5 +1,6 @@
 package sysmo.coviddata.router
 
+import sysmo.coviddata.panels.TablePanels
 import sysmo.coviddata.{panels => P}
 import sysmo.reform.router.{Category, Page, PageBase, PageCollection}
 
@@ -16,30 +17,37 @@ case object Plots extends Page {
 }
 
 
+case object SocioDemographicData extends Page {
+  def name = "SocioDemographicData"
+  override def label = "Socio-Demographic Data"
+  def icon = "fa-database"
+  def panel = TablePanels.SocioDemographic
+}
+
 case object ClinicalData extends Page {
   def name = "ClinicalData"
   override def label = "Clinical Data"
   def icon = "fa-database"
-  def panel = P.ClinicalDataPanel
+  def panel = TablePanels.Clinical
 }
 
-case object SocioEconomicData extends Page {
-  def name = "SocioEconomicData"
-  override def label = "Socio-Economic Data"
+case object TherapyData extends Page {
+  def name = "TherapyData"
+  override def label = "Therapy Data"
   def icon = "fa-database"
-  def panel = P.ClinicalDataPanel
+  def panel = TablePanels.Therapy
 }
 
 case object ImmunologyData extends Page {
   def name = "ImmunologyData"
   override def label = "Immunology Data"
   def icon = "fa-database"
-  def panel = P.ClinicalDataPanel
+  def panel = TablePanels.Immunology
 }
 
 case object CovidData extends Category {
   override def children: Seq[PageBase] =
-    Seq(ClinicalData, SocioEconomicData, ImmunologyData)
+    Seq(SocioDemographicData, ClinicalData, TherapyData, ImmunologyData)
   override def name: String = "Covid Data"
   override def icon: String = "fa fa-database"
 }

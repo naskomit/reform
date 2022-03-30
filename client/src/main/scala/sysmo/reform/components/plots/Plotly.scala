@@ -1,5 +1,6 @@
 package sysmo.reform.components.plots
 
+import io.circe.Json
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 import org.scalajs.dom.html
@@ -17,6 +18,7 @@ object PlotlyNative {
   object Plotly extends js.Object {
     // (element: html.Element, definition: js.Object)
     val newPlot: js.Function2[html.Element, js.Object, js.Promise[_]] = js.native
+    val react: js.Function2[html.Element, js.Object, js.Promise[_]] = js.native
   }
 
 }
@@ -24,7 +26,7 @@ object PlotlyNative {
 object Plotly extends ReactComponent {
   import japgolly.scalajs.react._
 
-  case class Props(width: String, height: String, plt_def: Ch.Plotly)
+  case class Props(width: String, height: String, uid: String, content: Json)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -33,26 +35,32 @@ object Plotly extends ReactComponent {
       <.div(^.style:= js.Dictionary("width" -> p.width, "height" -> p.height)).withRef(outerRef)
     }
 
-    def init(p: Props): Callback = Callback {
+    def show(p: Props): Callback = Callback {
+      logger.info(s"Running plotly show with uid = ${p.uid}")
       outerRef.raw.current match {
         case elem : html.Element => {
-          PlotlyNative.Plotly.newPlot(elem, circe_2_js(p.plt_def.content))
+          PlotlyNative.Plotly.react(elem, circe_2_js(p.content))
         }
       }
       ()
     }
   }
 
+  implicit val props_reuse = Reusability.by((_ : Props).uid)
+  implicit val state_reuse = Reusability.derive[State]
+
   // : Scala.Component[Props, State, Backend, _]
   val component =
     ScalaComponent.builder[Props]("Form1")
     .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount(f => f.backend.init(f.props))
+    .componentDidMount(f => f.backend.show(f.props))
+    .componentDidUpdate(f => f.backend.show(f.currentProps))
+    .configure(Reusability.shouldComponentUpdate)
     .build
 
   // , definition: js.Object
   def apply(width: String, height: String, plt_def: Ch.Plotly): Unmounted = {
-    component(Props(width, height, plt_def))
+    component(Props(width, height, plt_def.uid, plt_def.content))
   }
 }

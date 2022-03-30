@@ -8,8 +8,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
 import org.apache.tinkerpop.gremlin.structure.T
-import sysmo.coviddata.CSVDataSource
-import sysmo.coviddata.shared.data.PatientRecord
 import sysmo.reform.shared.data.{DummyRecordOptionProvider$, RecordMeta, RecordWithMeta, graph => G, table => sdt}
 import sysmo.reform.shared.gremlin.GraphsonEncoder
 import sysmo.reform.shared.{query => Q}
@@ -19,11 +17,13 @@ import upickle.default._
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
 import sdt.Printers._
+import sysmo.reform.shared.data.graph.VertexSchema
 import sysmo.reform.shared.util.pprint
 
-class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
+class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySchema]) extends Logging {
   import sysmo.reform.shared.{data => RM}
-
+  val schema_map: Map[String, G.EntitySchema] = schemas.map(x => (x.name, x)).toMap
+  def entity_schema(klass: String): Option[G.EntitySchema] = schema_map.get(klass)
   def classes(graph: OrientGraph): Iterable[OClass] = graph.database.getMetadata.getSchema.getClasses.asScala
 
 //  def create_schema(rec_meta_list: Seq[RecordMeta[_]]): Unit = {
@@ -51,7 +51,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
 //    }
 //  }.get
 
-  def apply_schemas(schemas: Seq[G.EntitySchema]): Unit = {
+  def apply_schemas(): Unit = {
     logger.info("========== Creating database schema ==========")
     Using(graph_factory.getTx) { graph =>
       for (schema <- schemas) {
@@ -216,7 +216,11 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
         case Q.BasicQuery(source, columns_opt, _, _, _) => source match {
           case Q.SingleTable(id, _, _) => {
             columns_opt.map(columns => {
-              val db_table_schema = read_schema(id)
+              val db_table_schema: sdt.Schema = entity_schema(id) match {
+                case Some(sch: VertexSchema) => G.Schema.table_schema_builder(sch).build
+                case _ => throw new IllegalArgumentException(s"No VertexSchema named $id")
+              }
+
               columns.map(col => db_table_schema.field(col.id).get)
             }).map(columns => sdt.Schema(columns)).orElse(Some(read_schema(id))).get
           }
@@ -242,11 +246,11 @@ class GraphAppStorage(graph_factory: OrientGraphFactory) extends Logging {
 }
 
 object GraphAppStorage {
-  def apply(config: Config): GraphAppStorage = {
+  def apply(config: Config, schemas: Seq[G.EntitySchema]): GraphAppStorage = {
     val user = config.getString("user")
     val password = config.getString("password")
     val uri = config.getString("uri")
     val graph_factory = new OrientGraphFactory(uri, user, password)
-    new GraphAppStorage(graph_factory)
+    new GraphAppStorage(graph_factory, schemas)
   }
 }

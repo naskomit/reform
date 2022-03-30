@@ -10,8 +10,8 @@ import scala.concurrent.{Future, Promise}
 trait ReactAction
 
 trait ReactComponent extends Logging with cb_exports {
-  type Props <: Product
-  type State <: Product
+  type Props
+  type State
   type Backend
   type Unmounted = Scala.Unmounted[Props, State, Backend]
 

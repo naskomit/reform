@@ -26,8 +26,8 @@ case class ChartRequest(data: Map[String, ChartData], charts: Seq[ChartDefinitio
 
 /** Response */
 sealed trait ChartObject
-case class Plotly(content: Json) extends ChartObject
-case class PlotlyAsText(content: String) extends ChartObject
+case class Plotly(uid: String, content: Json) extends ChartObject
+case class PlotlyAsText(uid: String, content: String) extends ChartObject
 
 
 case class ChartResult(items: Seq[NamedValue[ChartObject]])

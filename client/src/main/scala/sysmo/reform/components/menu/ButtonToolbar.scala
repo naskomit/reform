@@ -22,7 +22,7 @@ object ButtonToolbar extends ReactComponent {
     def render (p: Props, s: State): VdomElement = {
       <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
         p.controls.map {
-          case Button(name, cb) => <.button(
+          case Button(name, cb) => <.button(^.key:= name,
             ^.cls := "btn btn-primary", ^.style:= js.Dictionary("margin-left" -> p.margin, "margin-right" -> p.margin)
             , name, ^.onClick --> cb)
         }.toTagMod

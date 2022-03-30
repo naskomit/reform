@@ -49,8 +49,13 @@ lazy val reform_back = project
     // Plotly
     libraryDependencies += "org.plotly-scala" %% "plotly-almond" % "0.8.1",
 
+    // Statistics with Breeze
+    libraryDependencies += "org.scalanlp" %% "breeze" % "2.0.1-RC1",
+
+    // Ammonite REPL
     libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
     libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
+
 
     Test / sourceGenerators += Def.task {
       val file = (Test / sourceManaged).value / "amm.scala"

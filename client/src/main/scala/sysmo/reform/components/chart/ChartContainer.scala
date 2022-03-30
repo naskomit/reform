@@ -8,6 +8,7 @@ import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.chart.ChartSettings
 import sysmo.reform.shared.{chart => Ch}
 import sysmo.reform.util.TypeSingleton
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import scala.reflect.ClassTag
 import scala.scalajs.js
@@ -21,7 +22,7 @@ object ChartContainerDefs {
   case object ActiveSettings extends ActiveMode
   trait ChartAction extends ReactAction
   case object ActivateChart extends ChartAction
-  case object ActivateSettins extends ChartAction
+  case object ActivateSettings extends ChartAction
   case object OkSettings extends ChartAction
   case object CancelSettings extends ChartAction
 
@@ -40,24 +41,34 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
   type Props = ChartContainerDefs.Props[U]
   type State = ChartContainerDefs.State
 
-  final class Backend($: BackendScope[Props, State]) extends IBackend {
+  final class Backend($: BackendScope[Props, State]) {
 
-    case class Effects(props: Props) {
-      def update_chart: AsyncCallback[Unit] = {
-
-        future_effect[Ch.ChartResult](
-          props.chart_manager.chart_service.chart(props.chart_manager.request()),
-          res => $.modState(s => s.copy(chart_result = Some(res))).asAsyncCallback,
+    object Effects {
+      def update_chart_result(props: Props): AsyncCallback[Unit] =
+        AsyncCallback.fromFuture(
+          props.chart_manager.chart_service.chart(props.chart_manager.request())
+        ).flatMap(res =>
+          $.modState(s => s.copy(chart_result = Some(res))).asAsyncCallback
+        ).handleError(
           err => $.modState(s => s.copy(chart_result = None)).asAsyncCallback
         )
-      }
 
       def activate_mode(mode: ActiveMode): AsyncCallback[Unit] =
         $.modState(s => s.copy(mode = mode)).asAsyncCallback
+
+      def ok_settings(props: Props): AsyncCallback[Unit] = Effects.activate_mode(Loading) >>
+        AsyncCallback.pure {logger.info("Beginning fetch data")} >>
+        Effects.update_chart_result(props) >>
+        Callback {logger.info("Done fetch data")}.asAsyncCallback >>
+        Effects.activate_mode(ActiveChart)
     }
 
+//    case class Actions() {
+//      val activate_settings = effects.activate_mode(ActiveSettings)
+//    }
+
     def render(p: Props, s: State): VdomElement = {
-      val dsp = dispatch(p, s) _
+//      val dsp = dispatch(p, s) _
       <.div(
         <.div(
           ^.style := js.Dictionary("height" -> p.height),
@@ -76,12 +87,12 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
           ^.style := js.Dictionary("height" -> 50),
           s.mode match {
             case ActiveChart => ButtonToolbar.builder
-                .button("Settings", dsp(ActivateSettins))
+                .button("Settings", Effects.activate_mode(ActiveSettings))
                 .build
 
             case ActiveSettings => ButtonToolbar.builder
-                .button("Ok", dsp(OkSettings))
-                .button("Cancel", dsp(CancelSettings))
+                .button("Ok", Effects.ok_settings(p))
+                .button("Cancel", Effects.activate_mode(ActiveChart))
                 .build
 
             case Loading => <.div()
@@ -90,15 +101,21 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
       )
     }
 
-    override def handle_action(props: Props, state: State)(action: ReactAction): AsyncCallback[Unit] = {
-      val dsp = dispatch(props, state) _
-      val effects = Effects(props)
-      action match {
-        case ActivateSettins => effects.activate_mode(ActiveSettings)
-        case OkSettings => effects.activate_mode(Loading) >> effects.update_chart >> effects.activate_mode(ActiveChart)
-        case CancelSettings => effects.activate_mode(ActiveChart)
-      }
-    }
+//    // TODO Figure out how to properly handle the callbacks and refresh on new chart
+//    override def handle_action(props: Props, state: State)(action: ReactAction): AsyncCallback[Unit] = {
+//      val dsp = dispatch(props, state) _
+//      val effects = Effects(props)
+//      logger.info(action.toString)
+//      action match {
+//        case ActivateSettings => effects.activate_mode(ActiveSettings)
+//        case OkSettings => effects.activate_mode(Loading) >>
+//          AsyncCallback.pure {logger.info("Beginning fetch data")} >>
+//          effects.update_chart >>
+//          Callback {logger.info("Done fetch data")}.asAsyncCallback >>
+//          effects.activate_mode(ActiveChart)
+//        case CancelSettings => effects.activate_mode(ActiveChart)
+//      }
+//    }
   }
 
   // : Scala.Component[Props, State, Backend, _]
@@ -107,7 +124,7 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
       .initialState(State(None, ActiveChart))
       .renderBackend[Backend]
       // f.backend.perform_request(f.props)
-      .componentDidMount(f => f.backend.dispatch(f.props, f.state)(OkSettings))
+      .componentDidMount(f => f.backend.Effects.ok_settings(f.props))
       .build
 }
 

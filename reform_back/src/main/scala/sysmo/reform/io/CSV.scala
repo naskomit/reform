@@ -8,7 +8,6 @@ import kantan.csv.{CsvConfiguration, HeaderDecoder}
 import monix.eval.Task
 import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, OverflowStrategy}
-import sysmo.coviddata.shared.data.PatientRecord
 
 import scala.util.{Failure, Success, Try, Using}
 

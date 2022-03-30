@@ -1,5 +1,7 @@
 package sysmo.reform.shared.data.table
 
+import scala.collection.mutable
+
 trait SeriesBuilder {
   def append(x: Option[Any]): Unit
   def append_value(x: Value[_]): Unit
@@ -33,14 +35,14 @@ trait Series extends Iterable[Value[_]] {
   def length: Int
   def get(i: Int): Value[_]
   def is_categorical: Boolean
-  def to_categorical(categories: Option[Seq[String]] = None): Series
+  def to_categorical(categories: Option[Seq[String]] = None): SeriesCategorical
   override def toString: String
   def vmap(result_field: Field)(f: Value[_] => Value[_]): Series
 }
 
-trait SeriesCategorical {
+trait SeriesCategorical extends Series {
   def categories: Seq[String]
-
+  def count_categories: Seq[(String, Int)]
 }
 
 class SeriesIterator(s: Series) extends Iterator[Value[_]] {
@@ -52,7 +54,7 @@ class SeriesIterator(s: Series) extends Iterator[Value[_]] {
   }
 }
 
-class SeriesImpl(val field: Field, val data: Vector[_, _]) extends Series with SeriesCategorical {
+class SeriesImpl(val field: Field, val data: Vector[_, _]) extends SeriesCategorical {
   def length: Int = data.length
   def get(i: Int): Value[_] =  (field.field_type.tpe, field.field_type.ext_class) match {
     case (VectorType.Real, Date) => Value.date(data(i).asInstanceOf[Option[Double]])
@@ -72,7 +74,7 @@ class SeriesImpl(val field: Field, val data: Vector[_, _]) extends Series with S
   }
 
   def is_categorical: Boolean = field.field_type.ext_class == Categorical
-  def to_categorical(categories: Option[Seq[String]]): Series = {
+  def to_categorical(categories: Option[Seq[String]]): SeriesCategorical = {
     if (is_categorical)
       return this
     val cats = categories match {
@@ -81,10 +83,19 @@ class SeriesImpl(val field: Field, val data: Vector[_, _]) extends Series with S
     }
     val cat_map = cats.zipWithIndex.toMap
     val res_field = field.copy(field_type = field.field_type.copy(tpe = VectorType.Int, ext_class = Categorical, categories = cats))
-    this.vmap(res_field)(x => Value.int(x.as_char.flatMap(cat_map.get)))
+    this.vmap(res_field)(x => Value.int(x.as_char.flatMap(cat_map.get))).asInstanceOf[SeriesCategorical]
   }
 
   def categories: Seq[String] = field.field_type.categories
+  def count_categories: Seq[(String, Int)] = {
+    val counter = mutable.HashMap[String, Int]()
+    val cats = categories
+    cats.foreach(x => counter.addOne(x, 0))
+    for (v <- this) {
+      v.as_char.foreach(x => counter.updateWith(x)((count: Option[Int]) => count.map(_ + 1)))
+    }
+    counter.toSeq
+  }
 
   override def toString: String = data.toString
 

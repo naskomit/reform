@@ -8,7 +8,6 @@ import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
 import scala.util.{Failure, Success}
 import sysmo.reform.shared.data.{TableDatasource, table => sdt}
 import sysmo.reform.shared.{query => Q}
