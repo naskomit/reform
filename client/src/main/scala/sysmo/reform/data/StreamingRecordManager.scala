@@ -6,7 +6,7 @@ import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import sysmo.reform.components.editors.SetValue
 import sysmo.reform.shared.chart.DistributionSettings
-import sysmo.reform.shared.data.{NoValue, Record, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, ValueDependency}
+import sysmo.reform.shared.data.{FieldValue, NoValue, Record, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, ValueDependency}
 import sysmo.reform.util.log.Logging
 
 import scala.collection.mutable
@@ -43,7 +43,7 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
         case Some(f) => action match {
           case UpdateField(form_id, field_id, update) => {
             val new_value = update match {
-              case SetValue(v) => SomeValue(v)
+              case SetValue(v) => v
             }
             state = state + (field_id -> new_value)
             resolve_field_dependencies(field_id)
@@ -58,7 +58,7 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
       Ack.Continue
     }
 
-    override def onError(ex: Throwable): Unit = println(s"StreamingRecordManager / onError")
+    override def onError(ex: Throwable): Unit = logger.error(ex)
 
     override def onComplete(): Unit = println(s"StreamingRecordManager / onComplete")
   }

@@ -8,16 +8,22 @@ package object log {
     def info(msg: String): Unit
     def warn(msg: String): Unit
     def error(msg: String): Unit
+    def error(err: Throwable): Unit
   }
 
 
   object Logger {
     class Default(fmt_str: String) extends Logger {
-      def format(msg: String) = f"[$fmt_str] $msg"
-      def debug(msg: String) = dom.console.log(format(msg))
-      def info(msg: String)= dom.console.log(format(msg))
-      def warn(msg: String)= dom.console.warn(format(msg))
-      def error(msg: String)= dom.console.error(format(msg))
+      def format(msg: String, level: String) = f"[$level/$fmt_str] $msg"
+      def debug(msg: String): Unit = dom.console.log(format(msg, "DEBUG"))
+      def info(msg: String): Unit= dom.console.log(format(msg, "INFO"))
+      def warn(msg: String): Unit= dom.console.warn(format(msg, "WARN"))
+      def error(msg: String): Unit= dom.console.error(format(msg, "ERROR"))
+      def error(err: Throwable): Unit = {
+        val msg = err.getMessage
+        System.err.println(format(msg, "ERROR"))
+        err.getStackTrace.foreach(System.err.println)
+      }
     }
 
     def get_logger(klass: Class[_]): Logger = {

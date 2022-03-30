@@ -10,21 +10,7 @@ import sysmo.reform.shared.data.{EnumeratedOption, FieldOptionProvider, FieldVal
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-object AsyncSelectEditorFSM {
-//  sealed trait EditorMode
-//  case object Unfocused extends EditorMode
-//  case object LoadingChoices extends EditorMode
-//  case object Focused extends EditorMode
-//
-//  sealed trait Selection
-//  case object SelectedNone extends Selection
-//  case object SelectedAll extends Selection
-//  case object SelectedSome extends Selection
-
-}
-
 object AsyncSelectEditor extends AbstractEditor {
-  import sysmo.reform.components.editors.{AsyncSelectEditorFSM => fsm}
   import ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 
   case class Props(field : RecordField, record_id: String, value : FieldValue[String],
@@ -40,7 +26,12 @@ object AsyncSelectEditor extends AbstractEditor {
 
     def on_change(p: Props, s: State): RSNC.OnChange = (choice: RSNC.Choice, action_meta: RSNC.ActionMeta) => {
       action_meta.action match {
-        case "select-option" => action_generator.dispatch(SetValue(choice.value))
+        case "select-option" => action_generator.dispatch(SetValue(SomeValue(choice.value)))
+        case "deselect-option" => throw new IllegalArgumentException("deselect-option")
+        case "remove-value" => throw new IllegalArgumentException("remove-value")
+        case "pop-value" => throw new IllegalArgumentException("pop-value")
+        case "clear" => action_generator.dispatch(SetValue(NoValue[String]))
+        case "create-option" => throw new IllegalArgumentException("create-option")
       }
     }
 

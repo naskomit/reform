@@ -5,14 +5,14 @@ import scala.reflect.ClassTag
 
 
 sealed trait FieldValue[+V] extends Equals
-case class NoValue[V]() extends FieldValue[V]
-case class AllValues[V]() extends FieldValue[V]
-case class SomeValue[V](v: V) extends FieldValue[V]
-case class MultiValue[V](v: Seq[V]) extends FieldValue[V]
+case class NoValue[+V]() extends FieldValue[V]
+case class AllValues[+V]() extends FieldValue[V]
+case class SomeValue[+V](v: V) extends FieldValue[V]
+case class MultiValue[+V](v: Seq[V]) extends FieldValue[V]
 
 trait Record extends Equals
 object Record {
-  type ValueMap = Map[String, FieldValue[_]]
+  type ValueMap = Map[String, FieldValue[Any]]
 }
 
 sealed trait FieldType

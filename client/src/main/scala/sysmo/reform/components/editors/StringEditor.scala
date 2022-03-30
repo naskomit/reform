@@ -31,7 +31,7 @@ object StringEditor extends AbstractEditor {
     }
 
     def on_value_change(event : ReactEventFromInput) : Callback = Callback {
-      action_generator.dispatch(SetValue(event.target.value))
+      action_generator.dispatch(SetValue(SomeValue(event.target.value)))
     }
 
     def on_focus = Callback {

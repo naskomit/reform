@@ -57,9 +57,9 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
         $.modState(s => s.copy(mode = mode)).asAsyncCallback
 
       def ok_settings(props: Props): AsyncCallback[Unit] = Effects.activate_mode(Loading) >>
-        AsyncCallback.pure {logger.info("Beginning fetch data")} >>
+//        Callback {logger.info("Beginning fetch data")}.asAsyncCallback >>
         Effects.update_chart_result(props) >>
-        Callback {logger.info("Done fetch data")}.asAsyncCallback >>
+//        Callback {logger.info("Done fetch data")}.asAsyncCallback >>
         Effects.activate_mode(ActiveChart)
     }
 

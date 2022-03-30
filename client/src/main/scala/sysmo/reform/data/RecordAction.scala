@@ -1,8 +1,6 @@
 package sysmo.reform.data
 
 import sysmo.reform.components.editors.UpdateValue
-import sysmo.reform.shared.data.{FieldValue, Record}
-
 trait RecordAction {
 
 }
