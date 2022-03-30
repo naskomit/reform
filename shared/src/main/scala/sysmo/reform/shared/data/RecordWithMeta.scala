@@ -4,15 +4,15 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 
-sealed trait FieldValue[+V] extends Equals
-case class NoValue[+V]() extends FieldValue[V]
-case class AllValues[+V]() extends FieldValue[V]
-case class SomeValue[+V](v: V) extends FieldValue[V]
-case class MultiValue[+V](v: Seq[V]) extends FieldValue[V]
+sealed trait FieldValue extends Equals
+case object NoValue extends FieldValue
+case object AllValues extends FieldValue
+case class SomeValue[+V](v: V) extends FieldValue
+case class MultiValue[+V](v: Seq[V]) extends FieldValue
 
 trait Record extends Equals
 object Record {
-  type ValueMap = Map[String, FieldValue[Any]]
+  type ValueMap = Map[String, FieldValue]
 }
 
 sealed trait FieldType

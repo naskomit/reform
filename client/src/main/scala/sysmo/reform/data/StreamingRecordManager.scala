@@ -33,7 +33,7 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
     val affected = meta.field_dependencies.collect {
       case x: ValueDependency if x.sources.contains(field_id) => x.sink
     }
-    affected.foreach(id => state = state + (id -> NoValue[String]()))
+    affected.foreach(id => state = state + (id -> NoValue))
   }
 
   val action_handler: Observer[RecordAction] = new Observer[RecordAction] {

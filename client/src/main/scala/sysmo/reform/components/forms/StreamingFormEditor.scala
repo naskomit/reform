@@ -78,7 +78,7 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
 
                 AsyncSelectEditor(
                   field, p.record_id,
-                  s.value(field.name).asInstanceOf[FieldValue[String]],
+                  s.value(field.name),
                   action_hub.in_observers(k.toString),
                   new FieldOptionProvider {
                     override def get(flt: OptionFilter): Future[Seq[EnumeratedOption]] =
@@ -91,7 +91,7 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
               case _ =>
                 StringEditor(
                   f_name, p.record_id, field.make_label,
-                  s.value(field.name).asInstanceOf[FieldValue[String]],
+                  s.value(field.name),
                   action_hub.in_observers(k.toString)
                 )
             }

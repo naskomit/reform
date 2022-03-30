@@ -46,7 +46,7 @@ class DistributionChartMeta(val option_provider: RecordOptionProvider)
   )
 
   override def value_map(u: RecordType): Record.ValueMap = {
-    Map[String, FieldValue[_]](
+    Map[String, FieldValue](
       "data_id" -> SomeValue(u.data_id),
       "column_id" -> SomeValue(u.column_id)
     )

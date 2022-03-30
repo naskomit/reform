@@ -7,7 +7,7 @@ import sysmo.reform.components.actions.ActionStreamGenerator
 import sysmo.reform.shared.data.{FieldValue, NoValue, SomeValue}
 
 object StringEditor extends AbstractEditor {
-  case class Props(id : String, manager_id : String, label : String, value : FieldValue[String],
+  case class Props(id : String, manager_id : String, label : String, value : FieldValue,
                    focused: Boolean, action_listener: Observer[EditorAction])
   case class State()
 
@@ -18,7 +18,7 @@ object StringEditor extends AbstractEditor {
     def render (p: Props, s: State): VdomElement = {
       val editor_value = p.value match {
         case SomeValue(x) => x.toString
-        case NoValue() => "No value!!!"
+        case NoValue => "No value!!!"
         case _  => "Error!!!"
       }
       <.div(^.className:= "form-group", ^.key:= p.id,
@@ -45,7 +45,7 @@ object StringEditor extends AbstractEditor {
 
 
   // TODO
-  implicit def FieldValue_reuse[A]: Reusability[FieldValue[A]]  = Reusability.by_==
+  implicit def FieldValue_reuse[A]: Reusability[FieldValue]  = Reusability.by_==
   implicit val props_reuse = Reusability.by((_ : Props).value)
   implicit val state_reuse = Reusability.derive[State]
 
@@ -59,7 +59,7 @@ object StringEditor extends AbstractEditor {
     .configure(Reusability.shouldComponentUpdate)
     .build
 
-  def apply(id : String, manager_id : String, label : String, value : FieldValue[String],
+  def apply(id : String, manager_id : String, label : String, value : FieldValue,
             action_listener: Observer[EditorAction], focused : Boolean = false) = {
     println("StringEditor creating")
     component(Props(id, manager_id, label, value, focused, action_listener))

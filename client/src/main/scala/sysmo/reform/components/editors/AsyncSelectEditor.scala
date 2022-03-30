@@ -13,7 +13,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 object AsyncSelectEditor extends AbstractEditor {
   import ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 
-  case class Props(field : RecordField, record_id: String, value : FieldValue[String],
+  case class Props(field : RecordField, record_id: String, value : FieldValue,
                    action_listener: Observer[EditorAction], option_provider: FieldOptionProvider)
   case class State(choices: Seq[EnumeratedOption]) //selection: fsm.Selection,
 
@@ -30,7 +30,7 @@ object AsyncSelectEditor extends AbstractEditor {
         case "deselect-option" => throw new IllegalArgumentException("deselect-option")
         case "remove-value" => throw new IllegalArgumentException("remove-value")
         case "pop-value" => throw new IllegalArgumentException("pop-value")
-        case "clear" => action_generator.dispatch(SetValue(NoValue[String]))
+        case "clear" => action_generator.dispatch(SetValue(NoValue))
         case "create-option" => throw new IllegalArgumentException("create-option")
       }
     }
@@ -53,8 +53,8 @@ object AsyncSelectEditor extends AbstractEditor {
         <.label(p.field.label),
         RSNC(
           p.value match {
-            case SomeValue(x) => Some(EnumeratedOption(x, x))
-            case NoValue() => None
+            case SomeValue(x) => Some(EnumeratedOption(x.toString, x.toString))
+            case NoValue => None
           },
           s.choices,
           on_change = Some(on_change(p,s)),
@@ -69,7 +69,7 @@ object AsyncSelectEditor extends AbstractEditor {
     override def handle_action(props: Props, state: State)(action: ReactAction): AsyncSelectEditor.AsyncCallback[Unit] = ???
   }
 
-  implicit def FieldValue_reuse[A]: Reusability[FieldValue[A]]  = Reusability.by_==
+  implicit def FieldValue_reuse[A]: Reusability[FieldValue]  = Reusability.by_==
   implicit val props_reuse = Reusability.by((_ : Props).value)
   implicit val choices_reuse = Reusability.by_==[Seq[EnumeratedOption]]
   implicit val state_reuse = Reusability.derive[State]
@@ -84,7 +84,7 @@ object AsyncSelectEditor extends AbstractEditor {
 //    .configure(Reusability.shouldComponentUpdate)
     .build
 
-  def apply(field : RecordField, record_id: String, value : FieldValue[String],
+  def apply(field : RecordField, record_id: String, value : FieldValue,
             action_listener: Observer[EditorAction], option_provider: FieldOptionProvider) =
     component(Props(field, record_id, value, action_listener, option_provider))
 }
