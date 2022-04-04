@@ -10,10 +10,10 @@ object Transport extends CirceTransport {
 //    override def apply(a: Value[_]): Json = {
 //      a match {
 //        case _ if a.is_na => Json.Null
-//        case RealValue(x) => Json.fromDoubleOrNull(x.get)
-//        case IntValue(x) => Json.fromInt(x.get)
-//        case BoolValue(x) => Json.fromBoolean(x.get)
-//        case CharValue(x) => Json.fromString(x.get)
+//        case RealValue(x) => Json.fromDoubleOrNull(x.get_options)
+//        case IntValue(x) => Json.fromInt(x.get_options)
+//        case BoolValue(x) => Json.fromBoolean(x.get_options)
+//        case CharValue(x) => Json.fromString(x.get_options)
 //        case x => throw new IllegalStateException(f"Cannot encode value $x")
 //      }
 //    }

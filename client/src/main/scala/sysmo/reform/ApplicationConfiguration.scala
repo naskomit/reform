@@ -1,7 +1,7 @@
 package sysmo.reform
 
-import sysmo.reform.shared.data.TableDatasource
+import sysmo.reform.shared.data.TableService
 
 trait ApplicationConfiguration {
-  val table_source: TableDatasource
+  val table_source: TableService
 }

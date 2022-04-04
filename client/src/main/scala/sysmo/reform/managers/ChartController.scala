@@ -2,8 +2,8 @@ package sysmo.reform.managers
 
 import sysmo.reform.data.StreamingRecordManager
 import sysmo.reform.services.{ChartService, ServerChartService}
-import sysmo.reform.shared.chart.{ChartRequest, ChartSettings, DistributionChartMeta, DistributionOptionProvider, DistributionSettings}
-import sysmo.reform.shared.data.{EnumeratedOption, OptionFilter, Record, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, TableDatasource, table => sdt}
+import sysmo.reform.shared.chart.{ChartRequest, ChartSettings, DistributionOptionProvider}
+import sysmo.reform.shared.data.{RecordMeta, RecordOptionProvider, RecordWithMeta, TableService}
 import sysmo.reform.shared.{chart => Ch}
 import sysmo.reform.shared.{query => Q}
 
@@ -42,10 +42,10 @@ class DistributionChartController
 }
 
 object ChartController {
-  def distribution(default: Ch.DistributionSettings, table_service: TableDatasource)(implicit meta_holder: RecordWithMeta[Ch.DistributionSettings]): ChartController[Ch.DistributionSettings] = {
+  def distribution(default: Ch.DistributionSettings, table_service: TableService)(implicit meta_holder: RecordWithMeta[Ch.DistributionSettings]): ChartController[Ch.DistributionSettings] = {
     val opt_provider = new DistributionOptionProvider(table_service)
     val meta = meta_holder._meta(opt_provider)
-    new DistributionChartController(StreamingRecordManager[Ch.DistributionSettings](default), meta)
+    new DistributionChartController(StreamingRecordManager[Ch.DistributionSettings](default, meta), meta)
   }
 
 }

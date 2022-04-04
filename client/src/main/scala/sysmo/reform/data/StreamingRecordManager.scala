@@ -5,18 +5,19 @@ import monix.execution.cancelables.SingleAssignCancelable
 import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import sysmo.reform.components.editors.SetValue
-import sysmo.reform.shared.chart.DistributionSettings
 import sysmo.reform.shared.data.{FieldValue, NoValue, Record, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, ValueDependency}
 import sysmo.reform.util.log.Logging
 
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U]) extends Logging {
   type State = Record.ValueMap
   var on_new_state: Option[Function1[State, Ack]] = None
   var state: State = meta.value_map(initial_value)
 
+  // TODO What happens if second subscription???
   val record_stream: Observable[State] = Observable.create(OverflowStrategy.Unbounded)
     { sub => {
       sub.onNext(state)
@@ -24,11 +25,16 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
       on_new_state = Some((state: State) => {
         sub.onNext(state).syncOnStopOrFailure(_ => c.cancel())
       })
+      meta.option_provider.label_values(state).onComplete {
+        case Success(values) => on_new_state.get(values)
+        case Failure(err) => logger.error(err)
+      }
       c := Cancelable(() => on_new_state = None)
     }
   }
 
-  private def resolve_field_dependencies(field_id: String) = {
+  // TODO This is only direct dependency; also do we always want NoValue?
+  private def resolve_field_dependencies(field_id: String): Unit = {
     val unresolved = mutable.Set()
     val affected = meta.field_dependencies.collect {
       case x: ValueDependency if x.sources.contains(field_id) => x.sink
@@ -47,8 +53,7 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
             }
             state = state + (field_id -> new_value)
             resolve_field_dependencies(field_id)
-            logger.info("New state:")
-            logger.info(state.toString())
+            logger.info(s"New state: ${state.toString()}")
             f(state)
           }
         }
@@ -67,7 +72,7 @@ class StreamingRecordManager[U <: Record](initial_value: U, meta: RecordMeta[U])
 }
 
 object StreamingRecordManager {
-  def apply[U <: Record](initial_value : U)(implicit meta_holder: RecordWithMeta[U]): StreamingRecordManager[U] =
-    new StreamingRecordManager[U](initial_value, meta_holder._meta)
+  def apply[U <: Record](initial_value : U, meta: RecordMeta[U]): StreamingRecordManager[U] =
+    new StreamingRecordManager[U](initial_value, meta)
 }
 

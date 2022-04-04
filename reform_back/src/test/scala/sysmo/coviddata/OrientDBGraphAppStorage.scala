@@ -6,7 +6,6 @@ import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Order, P}
-import sysmo.coviddata.shared.data.PatientRecord
 import sysmo.reform.db.GraphAppStorage
 import sysmo.reform.shared.data.RecordWithMeta
 import sysmo.reform.shared.data.{table => sdt}
@@ -23,7 +22,12 @@ import sysmo.reform.util.Logging
 object OrientDBGraphAppStorage extends Logging {
   val uri: String = "remote:localhost/covid"
   val factory = new OrientGraphFactory(uri, "nasko", "nasko")
-  val app_storage = new GraphAppStorage(factory)
+  val app_storage = new GraphAppStorage(factory, Seq(
+    CD.SocioDemographic.schema,
+    CD.Clinical.schema,
+    CD.Therapy.schema,
+    CD.Immunology.schema
+  ))
 
   val doc_path = "doc/SampleData_3.xlsx"
 
@@ -41,12 +45,7 @@ object OrientDBGraphAppStorage extends Logging {
   def test_import_2() = {
     app_storage.drop_schema
     app_storage.drop_data
-    app_storage.apply_schemas(Seq(
-      CD.SocioDemographic.schema,
-      CD.Clinical.schema,
-      CD.Therapy.schema,
-      CD.Immunology.schema
-    ))
+    app_storage.apply_schemas()
     sdt.with_table_manager()(tm => {
       val reader = new WorkbookReader(doc_path, tm)
       val data = reader.read_table_collection(TableCollectionRead(Map(

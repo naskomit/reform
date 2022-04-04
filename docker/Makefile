@@ -1,6 +1,9 @@
 UID=$(shell id -u)
 GID =$(shell id -g)
 
+down:
+	docker-compose down
+
 orientdb/setup:
 	docker-compose build --build-arg HOST_UID=$(UID) --build-arg HOST_GID=$(GID) orientdb
 	mkdir -p ../data/orientdb/databases/

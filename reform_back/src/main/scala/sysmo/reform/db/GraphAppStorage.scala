@@ -25,7 +25,12 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
   val schema_map: Map[String, G.EntitySchema] = schemas.map(x => (x.name, x)).toMap
   def entity_schema(klass: String): Option[G.EntitySchema] = schema_map.get(klass)
   def classes(graph: OrientGraph): Iterable[OClass] = graph.database.getMetadata.getSchema.getClasses.asScala
-
+  def transactional(f: OrientGraph => Unit) = {
+    val graph  = graph_factory.getTx
+    f(graph)
+    graph.commit()
+    graph.close()
+  }
 //  def create_schema(rec_meta_list: Seq[RecordMeta[_]]): Unit = {
 //    logger.info("========== Creating classes ==========")
 //    Using(graph_factory.getTx)  { graph =>
@@ -49,7 +54,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
 //
 //      }
 //    }
-//  }.get
+//  }.get_options
 
   def apply_schemas(): Unit = {
     logger.info("========== Creating database schema ==========")

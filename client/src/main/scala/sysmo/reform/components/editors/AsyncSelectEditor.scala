@@ -6,7 +6,8 @@ import monix.reactive.Observer
 import sysmo.reform.components.ReactAction
 import sysmo.reform.components.actions.ActionStreamGenerator
 import sysmo.reform.components.select.ReactSelectFacades
-import sysmo.reform.shared.data.{EnumeratedOption, FieldOptionProvider, FieldValue, NoFilter, NoValue, OptionFilter, RecordOptionProvider, RecordField, SomeValue}
+import sysmo.reform.shared.data.{FieldOptionProvider, FieldValue, NoFilter, NoValue, OptionFilter, RecordField, RecordOptionProvider, SomeValue}
+import sysmo.reform.shared.util.LabeledValue
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -15,7 +16,7 @@ object AsyncSelectEditor extends AbstractEditor {
 
   case class Props(field : RecordField, record_id: String, value : FieldValue,
                    action_listener: Observer[EditorAction], option_provider: FieldOptionProvider)
-  case class State(choices: Seq[EnumeratedOption]) //selection: fsm.Selection,
+  case class State(choices: Seq[LabeledValue[_]]) //selection: fsm.Selection,
 
   final class Backend($: BackendScope[Props, State]) extends IBackend {
     val action_generator : ActionStreamGenerator[EditorAction] =
@@ -26,7 +27,10 @@ object AsyncSelectEditor extends AbstractEditor {
 
     def on_change(p: Props, s: State): RSNC.OnChange = (choice: RSNC.Choice, action_meta: RSNC.ActionMeta) => {
       action_meta.action match {
-        case "select-option" => action_generator.dispatch(SetValue(SomeValue(choice.value)))
+        case "select-option" => {
+          val original_choice = s.choices.find(c => c.value == choice.value).get
+          action_generator.dispatch(SetValue(SomeValue(original_choice)))
+        }
         case "deselect-option" => throw new IllegalArgumentException("deselect-option")
         case "remove-value" => throw new IllegalArgumentException("remove-value")
         case "pop-value" => throw new IllegalArgumentException("pop-value")
@@ -53,7 +57,7 @@ object AsyncSelectEditor extends AbstractEditor {
         <.label(p.field.label),
         RSNC(
           p.value match {
-            case SomeValue(x) => Some(EnumeratedOption(x.toString, x.toString))
+            case SomeValue(x) => Some(x)
             case NoValue => None
           },
           s.choices,
@@ -71,7 +75,7 @@ object AsyncSelectEditor extends AbstractEditor {
 
   implicit def FieldValue_reuse[A]: Reusability[FieldValue]  = Reusability.by_==
   implicit val props_reuse = Reusability.by((_ : Props).value)
-  implicit val choices_reuse = Reusability.by_==[Seq[EnumeratedOption]]
+  implicit val choices_reuse = Reusability.by_==[Seq[LabeledValue[_]]]
   implicit val state_reuse = Reusability.derive[State]
 
   val component =

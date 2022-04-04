@@ -1,14 +1,19 @@
 package sysmo.reform.shared.data
 
-import scala.concurrent.{ExecutionContext, Future}
+import sysmo.reform.shared.data.Record.ValueMap
+import sysmo.reform.shared.util.LabeledValue
+
+import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 
-sealed trait FieldValue extends Equals
+
+
+sealed trait FieldValue
 case object NoValue extends FieldValue
 case object AllValues extends FieldValue
-case class SomeValue[+V](v: V) extends FieldValue
-case class MultiValue[+V](v: Seq[V]) extends FieldValue
+case class SomeValue[+V](v: LabeledValue[V]) extends FieldValue
+case class MultiValue[+V](v: Seq[LabeledValue[V]]) extends FieldValue
 
 trait Record extends Equals
 object Record {
@@ -23,20 +28,15 @@ case class BoolType() extends FieldType
 
 sealed trait Domain
 
-case class EnumeratedOption(value: String, label: String)
-case class EnumeratedDomain(options: Seq[EnumeratedOption]) extends Domain {
+case class EnumeratedDomain(options: Seq[LabeledValue[_]]) extends Domain {
 }
 
 object EnumeratedDomain {
   def apply[X: ClassTag](options: Seq[String]): EnumeratedDomain =
-    EnumeratedDomain(options.map(x => EnumeratedOption(x, x)))
+    EnumeratedDomain(options.map(x => LabeledValue(x, Some(x))))
 }
 
-case class EnumeratedDomainSource[-U](option_provider: RecordOptionProvider, field_id: String) extends Domain {
-  def get(record: Record.ValueMap, flt: OptionFilter): Future[Seq[EnumeratedOption]] = {
-    option_provider.get(record, field_id, flt)
-  }
-}
+case class EnumeratedDomainSource[-U](option_provider: RecordOptionProvider, field_id: String) extends Domain
 
 case class RecordField(name: String, label: Option[String], tpe: FieldType, domain: Option[Domain] = None) {
   def make_label: String = label.getOrElse(name)
@@ -45,19 +45,24 @@ case class RecordField(name: String, label: Option[String], tpe: FieldType, doma
 
 sealed trait OptionFilter
 case object NoFilter extends OptionFilter
-case class StringFilter(exp: String) extends OptionFilter
+case class LabelFilter(exp: String) extends OptionFilter
+case class ValueFilter(v: Any) extends OptionFilter
 
 trait RecordOptionProvider {
-  def get(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]]
+  def get_options(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[LabeledValue[_]]]
+  def label_values(record: Record.ValueMap): Future[ValueMap]
 }
 
 object DummyRecordOptionProvider$ extends RecordOptionProvider {
-  def get(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[EnumeratedOption]] =
+  def get_options(record: Record.ValueMap, field_id: String, flt: OptionFilter): Future[Seq[LabeledValue[_]]] =
     Future.successful(Seq())
+
+  override def label_values(record: ValueMap): Future[ValueMap] =
+    Future.successful(record)
 }
 
 trait FieldOptionProvider {
-  def get(flt: OptionFilter): Future[Seq[EnumeratedOption]]
+  def get(flt: OptionFilter): Future[Seq[LabeledValue[_]]]
 }
 
 trait Interdependency

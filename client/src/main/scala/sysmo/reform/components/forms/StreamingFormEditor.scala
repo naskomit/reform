@@ -7,10 +7,11 @@ import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, SelectEditor, SetValue, StringEditor, UpdateValue}
+import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, StringEditor, UpdateValue}
 import sysmo.reform.components.actions.ActionHub
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.reform.shared.data.{EnumeratedDomain, EnumeratedDomainSource, EnumeratedOption, FieldOptionProvider, FieldValue, OptionFilter, RecordOptionProvider, Record, RecordField, RecordMeta, RecordWithMeta}
+import sysmo.reform.shared.data.{EnumeratedDomainSource, FieldOptionProvider, FieldValue, OptionFilter, Record, RecordField, RecordMeta, RecordOptionProvider, RecordWithMeta}
+import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.util.TypeSingleton
 
 
@@ -73,7 +74,7 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
               case (_, Some(EnumeratedDomainSource(option_provider, _))) => {
 
                 //                val field_option_provider = (flt: OptionFilter) => {
-                //                  option_provider.get(s.value, f_name, flt)
+                //                  option_provider.get_options(s.value, f_name, flt)
                 //                }
 
                 AsyncSelectEditor(
@@ -81,8 +82,8 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
                   s.value(field.name),
                   action_hub.in_observers(k.toString),
                   new FieldOptionProvider {
-                    override def get(flt: OptionFilter): Future[Seq[EnumeratedOption]] =
-                      p.meta.option_provider.get(s.value, field.name, flt)
+                    override def get(flt: OptionFilter): Future[Seq[LabeledValue[_]]] =
+                      p.meta.option_provider.get_options(s.value, field.name, flt)
                   }
                 )
 

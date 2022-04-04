@@ -123,7 +123,7 @@ object ArrowVector {
       extends  ArrowStorage[ValueType](manager, backend) {
       override def set_safe(index: Int, v: ValueType): Unit = backend.setSafe(index, v.getBytes(StandardCharsets.UTF_8))
       override def get(index: Int): Option[ValueType] = {
-        //: ValueType = new String(backend.get(index), StandardCharsets.UTF_8)
+        //: ValueType = new String(backend.get_options(index), StandardCharsets.UTF_8)
         val holder = new av.holders.NullableVarCharHolder
         backend.get(index, holder)
         if (backend.isSet(index) == 0)

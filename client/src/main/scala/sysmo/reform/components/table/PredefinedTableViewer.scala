@@ -4,7 +4,7 @@ import japgolly.scalajs.react.component.Scala.RawMounted
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.shared.data.TableDatasource
+import sysmo.reform.shared.data.TableService
 import sysmo.reform.shared.data.table.Schema
 import sysmo.reform.shared.{query => Q}
 
@@ -15,7 +15,7 @@ object PredefinedTableViewer extends ReactComponent {
 
   import japgolly.scalajs.react._
 
-  case class Props(table_data_source: TableDatasource, table_id: String)
+  case class Props(table_data_source: TableService, table_id: String)
   case class State(table_schema: Option[Schema], table_id_loaded: String)
 
   final class Backend($: BackendScope[Props, State]) {

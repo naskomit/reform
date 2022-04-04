@@ -6,12 +6,13 @@ import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
 import sysmo.reform.services.ServerTableDataSource
-import sysmo.reform.shared.data.{TableDatasource, graph => G, table => sdt}
+import sysmo.reform.shared.data.{TableService, graph => G, table => sdt}
 import sysmo.reform.shared.util.{Named, NamedValue}
 import sysmo.coviddata.shared.{data => CD}
+import sysmo.reform.components.diagrams.mermaid.MermaidFacades
 
 object AppConfig extends ApplicationConfiguration {
-  override val table_source: TableDatasource = new ServerTableDataSource(
+  override val table_source: TableService = new ServerTableDataSource(
     NamedValue(
       "SocioDemographic", Some("Социо-демографски"),
       G.Schema.table_schema_builder(CD.SocioDemographic.schema).build
@@ -39,5 +40,7 @@ object Application extends ReactApplication {
     sdt.enable_global_manager(true)
     super.init_react(e)
   }
+
+//  MermaidFacades.show()
 
 }

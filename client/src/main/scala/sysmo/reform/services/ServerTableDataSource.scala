@@ -4,7 +4,7 @@ import autowire.Core.Request
 import io.circe.syntax._
 import sysmo.reform.shared.data.table.Schema
 import sysmo.reform.shared.{query => Q}
-import sysmo.reform.shared.data.{NoFilter, OptionFilter, TableDatasource, table => sdt}
+import sysmo.reform.shared.data.{LabelFilter, NoFilter, OptionFilter, TableService, ValueFilter, table => sdt}
 import sysmo.reform.shared.util.{Named, NamedValue}
 
 import scala.concurrent.Future
@@ -12,7 +12,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import sysmo.reform.util.log.Logging
 
 // TODO this is specific
-class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableDatasource with Logging {
+class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableService with Logging {
   import sdt.Transport._
   import Q.Transport._
 
@@ -20,9 +20,15 @@ class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableDatasourc
   val base_path: Seq[String] = Seq("sysmo", "reform", "services", "TableDataService")
 
   override def list_tables(optionFilter: OptionFilter): Future[Seq[Named]] = {
-    if (optionFilter != NoFilter)
-      throw new NotImplementedError("Filter not implemented")
-    Future(schemas.map(x => Named(x.name, x.label)).toSeq)
+    Future(schemas
+      .map(x => Named(x.name, x.label))
+      .filter(x => optionFilter match {
+        case NoFilter => true
+        case LabelFilter(label) => x.make_label.contains(label)
+        case ValueFilter(v) => x.name == v
+      }
+
+      ).toSeq)
   }
 
   override def table_schema(table_id: String): Future[Schema] = {

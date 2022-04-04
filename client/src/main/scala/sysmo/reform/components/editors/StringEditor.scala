@@ -5,6 +5,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import sysmo.reform.components.actions.ActionStreamGenerator
 import sysmo.reform.shared.data.{FieldValue, NoValue, SomeValue}
+import sysmo.reform.shared.util.LabeledValue
 
 object StringEditor extends AbstractEditor {
   case class Props(id : String, manager_id : String, label : String, value : FieldValue,
@@ -31,7 +32,7 @@ object StringEditor extends AbstractEditor {
     }
 
     def on_value_change(event : ReactEventFromInput) : Callback = Callback {
-      action_generator.dispatch(SetValue(SomeValue(event.target.value)))
+      action_generator.dispatch(SetValue(SomeValue(LabeledValue(event.target.value))))
     }
 
     def on_focus = Callback {

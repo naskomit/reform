@@ -33,7 +33,7 @@ package sysmo.coviddata.shared.data
 //    sdt.Field.Char("14d").label("Рискови фактори / Психо-травми"),
 //    sdt.Field.Char("14e").label("Рискови фактори / Пренапрежение на ОДА"),
 //    sdt.Field.Char("14f").label("Други")
-//  ).map(x => x.get)
+//  ).map(x => x.get_options)
 //  val schema = sdt.Schema(fields)
 //}
 

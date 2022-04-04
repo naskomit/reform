@@ -6,12 +6,12 @@ import scala.scalajs.js
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.components.table.aggrid.AgGridComponent
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
-import sysmo.reform.shared.data.{TableDatasource, table => sdt}
+import sysmo.reform.shared.data.{TableService, table => sdt}
 
 object RecordTableViewer {
   import japgolly.scalajs.react._
 
-  case class Props(ds: TableDatasource, source: Q.QuerySource, schema: sdt.Schema, height: String)
+  case class Props(ds: TableService, source: Q.QuerySource, schema: sdt.Schema, height: String)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -67,7 +67,7 @@ object RecordTableViewer {
     .renderBackend[Backend]
     .build
 
-  def apply(ds : TableDatasource, schema: sdt.Schema, source: Q.QuerySource, height: String = "800px") = {
+  def apply(ds : TableService, schema: sdt.Schema, source: Q.QuerySource, height: String = "800px") = {
     component(Props(ds, source, schema, height))
   }
 }

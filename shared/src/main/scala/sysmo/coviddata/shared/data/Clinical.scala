@@ -45,7 +45,7 @@ import sysmo.reform.shared.data.{table => sdt}
 //    sdt.Field.Char("30a").label("Характеристики на отпадналостта"),
 //    sdt.Field.Char("30b").label("Наличие на безапетитие"),
 //    sdt.Field.Char("30c").label("Характеристики на безапетитието"),
-//  ).map(x => x.get)
+//  ).map(x => x.get_options)
 //  val schema = sdt.Schema(fields)
 //
 //}

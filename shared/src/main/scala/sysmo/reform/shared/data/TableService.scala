@@ -6,7 +6,7 @@ import sysmo.reform.shared.util.Named
 
 import scala.concurrent.Future
 
-trait TableDatasource {
+trait TableService {
   type RemoteBatch = Future[Table]
 //  def row_count : Future[Int]
   def list_tables(optionFilter: OptionFilter): Future[Seq[Named]]

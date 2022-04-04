@@ -6,7 +6,7 @@ import sysmo.reform.components.chart.ChartContainer
 import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.{chart => Ch}
-import sysmo.reform.shared.data.{TableDatasource, graph => G}
+import sysmo.reform.shared.data.{TableService, graph => G}
 import sysmo.coviddata.shared.{data => CD}
 import sysmo.reform.ApplicationConfiguration
 
@@ -15,15 +15,8 @@ import scala.scalajs.js
 object ChartPanel extends ApplicationPanel {
   import japgolly.scalajs.react._
 
-  case class Props(table_service: TableDatasource)
+  case class Props(table_service: TableService)
   case class State()
-  val clin_schema = G.Schema
-    .table_schema_builder(CD.Clinical.schema)
-    .build
-  val socio_demographic_schema = G.Schema
-    .table_schema_builder(CD.SocioDemographic.schema)
-    .build
-
   val vmargin = 30
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {

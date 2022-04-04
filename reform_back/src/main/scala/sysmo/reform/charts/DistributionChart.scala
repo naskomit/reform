@@ -30,8 +30,8 @@ object DistributionChart {
 //    val data = Util.plotly_series(column)
 //      .map(column => column.iterator
 //        .filter((element: sdt. Value) => element.is_set)
-//        .map((element : sdt.Value) => element.v.get))
-//      .get.toSeq
+//        .map((element : sdt.Value) => element.v.get_options))
+//      .get_options.toSeq
 
     val traces =
       if (column.field.field_type.tpe == sdt.VectorType.Char)

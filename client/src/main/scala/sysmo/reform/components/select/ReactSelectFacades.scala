@@ -2,7 +2,7 @@ package sysmo.reform.components.select
 
 import japgolly.scalajs.react.{Children, JsComponent}
 import org.scalajs.dom
-import sysmo.reform.shared.data.EnumeratedOption
+import sysmo.reform.shared.util.LabeledValue
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -17,7 +17,7 @@ object ReactSelectFacades {
 
     @js.native
     trait Choice extends js.Object {
-      var value: String = js.native
+      var value: Any = js.native
       var label: String = js.native
     }
 
@@ -47,8 +47,8 @@ object ReactSelectFacades {
 
     val component = JsComponent[Props, Children.None, Null](Select)
 
-    def apply(value: Option[EnumeratedOption], options : Seq[EnumeratedOption],
-              defaultValue : Option[EnumeratedOption] = None,
+    def apply(value: Option[LabeledValue[_]], options : Seq[LabeledValue[_]],
+              defaultValue : Option[LabeledValue[_]] = None,
               is_disabled: Option[Boolean] = None, is_loading: Option[Boolean] = None,
               is_clearable: Option[Boolean] = None, is_searchable: Option[Boolean] = None,
               on_change: Option[OnChange] = None, on_input_change: Option[OnInputChange] = None,
@@ -60,7 +60,7 @@ object ReactSelectFacades {
         case Some(p) => {
           val dv = (new js.Object).asInstanceOf[Choice]
           dv.value = p.value
-          dv.label = p.label
+          dv.label = p.make_label
           dv
         }
         case None => null
@@ -70,7 +70,7 @@ object ReactSelectFacades {
         case Some(p) => {
           val dv = (new js.Object).asInstanceOf[Choice]
           dv.value = p.value
-          dv.label = p.label
+          dv.label = p.make_label
           dv
         }
         case None => js.undefined
@@ -79,7 +79,7 @@ object ReactSelectFacades {
       props.options = options.map { x => {
         val option = (new js.Object).asInstanceOf[Choice]
         option.value =  x.value
-        option.label = x.label
+        option.label = x.make_label
         option
       }}.toJSArray
 

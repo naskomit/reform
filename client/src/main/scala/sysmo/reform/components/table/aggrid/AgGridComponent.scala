@@ -9,10 +9,10 @@ import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.util.{Failure, Success}
-import sysmo.reform.shared.data.{TableDatasource, table => sdt}
+import sysmo.reform.shared.data.{TableService, table => sdt}
 import sysmo.reform.shared.{query => Q}
 
-class AgGridSourceAgaptor(ds: TableDatasource, source: QuerySource, schema: sdt.Schema) {
+class AgGridSourceAgaptor(ds: TableService, source: QuerySource, schema: sdt.Schema) {
   private def process_filter(filter_model : AgGridFacades.FilterModel): Option[QueryFilter] = {
     val filter_seq = filter_model.toMap.map {case (k, v) =>
       val extractor = new AgGridFacades.FilterModelJSExtractor(k)
@@ -78,7 +78,7 @@ class AgGridSourceAgaptor(ds: TableDatasource, source: QuerySource, schema: sdt.
 }
 
 object AgGridSourceAgaptor{
-  def apply(ds: TableDatasource, source: QuerySource, schema: sdt.Schema): AgGridSourceAgaptor =
+  def apply(ds: TableService, source: QuerySource, schema: sdt.Schema): AgGridSourceAgaptor =
     new AgGridSourceAgaptor(ds, source, schema)
 }
 
@@ -105,7 +105,7 @@ object AgGridComponent extends ReactComponent {
     .renderBackend[Backend]
     .build
 
-  def apply(ds: TableDatasource, table: QuerySource, schema: sdt.Schema, columns: Seq[agf.ColumnProps], height: String): Unmounted =
+  def apply(ds: TableService, table: QuerySource, schema: sdt.Schema, columns: Seq[agf.ColumnProps], height: String): Unmounted =
     component(Props(AgGridSourceAgaptor(ds, table, schema), columns, height))
 
 }
