@@ -11,93 +11,160 @@ import japgolly.scalajs.react.{Children, JsComponent}
 import scala.scalajs.js.|
 import scalajs.js.annotation.JSGlobal
 import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.util.log.Logging
 
-object AgGridFacades {
+object AgGridFacades extends Logging {
   @js.native
   trait GridOptions extends js.Object {
     var rowModelType: String = js.native
     var datasource: TableDatasource  = js.native
   }
 
-  type FilterModel = js.Dictionary[ColumnFilter]
+  type FilterModel = js.Dictionary[ColumnFilterJS]
   type SortModel = js.Array[SortModelItem]
 
   @js.native
-  trait ColumnFilter extends js.Object {
-    val filterType: String = js.native
-  }
-
-  class FilterModelJSExtractor(column: String) {
-    def unapply(flt : ColumnFilter): Option[PredicateExpression] = {
-      if (flt.hasOwnProperty("filterType")) {
-        flt.filterType match {
-          case "text" => {
-            val f = flt.asInstanceOf[TextFilterModelJS]
-            val predicate = f.`type` match {
-              case "equals" => StringPredicateOp.Equal
-              case "notEqual" => StringPredicateOp.NotEqual
-              case "contains" => StringPredicateOp.Containing
-              case "notContains" => StringPredicateOp.NotContaining
-              case "startsWith" => StringPredicateOp.StartingWith
-              case "endsWith" => StringPredicateOp.EndingWith
-
-            }
-            Some(StringPredicate(predicate, ColumnRef(column), Val(f.filter)))
-          }
-
-          case "number" => {
-            val f = flt.asInstanceOf[NumberFilterModelJS]
-            if (f.`type` == "inRange") {
-              Some(LogicalAnd(
-                NumericalPredicate(NumericalPredicateOp.>=, ColumnRef(column), Val(f.filter)),
-                NumericalPredicate(NumericalPredicateOp.<=, ColumnRef(column), Val(f.filterTo))
-              ))
-            } else {
-              val predicate = f.`type` match {
-                case "equals" => NumericalPredicateOp.Equal
-                case "notEqual" => NumericalPredicateOp.NotEqual
-                case "lessThan" => NumericalPredicateOp.<
-                case "lessThanOrEqual" => NumericalPredicateOp.<=
-                case "greaterThan" => NumericalPredicateOp.>
-                case "greaterThanOrEqual" => NumericalPredicateOp.>=
-
-              }
-              Some(NumericalPredicate(predicate, ColumnRef(column), Val(f.filter)))
-            }
-          }
-
-          case x => {
-            dom.console.warn(f"Unimplemented filter type $x")
-            None
-          }
-        }
-      } else
-        None
-    }
+  trait ColumnFilterJS extends js.Object {
+    val filterType: js.UndefOr[String] = js.native
+    val operator: js.UndefOr[String] = js.native
+    val `type`: js.UndefOr[String] = js.native
   }
 
   @js.native
-  trait TextFilterModelJS extends ColumnFilter {
+  trait BinaryFilterJS extends ColumnFilterJS {
+    val condition1: ColumnFilterJS = js.native
+    val condition2: ColumnFilterJS = js.native
+  }
+
+  @js.native
+  trait TextFilterModelJS extends ColumnFilterJS {
     val filter: String = js.native
     val filterTo: js.UndefOr[String] = js.native
-    val `type`: String = js.native
   }
 
   @js.native
-  trait NumberFilterModelJS extends ColumnFilter {
+  trait NumberFilterModelJS extends ColumnFilterJS {
     val filter: Double = js.native
     val filterTo: Double = js.native
-    val `type`: String = js.native
   }
 
   @js.native
-  trait DateFilterModelJS extends ColumnFilter {
+  trait DateFilterModelJS extends ColumnFilterJS {
     val dateFrom: String = js.native
     val dateTo: String = js.native
-    val `type`: String = js.native
+  }
+
+  case class ColumnFilter(filter_type: Option[String], operator: Option[String], tpe: Option[String])
+  object ColumnFilter {
+    def fromJS(flt_js: ColumnFilterJS): ColumnFilter =
+      ColumnFilter(flt_js.filterType.toOption, flt_js.operator.toOption, flt_js.`type`.toOption)
   }
 
 
+  def extract_filter(flt_js : ColumnFilterJS, column: String): Option[PredicateExpression] = {
+      val flt = ColumnFilter.fromJS(flt_js)
+      println("Filter")
+      println(flt)
+      dom.console.log(flt_js)
+      flt match {
+        case ColumnFilter(_, Some(op), None) => {
+          val flt_binary = flt_js.asInstanceOf[BinaryFilterJS]
+          val cond1 = extract_filter(flt_binary.condition1, column)
+          val cond2 = extract_filter(flt_binary.condition2, column)
+          (op, cond1, cond2) match {
+            case ("AND", Some(c1), Some(c2)) => Some(LogicalAnd(c1, c2))
+            case ("OR", Some(c1), Some(c2)) => Some(LogicalOr(c1, c2))
+            case _ => {logger.warn(s"Cannot decode filter ${(op, cond1, cond2)}"); None}
+          }
+        }
+
+        case ColumnFilter(Some("text"), None, Some(pred_str)) => {
+          val f = flt_js.asInstanceOf[TextFilterModelJS]
+          val predicate = pred_str match {
+            case "equals" => StringPredicateOp.Equal
+            case "notEqual" => StringPredicateOp.NotEqual
+            case "contains" => StringPredicateOp.Containing
+            case "notContains" => StringPredicateOp.NotContaining
+            case "startsWith" => StringPredicateOp.StartingWith
+            case "endsWith" => StringPredicateOp.EndingWith
+
+          }
+          Some(StringPredicate(predicate, ColumnRef(column), Val(f.filter)))
+        }
+
+        case ColumnFilter(Some("number"), None, Some(pred_str)) => {
+          val f = flt_js.asInstanceOf[NumberFilterModelJS]
+          if (pred_str == "inRange") {
+            Some(LogicalAnd(
+              NumericalPredicate(NumericalPredicateOp.>=, ColumnRef(column), Val(f.filter)),
+              NumericalPredicate(NumericalPredicateOp.<=, ColumnRef(column), Val(f.filterTo))
+            ))
+          } else {
+            val predicate = pred_str match {
+              case "equals" => NumericalPredicateOp.Equal
+              case "notEqual" => NumericalPredicateOp.NotEqual
+              case "lessThan" => NumericalPredicateOp.<
+              case "lessThanOrEqual" => NumericalPredicateOp.<=
+              case "greaterThan" => NumericalPredicateOp.>
+              case "greaterThanOrEqual" => NumericalPredicateOp.>=
+
+            }
+            Some(NumericalPredicate(predicate, ColumnRef(column), Val(f.filter)))
+          }
+        }
+
+        case ColumnFilter(Some("date"), None, pred) => {
+          None
+
+        }
+
+        case _ => {logger.warn(s"Cannot decode filter $flt") ;None}
+      }
+//      if (flt_js.hasOwnProperty("filterType")) {
+//        flt_js.filterType match {
+//          case "text" => {
+//            val f = flt_js.asInstanceOf[TextFilterModelJS]
+//            val predicate = f.`type` match {
+//              case "equals" => StringPredicateOp.Equal
+//              case "notEqual" => StringPredicateOp.NotEqual
+//              case "contains" => StringPredicateOp.Containing
+//              case "notContains" => StringPredicateOp.NotContaining
+//              case "startsWith" => StringPredicateOp.StartingWith
+//              case "endsWith" => StringPredicateOp.EndingWith
+//
+//            }
+//            Some(StringPredicate(predicate, ColumnRef(column), Val(f.filter)))
+//          }
+//
+//          case "number" => {
+//            val f = flt_js.asInstanceOf[NumberFilterModelJS]
+//            if (f.`type` == "inRange") {
+//              Some(LogicalAnd(
+//                NumericalPredicate(NumericalPredicateOp.>=, ColumnRef(column), Val(f.filter)),
+//                NumericalPredicate(NumericalPredicateOp.<=, ColumnRef(column), Val(f.filterTo))
+//              ))
+//            } else {
+//              val predicate = f.`type` match {
+//                case "equals" => NumericalPredicateOp.Equal
+//                case "notEqual" => NumericalPredicateOp.NotEqual
+//                case "lessThan" => NumericalPredicateOp.<
+//                case "lessThanOrEqual" => NumericalPredicateOp.<=
+//                case "greaterThan" => NumericalPredicateOp.>
+//                case "greaterThanOrEqual" => NumericalPredicateOp.>=
+//
+//              }
+//              Some(NumericalPredicate(predicate, ColumnRef(column), Val(f.filter)))
+//            }
+//          }
+//
+//          case x => {
+//            dom.console.warn(f"Unimplemented filter type $x")
+//            None
+//          }
+//        }
+//      } else
+//        None
+  }
 
   @js.native
   trait SortModelItem extends js.Object {

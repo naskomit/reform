@@ -48,11 +48,12 @@ class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableService w
 
   override def query_table(q : Q.Query): RemoteBatch = {
     logger.info("run_query")
-    logger.info(q.toString)
+    val q_json = q.asJson
+    logger.info(q_json)
 
     val resp = api_client.doCall(Request(
       base_path :+ "query_table",
-      Map("query" -> q.asJson)
+      Map("query" -> q_json)
     ))
     resp.map(x => x.as[sdt.Table] match {
       case Left(err) =>  throw new RuntimeException(f"Expected Table , got $x")

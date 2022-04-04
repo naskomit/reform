@@ -15,10 +15,8 @@ import sysmo.reform.shared.{query => Q}
 class AgGridSourceAgaptor(ds: TableService, source: QuerySource, schema: sdt.Schema) {
   private def process_filter(filter_model : AgGridFacades.FilterModel): Option[QueryFilter] = {
     val filter_seq = filter_model.toMap.map {case (k, v) =>
-      val extractor = new AgGridFacades.FilterModelJSExtractor(k)
-      v match {
-        case extractor(x) => (k, x)
-      }
+      (k, AgGridFacades.extract_filter(v, k))
+    }.collect {case(k, Some(flt)) => (k, flt)
     }.values.toSeq
     if (filter_seq.nonEmpty) {
       Some(QueryFilter(LogicalAnd(filter_seq: _*)))
