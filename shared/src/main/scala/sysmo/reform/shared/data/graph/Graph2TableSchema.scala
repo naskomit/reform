@@ -1,32 +1,34 @@
 package sysmo.reform.shared.data.graph
 
+import sysmo.reform.shared.{data => D}
 import sysmo.reform.shared.data.{table => T}
 import sysmo.reform.shared.data.{graph => G}
+
 
 object Graph2TableSchema {
   class SchemaVertex2TableBuilder(schema: VertexSchema, categorical: Boolean) {
 
-    def prop2field(prop: G.Prop): T.Field = {
-      val tpe = prop.prop_type match {
-        case StringType() => T.VectorType.Char
-        case IntegerType() => T.VectorType.Int
-        case RealType() => T.VectorType.Real
-        case BoolType() => T.VectorType.Bool
-        case DateType() => T.VectorType.Real
-        case DateTimeType() => T.VectorType.Real
+    def prop2field(prop: D.Property): T.Field = {
+      val tpe = prop.tpe match {
+        case D.StringType() => T.VectorType.Char
+        case D.IntegerType() => T.VectorType.Int
+        case D.RealType() => T.VectorType.Real
+        case D.BoolType() => T.VectorType.Bool
+        case D.DateType() => T.VectorType.Real
+        case D.DateTimeType() => T.VectorType.Real
         case _ => throw new IllegalArgumentException(f"Cannot handle prop $prop")
       }
-      val ext_class = (prop.prop_type, prop.domain) match {
-        case (DateType(), _) => T.Date
-        case (DateTimeType(), _) => T.DateTime
-        case (_, Some(CategoricalDomain(_))) if categorical => T.Categorical
+      val ext_class = (prop.tpe, prop.domain) match {
+        case (D.DateType(), _) => T.Date
+        case (D.DateTimeType(), _) => T.DateTime
+        case (_, Some(D.CategoricalDomain(_))) if categorical => T.Categorical
         case _ => T.Same
       }
 
       val categories = if (ext_class == T.Categorical) {
         prop.domain match {
-          case Some(CategoricalDomain(Some(cats))) => cats.map(_.name)
-          case Some(CategoricalDomain(None)) => Seq[String]()
+          case Some(D.CategoricalDomain(Some(cats))) => cats.map(_.make_label)
+          case Some(D.CategoricalDomain(None)) => Seq[String]()
         }
       } else {
         Seq[String]()

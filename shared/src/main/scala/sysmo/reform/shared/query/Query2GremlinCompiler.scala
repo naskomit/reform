@@ -28,7 +28,20 @@ object Query2GremlinCompiler {
           case Some(sort_) => sort_.column_sorts.reverse.foreach(cs => {
             val dir = if (cs.ascending) bc.Order.asc else bc.Order.desc
             steps ++= Seq(
-              bc.Instruction(S.order), bc.Instruction(S.by, cs.col.id, dir)
+              bc.Instruction(S.order),
+              bc.Instruction(S.by,
+                cs.col.id,
+                dir
+              )
+//              bc.Instruction(S.by, bc.Bytecode(step = Seq(
+//                bc.Instruction(S.coalesce,
+//                  bc.Bytecode(step = Seq(
+//                    bc.Instruction(S.values, cs.col.id))),
+//                  bc.Bytecode(step = Seq(
+//                    bc.Instruction(S.constant, Long.MaxValue)))
+//                ),
+//              )), dir)
+
             )
           })
           case None =>

@@ -1,7 +1,8 @@
 package sysmo.reform.shared.chart
 
 import io.circe.Json
-import sysmo.reform.shared.data.{RecordOptionProvider, RecordMeta, RecordWithMeta, Record}
+import sysmo.reform.shared.data.form.{Record, RecordMeta, RecordOptionProvider, RecordWithMeta}
+
 import scala.collection.mutable
 import sysmo.reform.shared.util.NamedValue
 import sysmo.reform.shared.{query => Q}

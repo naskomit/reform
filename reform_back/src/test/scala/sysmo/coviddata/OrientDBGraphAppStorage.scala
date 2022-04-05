@@ -7,7 +7,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Order, P}
 import sysmo.reform.db.GraphAppStorage
-import sysmo.reform.shared.data.RecordWithMeta
 import sysmo.reform.shared.data.{table => sdt}
 import sysmo.reform.data.{table => dt}
 import sysmo.reform.shared.{query => Q}
@@ -16,33 +15,19 @@ import sysmo.reform.shared.util.pprint._
 import sdt.Printers._
 import sysmo.coviddata.shared.{data => CD}
 import sysmo.coviddata.io.ExcelImporter
+import sysmo.coviddata.shared.data.DataDescription
 import sysmo.reform.io.excel.{TableCollectionRead, WorkbookReader}
+import sysmo.reform.shared.data.form.RecordWithMeta
 import sysmo.reform.util.Logging
 
 object OrientDBGraphAppStorage extends Logging {
   val uri: String = "remote:localhost/covid"
   val factory = new OrientGraphFactory(uri, "nasko", "nasko")
-  val app_storage = new GraphAppStorage(factory, Seq(
-    CD.SocioDemographic.schema,
-    CD.Clinical.schema,
-    CD.Therapy.schema,
-    CD.Immunology.schema
-  ))
+  val app_storage = new GraphAppStorage(factory, DataDescription.schemas)
 
   val doc_path = "doc/SampleData_3.xlsx"
 
-
-//  def test_import()  = {
-//    val patient_data = CSVDataSource.read_patient_data()
-//    val patient_record_meta = implicitly[RecordWithMeta[PatientRecord]]._meta
-//    app_storage.drop_schema
-//    app_storage.create_schema(Seq(patient_record_meta))
-//    app_storage.list_schema
-//    app_storage.drop_data
-//    app_storage.import_batch(patient_data)
-//  }
-
-  def test_import_2() = {
+  def test_import(): Unit = {
     app_storage.drop_schema
     app_storage.drop_data
     app_storage.apply_schemas()

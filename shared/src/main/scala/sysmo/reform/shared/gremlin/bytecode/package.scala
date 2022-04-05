@@ -3,11 +3,9 @@ package sysmo.reform.shared.gremlin
 package object bytecode {
 
   case class Instruction(operator: String, arguments: Any*)
-
   case class Bytecode(
      source: Seq[Instruction] = Seq(),
      step: Seq[Instruction])
-
 
   object Bytecode {
     import sysmo.reform.shared.gremlin.bytecode.{Predicate => P, Symbols => S}

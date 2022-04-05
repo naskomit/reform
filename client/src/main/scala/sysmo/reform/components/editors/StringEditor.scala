@@ -4,7 +4,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import sysmo.reform.components.actions.ActionStreamGenerator
-import sysmo.reform.shared.data.{FieldValue, NoValue, SomeValue}
+import sysmo.reform.shared.data.form.{FieldValue, NoValue, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
 
 object StringEditor extends AbstractEditor {

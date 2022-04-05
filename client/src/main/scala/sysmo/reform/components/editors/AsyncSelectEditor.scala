@@ -6,7 +6,8 @@ import monix.reactive.Observer
 import sysmo.reform.components.ReactAction
 import sysmo.reform.components.actions.ActionStreamGenerator
 import sysmo.reform.components.select.ReactSelectFacades
-import sysmo.reform.shared.data.{FieldOptionProvider, FieldValue, NoFilter, NoValue, OptionFilter, RecordField, RecordOptionProvider, SomeValue}
+import sysmo.reform.shared.{data => D}
+import sysmo.reform.shared.data.form.{FieldOptionProvider, FieldValue, NoValue, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -14,7 +15,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 object AsyncSelectEditor extends AbstractEditor {
   import ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 
-  case class Props(field : RecordField, record_id: String, value : FieldValue,
+  case class Props(field : D.Property, record_id: String, value : FieldValue,
                    action_listener: Observer[EditorAction], option_provider: FieldOptionProvider)
   case class State(choices: Seq[LabeledValue[_]]) //selection: fsm.Selection,
 
@@ -45,7 +46,7 @@ object AsyncSelectEditor extends AbstractEditor {
     }
 
     def on_menu_open(p: Props, s: State): RSNC.OnMenuOpen = () => {
-      p.option_provider.get(NoFilter)
+      p.option_provider.get(D.NoFilter)
         .map(choices => {
           $.modState(s => s.copy(choices = choices)).runNow()
         })
@@ -88,7 +89,7 @@ object AsyncSelectEditor extends AbstractEditor {
 //    .configure(Reusability.shouldComponentUpdate)
     .build
 
-  def apply(field : RecordField, record_id: String, value : FieldValue,
+  def apply(field : D.Property, record_id: String, value : FieldValue,
             action_listener: Observer[EditorAction], option_provider: FieldOptionProvider) =
     component(Props(field, record_id, value, action_listener, option_provider))
 }

@@ -10,7 +10,8 @@ import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, StringEditor, UpdateValue}
 import sysmo.reform.components.actions.ActionHub
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
-import sysmo.reform.shared.data.{EnumeratedDomainSource, FieldOptionProvider, FieldValue, OptionFilter, Record, RecordField, RecordMeta, RecordOptionProvider, RecordWithMeta}
+import sysmo.reform.shared.{data => D}
+import sysmo.reform.shared.data.form.{FieldOptionProvider, Record, RecordMeta}
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.util.TypeSingleton
 
@@ -69,20 +70,15 @@ class StreamingFormEditor[U <: Record] extends ReactComponent {
         case fsm.Initialized => {
           val field_editors = p.meta.field_keys.map(k => {
             val field = p.meta.fields(k)
-            val RecordField(f_name, f_label, f_tpe, f_domain) = field
+            val D.Property(f_name, f_label, f_tpe, f_mult, f_domain) = field
             (f_tpe, f_domain) match {
-              case (_, Some(EnumeratedDomainSource(option_provider, _))) => {
-
-                //                val field_option_provider = (flt: OptionFilter) => {
-                //                  option_provider.get_options(s.value, f_name, flt)
-                //                }
-
+              case (_, Some(D.CategoricalDomainSource(_, _))) => {
                 AsyncSelectEditor(
                   field, p.record_id,
                   s.value(field.name),
                   action_hub.in_observers(k.toString),
                   new FieldOptionProvider {
-                    override def get(flt: OptionFilter): Future[Seq[LabeledValue[_]]] =
+                    override def get(flt: D.OptionFilter): Future[Seq[LabeledValue[_]]] =
                       p.meta.option_provider.get_options(s.value, field.name, flt)
                   }
                 )

@@ -3,7 +3,8 @@ package sysmo.reform.managers
 import sysmo.reform.data.StreamingRecordManager
 import sysmo.reform.services.{ChartService, ServerChartService}
 import sysmo.reform.shared.chart.{ChartRequest, ChartSettings, DistributionOptionProvider}
-import sysmo.reform.shared.data.{RecordMeta, RecordOptionProvider, RecordWithMeta, TableService}
+import sysmo.reform.shared.data.TableService
+import sysmo.reform.shared.data.form.{RecordMeta, RecordOptionProvider, RecordWithMeta}
 import sysmo.reform.shared.{chart => Ch}
 import sysmo.reform.shared.{query => Q}
 

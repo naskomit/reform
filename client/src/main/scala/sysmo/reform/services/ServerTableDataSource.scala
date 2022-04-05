@@ -2,9 +2,10 @@ package sysmo.reform.services
 
 import autowire.Core.Request
 import io.circe.syntax._
+import sysmo.reform.shared.{data => D}
 import sysmo.reform.shared.data.table.Schema
 import sysmo.reform.shared.{query => Q}
-import sysmo.reform.shared.data.{LabelFilter, NoFilter, OptionFilter, TableService, ValueFilter, table => sdt}
+import sysmo.reform.shared.data.{TableService, table => sdt}
 import sysmo.reform.shared.util.{Named, NamedValue}
 
 import scala.concurrent.Future
@@ -19,13 +20,13 @@ class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableService w
   val api_client = ApiClient("api/table")
   val base_path: Seq[String] = Seq("sysmo", "reform", "services", "TableDataService")
 
-  override def list_tables(optionFilter: OptionFilter): Future[Seq[Named]] = {
+  override def list_tables(optionFilter: D.OptionFilter): Future[Seq[Named]] = {
     Future(schemas
       .map(x => Named(x.name, x.label))
       .filter(x => optionFilter match {
-        case NoFilter => true
-        case LabelFilter(label) => x.make_label.contains(label)
-        case ValueFilter(v) => x.name == v
+        case D.NoFilter => true
+        case D.LabelFilter(label) => x.make_label.contains(label)
+        case D.ValueFilter(v) => x.name == v
       }
 
       ).toSeq)

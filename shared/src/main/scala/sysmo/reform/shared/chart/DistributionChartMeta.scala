@@ -1,7 +1,9 @@
 package sysmo.reform.shared.chart
 
-import sysmo.reform.shared.data.Record.ValueMap
-import sysmo.reform.shared.data.{AllValues, EnumeratedDomainSource, FieldValue, MultiValue, NoFilter, NoValue, OptionFilter, Record, RecordField, RecordMeta, RecordOptionProvider, SomeValue, LabelFilter, StringType, TableService, ValueDependency, ValueFilter}
+import sysmo.reform.shared.data.form.Record.ValueMap
+import sysmo.reform.shared.data.TableService
+import sysmo.reform.shared.data.{CategoricalDomainSource, OptionFilter, LabelFilter, NoFilter, ValueFilter, Property, StringType}
+import sysmo.reform.shared.data.form.{AllValues, FieldValue, MultiValue, NoValue, Record, RecordMeta, RecordOptionProvider, SomeValue, ValueDependency}
 import sysmo.reform.shared.util.LabeledValue
 
 import scala.collection.immutable.VectorMap
@@ -115,11 +117,10 @@ class DistributionChartMeta(val option_provider: RecordOptionProvider)
 
   override val field_keys = Seq(FieldEnum.data_id, FieldEnum.column_id)
 
+
   override val fields = VectorMap(
-    FieldEnum.data_id -> RecordField(name = "data_id", label = Some("Data"),
-      tpe = StringType(), domain = Some(EnumeratedDomainSource(option_provider, "data_id"))),
-    FieldEnum.column_id -> RecordField(name = "column_id", label = Some("Column"),
-      tpe = StringType(), domain = Some(EnumeratedDomainSource(option_provider, "column_id")))
+    FieldEnum.data_id -> Property.string("data_id").label("Data").categorical_source(option_provider, "data_id").build,
+    FieldEnum.column_id -> Property.string("column_id").label("Column").categorical_source(option_provider, "column_id").build
   )
 
   override def field_key(name: String): FieldKey = FieldEnum.withName(name)

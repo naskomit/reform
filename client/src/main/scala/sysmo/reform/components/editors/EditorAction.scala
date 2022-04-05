@@ -1,7 +1,7 @@
 package sysmo.reform.components.editors
 
 import sysmo.reform.components.ReactAction
-import sysmo.reform.shared.data.FieldValue
+import sysmo.reform.shared.data.form.FieldValue
 
 trait EditorAction extends ReactAction
 

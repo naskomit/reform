@@ -8,15 +8,17 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
 import org.apache.tinkerpop.gremlin.structure.T
-import sysmo.reform.shared.data.{DummyRecordOptionProvider$, RecordMeta, RecordWithMeta, graph => G, table => sdt}
+import sysmo.reform.shared.data.{graph => G, table => sdt}
 import sysmo.reform.shared.gremlin.GraphsonEncoder
 import sysmo.reform.shared.{query => Q}
+import sysmo.reform.shared.{data => D}
 import sysmo.reform.util.Logging
 import upickle.default._
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
 import sdt.Printers._
+import sysmo.reform.shared.data.form.RecordWithMeta
 import sysmo.reform.shared.data.graph.VertexSchema
 import sysmo.reform.shared.util.pprint
 
@@ -78,13 +80,13 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
           val vertex_class = graph.database.getMetadata.getSchema.getClass(schema.name)
           vertex_class.setStrictMode(true)
           schema.props.foreach(prop => {
-            val prop_type = prop.prop_type match {
-              case G.StringType() => OType.STRING
-              case G.IntegerType() => OType.INTEGER
-              case G.RealType() => OType.DOUBLE
-              case G.BoolType() => OType.BOOLEAN
-              case G.DateType() => OType.DATE
-              case G.DateTimeType() => OType.DATETIME
+            val prop_type = prop.tpe match {
+              case D.StringType() => OType.STRING
+              case D.IntegerType() => OType.INTEGER
+              case D.RealType() => OType.DOUBLE
+              case D.BoolType() => OType.BOOLEAN
+              case D.DateType() => OType.DATE
+              case D.DateTimeType() => OType.DATETIME
               case _ => throw new IllegalStateException(f"Cannot handle property ${prop}")
             }
             vertex_class.createProperty(prop.name, prop_type)
@@ -213,6 +215,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
   def query_table(q: Q.Query, tm: sdt.TableManager): sdt.Table = {
     val gremlin_scala_bc = Q.Query2GremlinCompiler.compile(q)
     val gremlin_str = write(GraphsonEncoder.to_value(gremlin_scala_bc))
+//    logger.info(gremlin_str)
     val gremlin_native_bc = GremlinIO.readValue(gremlin_str, classOf[Bytecode])
     Using(graph_factory.getTx) { graph =>
       val g = graph.traversal

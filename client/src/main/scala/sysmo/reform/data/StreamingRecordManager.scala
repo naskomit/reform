@@ -5,7 +5,7 @@ import monix.execution.cancelables.SingleAssignCancelable
 import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import sysmo.reform.components.editors.SetValue
-import sysmo.reform.shared.data.{FieldValue, NoValue, Record, RecordMeta, RecordOptionProvider, RecordWithMeta, SomeValue, ValueDependency}
+import sysmo.reform.shared.data.form.{NoValue, Record, RecordMeta, ValueDependency}
 import sysmo.reform.util.log.Logging
 
 import scala.collection.mutable

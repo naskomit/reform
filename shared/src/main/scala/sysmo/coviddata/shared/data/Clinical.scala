@@ -1,54 +1,7 @@
 package sysmo.coviddata.shared.data
 
 import sysmo.reform.shared.data.{table => sdt}
-
-//object Clinical_Table {
-//  val fields = Seq(
-//    sdt.Field.Int("1").label("№"),
-//    sdt.Field.Char("1a").label("Име"),
-//    sdt.Field.Char("1b").label("Презиме"),
-//    sdt.Field.Char("1c").label("Фамилия"),
-//
-//    sdt.Field.Char("14").label("Хоспитализиран"),
-//    sdt.Field.Char("14a").label("Дата на хоспитализация"),
-//    sdt.Field.Int("15").label("Болничен престой, дни"),
-//    sdt.Field.Char("16").label("Изход от заболяването"),
-//    sdt.Field.Char("17").label("Потвърждаване на диагнозата"),
-//    sdt.Field.Char("18").label("Форми на диагнозата"),
-//    sdt.Field.Char("19a").label("Дебют от заболяването"),
-//    sdt.Field.Char("19b").label("Дебют от заболяването"),
-//    sdt.Field.Char("19c").label("Дебют от заболяването"),
-//    sdt.Field.Char("19d").label("Дебют от заболяването"),
-//    sdt.Field.Char("19e").label("Дебют от заболяването"),
-//    sdt.Field.Char("19f").label("Дебют от заболяването"),
-//    sdt.Field.Char("19g").label("Дебют от заболяването"),
-//    sdt.Field.Char("19h").label("Дебют от заболяването"),
-//    sdt.Field.Char("19i").label("Дебют от заболяването"),
-//    sdt.Field.Char("19j").label("Дебют от заболяването"),
-//    sdt.Field.Char("19k").label("Дебют от заболяването"),
-//    sdt.Field.Char("19l").label("Дебют от заболяването"),
-//    sdt.Field.Int("20a").label("Оценка на фебрилитета, дни"),
-//    sdt.Field.Char("20b").label("Оценка на фебрилитета"),
-//    sdt.Field.Char("21").label("Наличие на кашлица"),
-//    sdt.Field.Int("22a").label("Характеристика на кашлицата / Ден на поява"),
-//    sdt.Field.Char("22b").label("Характеристика на кашлицата"),
-//    sdt.Field.Char("23").label("Наличие на болкови-ставен синдром"),
-//    sdt.Field.Char("24a").label("Локализациа на БСС"),
-//    sdt.Field.Char("24b").label("Локализациа на БСС"),
-//    sdt.Field.Char("24c").label("Локализациа на БСС"),
-//    sdt.Field.Char("24d").label("Локализациа на БСС"),
-//    sdt.Field.Char("25").label("Наличие на главоболие"),
-//    sdt.Field.Char("26").label("Вид на главоболието"),
-//    sdt.Field.Char("27").label("Наличие на световъртеж"),
-//    sdt.Field.Char("28").label("Наличие на колаптоидни прояви"),
-//    sdt.Field.Char("29").label("Наличие на отпадналост"),
-//    sdt.Field.Char("30a").label("Характеристики на отпадналостта"),
-//    sdt.Field.Char("30b").label("Наличие на безапетитие"),
-//    sdt.Field.Char("30c").label("Характеристики на безапетитието"),
-//  ).map(x => x.get_options)
-//  val schema = sdt.Schema(fields)
-//
-//}
+import sysmo.reform.shared.data.{Property => Prop}
 
 object Clinical {
   import sysmo.reform.shared.data.graph._

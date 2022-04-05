@@ -1,6 +1,7 @@
 package sysmo.reform
 
 import sysmo.coviddata.OrientDBGraphAppStorage
+import sysmo.reform.query.GremlinTest
 import sysmo.reform.util.Logging
 
 import scala.util.Using
@@ -42,12 +43,11 @@ object TestApp extends App with Logging {
   }
 
   def do_import(): Unit = {
-    OrientDBGraphAppStorage.test_import_2()
+    OrientDBGraphAppStorage.test_import()
     fix_names()
     logger.info("Finished import!")
   }
 
-  do_import()
 
 
   //    sysmo.reform.data.table.TestTable.test_sysmo_table()
@@ -66,5 +66,15 @@ object TestApp extends App with Logging {
 //  sysmo.typelevel.JsonCats.test1()
 //  sysmo.typelevel.ScalaWithCats.run()
 
+  def test_gremlin(): Unit = {
+    val setup = new GremlinTest(OrientDBGraphAppStorage.factory)
+    setup.run()
+  }
 
+  def run(): Unit = {
+    do_import()
+//    test_gremlin()
+  }
+
+  run()
 }

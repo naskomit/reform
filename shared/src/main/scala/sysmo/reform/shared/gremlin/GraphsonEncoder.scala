@@ -10,6 +10,7 @@ object GraphsonEncoder {
       case x: String => x
       case x: Double => x
       case x: Int => int32(x)
+      case x: Long => int64(x)
       case x: Boolean => x
       case x: Bytecode => bytecode(x)
       case x: Instruction => instruction(x)
@@ -52,6 +53,11 @@ object GraphsonEncoder {
 
   def int32(o: Int): Obj = Obj(
     ("@type", "g:Int32"),
+    ("@value", o)
+  )
+
+  def int64(o: Long): Obj = Obj(
+    ("@type", "g:Int64"),
     ("@value", o)
   )
 }
