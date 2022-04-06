@@ -1,7 +1,7 @@
 package sysmo.reform.shared.data
 
 import sysmo.reform.shared.data.form.RecordOptionProvider
-import sysmo.reform.shared.util.{LabeledValue, TNamed}
+import sysmo.reform.shared.util.{LabeledValue}
 
 import scala.reflect.ClassTag
 

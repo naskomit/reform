@@ -4,8 +4,6 @@ import com.orientechnologies.orient.core.metadata.schema.{OClass, OType}
 import com.typesafe.config.Config
 import org.apache.tinkerpop.gremlin.jsr223.JavaTranslator
 import org.apache.tinkerpop.gremlin.orientdb.{OrientGraph, OrientGraphFactory}
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
-import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
 import org.apache.tinkerpop.gremlin.structure.T
 import sysmo.reform.shared.data.{graph => G, table => sdt}
@@ -18,16 +16,14 @@ import upickle.default._
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
 import sdt.Printers._
-import sysmo.reform.shared.data.form.RecordWithMeta
-import sysmo.reform.shared.data.graph.VertexSchema
 import sysmo.reform.shared.util.pprint
 
-class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySchema]) extends Logging {
-  import sysmo.reform.shared.{data => RM}
-  val schema_map: Map[String, G.EntitySchema] = schemas.map(x => (x.name, x)).toMap
-  def entity_schema(klass: String): Option[G.EntitySchema] = schema_map.get(klass)
+class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSchema) extends Logging {
+//  import sysmo.reform.shared.{data => RM}
+//  val schema_map: Map[String, G.EntitySchema] = schemas.map(x => (x.name, x)).toMap
+//  def entity_schema(klass: String): Option[G.EntitySchema] = schema_map.get(klass)
   def classes(graph: OrientGraph): Iterable[OClass] = graph.database.getMetadata.getSchema.getClasses.asScala
-  def transactional(f: OrientGraph => Unit) = {
+  def transactional[A](f: OrientGraph => Unit) = {
     val graph  = graph_factory.getTx
     f(graph)
     graph.commit()
@@ -61,7 +57,8 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
   def apply_schemas(): Unit = {
     logger.info("========== Creating database schema ==========")
     Using(graph_factory.getTx) { graph =>
-      for (schema <- schemas) {
+      for (schema_ref <- db_schema.vertex_schemas) {
+        val schema = schema_ref.target
         if (graph.existClass(schema.name))
           throw new IllegalStateException(f"Class ${schema.name} already exists")
 //          logger.warn()
@@ -71,14 +68,14 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
               logger.info(f"Creating vertex class ${schema.name}")
               graph.createVertexClass(schema.name)
             }
-            case x: G.EdgeSchema => {
-              logger.info(f"Creating edge class ${schema.name}")
-              graph.createEdgeClass(schema.name)
-            }
+//            case x: G.EdgeSchema => {
+//              logger.info(f"Creating edge class ${schema.name}")
+//              graph.createEdgeClass(schema.name)
+//            }
           }
 
-          val vertex_class = graph.database.getMetadata.getSchema.getClass(schema.name)
-          vertex_class.setStrictMode(true)
+          val entity_class = graph.database.getMetadata.getSchema.getClass(schema.name)
+          entity_class.setStrictMode(true)
           schema.props.foreach(prop => {
             val prop_type = prop.tpe match {
               case D.StringType() => OType.STRING
@@ -89,7 +86,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
               case D.DateTimeType() => OType.DATETIME
               case _ => throw new IllegalStateException(f"Cannot handle property ${prop}")
             }
-            vertex_class.createProperty(prop.name, prop_type)
+            entity_class.createProperty(prop.name, prop_type)
           })
 
         }
@@ -159,20 +156,20 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
     }.get
   }
 
-  def import_batch[U](data: Seq[U])(implicit meta_source: RecordWithMeta[U]): Unit = {
-    val meta = meta_source._meta
-    val prop_args_init = List[Any](T.label, meta.id)
-
-    val graph = graph_factory.getNoTx
-    data.foreach(row => {
-      val prop_args = meta.field_keys.foldLeft(prop_args_init)((acc, item) =>
-        acc ++ Seq(meta.fields(item).name, meta.get_value(row, item))
-      )
-
-      graph.addVertex(prop_args: _*)
-    })
-    graph.close()
-  }
+//  def import_batch[U](data: Seq[U])(implicit meta_source: RecordWithMeta[U]): Unit = {
+//    val meta = meta_source._meta
+//    val prop_args_init = List[Any](T.label, meta.id)
+//
+//    val graph = graph_factory.getNoTx
+//    data.foreach(row => {
+//      val prop_args = meta.field_keys.foldLeft(prop_args_init)((acc, item) =>
+//        acc ++ Seq(meta.fields(item).name, meta.get_value(row, item))
+//      )
+//
+//      graph.addVertex(prop_args: _*)
+//    })
+//    graph.close()
+//  }
 
   def upsurt_vertices(graph_schema: G.VertexSchema, table: sdt.Table, id_column: String): Unit = {
     val graph = graph_factory.getTx
@@ -224,8 +221,8 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
         case Q.BasicQuery(source, columns_opt, _, _, _) => source match {
           case Q.SingleTable(id, _, _) => {
             columns_opt.map(columns => {
-              val db_table_schema: sdt.Schema = entity_schema(id) match {
-                case Some(sch: VertexSchema) => G.Schema.table_schema_builder(sch).build
+              val db_table_schema: sdt.Schema = db_schema.vertex_schema(id) match {
+                case Some(sch: G.VertexSchema) => G.Schema.table_schema_builder(sch).build
                 case _ => throw new IllegalArgumentException(s"No VertexSchema named $id")
               }
 
@@ -254,11 +251,11 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, schemas: Seq[G.EntitySc
 }
 
 object GraphAppStorage {
-  def apply(config: Config, schemas: Seq[G.EntitySchema]): GraphAppStorage = {
+  def apply(config: Config, db_schema: G.DatabaseSchema): GraphAppStorage = {
     val user = config.getString("user")
     val password = config.getString("password")
     val uri = config.getString("uri")
     val graph_factory = new OrientGraphFactory(uri, user, password)
-    new GraphAppStorage(graph_factory, schemas)
+    new GraphAppStorage(graph_factory, db_schema)
   }
 }

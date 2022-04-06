@@ -15,15 +15,15 @@ import sysmo.reform.shared.util.pprint._
 import sdt.Printers._
 import sysmo.coviddata.shared.{data => CD}
 import sysmo.coviddata.io.ExcelImporter
-import sysmo.coviddata.shared.data.DataDescription
+import sysmo.coviddata.shared.data.CovidDatabaseSchema
 import sysmo.reform.io.excel.{TableCollectionRead, WorkbookReader}
 import sysmo.reform.shared.data.form.RecordWithMeta
 import sysmo.reform.util.Logging
 
 object OrientDBGraphAppStorage extends Logging {
   val uri: String = "remote:localhost/covid"
-  val factory = new OrientGraphFactory(uri, "nasko", "nasko")
-  val app_storage = new GraphAppStorage(factory, DataDescription.schemas)
+  val factory = new OrientGraphFactory(uri, "sysmo", "sysmopass")
+  val app_storage = new GraphAppStorage(factory, CovidDatabaseSchema)
 
   val doc_path = "doc/SampleData_3.xlsx"
 

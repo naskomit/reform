@@ -5,7 +5,7 @@ import sysmo.reform.shared.data.{Property => Prop}
 
 object Clinical {
   import sysmo.reform.shared.data.graph._
-  val schema : VertexSchema = Schema.vertex_builder("Clinical")
+  val schema : VertexSchema = Schema.vertex_builder("Clinical").label("Клинични")
     // Част 2 - Клин.I
 //    .link(Link.builder("1", SocioDemographic_Graph.schema))
     .prop(Prop.int("1").label("№"))
