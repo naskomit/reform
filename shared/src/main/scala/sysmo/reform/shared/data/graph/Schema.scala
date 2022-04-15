@@ -5,7 +5,7 @@ import sysmo.reform.shared.util.INamed
 
 import scala.collection.mutable
 
-sealed trait EntitySchema extends INamed {
+sealed trait ElementSchema extends INamed {
   val props: Seq[Property]
   private val prop_map = props.zipWithIndex.map({case (prop, index) => (prop.name, index)}).toMap
   def prop(name: String): Option[Property] = prop_index(name).map(index => props(index))
@@ -13,7 +13,7 @@ sealed trait EntitySchema extends INamed {
 }
 
 case class VertexSchema(name: String, label: Option[String], props: Seq[Property])
-    extends EntitySchema {
+    extends ElementSchema {
 }
 
 trait Multiplicity
@@ -26,7 +26,7 @@ case class EdgeSchema(
   props: Seq[Property],
   from: OVCRef, from_mult: Multiplicity,
   to: OVCRef, to_mult: Multiplicity
-) extends EntitySchema
+) extends ElementSchema
 
 object Schema {
   def table_schema_builder(schema: VertexSchema): Graph2TableSchema.SchemaVertex2TableBuilder = Graph2TableSchema.builder(schema)
@@ -54,23 +54,24 @@ object Schema {
     protected var _mult_from: Multiplicity = MultMany
     protected var _to: OVCRef = None
     protected var _mult_to: Multiplicity = MultMany
+
     def from(value: VCRef, mult: Multiplicity = MultMany): this.type = {
       _from = Some(value)
       _mult_from = mult
       this
     }
+
     def to(value: VCRef, mult: Multiplicity = MultMany): this.type = {
       _to = Some(value)
       _mult_to = mult
       this
     }
+
     def build: EdgeSchema = EdgeSchema(
       name, _label, props.toSeq,
       _from, _mult_from, _to, _mult_to
     )
   }
-
-
 
   def vertex_builder(name: String) = new VertexSchemaBuilder(name)
   def edge_builder(name: String) = new EdgeSchemaBuilder(name)
@@ -83,8 +84,8 @@ trait DatabaseSchema {
   val edge_schemas: Seq[EdgeClass]
   protected lazy val vertex_schema_map: Map[String, VertexClass] = vertex_schemas.map(x => (x.uid, x)).toMap
   protected lazy val edge_schema_map: Map[String, EdgeClass] = edge_schemas.map(x => (x.uid, x)).toMap
-  protected def vertex_class(schema: VertexSchema): VertexClass = new VertexClass {
-    override def _target: VertexSchema = schema
+  protected def vertex_class(vertex: VertexSchema): VertexClass = new VertexClass {
+    override def _target: VertexSchema = vertex
   }
   protected def edge_class(schema: EdgeSchema): EdgeClass = new EdgeClass {
     override def _target: EdgeSchema = schema

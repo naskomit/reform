@@ -19,9 +19,35 @@ class AsyncLogger(logger : Logger) {
   }
 }
 
+class FuncLogger(logger : Logger) {
+  type F = Either[Throwable, Unit]
+  def debug(msg: String): F = {
+    logger.debug(msg)
+    Right()
+  }
+
+  def info(msg: String): F = {
+    logger.info(msg)
+    Right()
+  }
+  def warn(msg: String): F = {
+    logger.warn(msg)
+    Right()
+  }
+  def error(msg: String): F = {
+    logger.error(msg)
+    Right()
+  }
+}
+
 trait Logging {
   lazy val logger = LoggerFactory.getLogger(this.getClass)
 }
+
+trait FuncLogging {
+  lazy val logger = new FuncLogger(LoggerFactory.getLogger(this.getClass))
+}
+
 
 trait AsyncLogging {
   lazy val logger = new AsyncLogger(LoggerFactory.getLogger(this.getClass))

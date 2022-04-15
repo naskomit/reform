@@ -1,36 +1,59 @@
 package sysmo.coviddata
 
-import scala.util.Using
+import scala.util.{Success, Try, Using}
 import scala.jdk.CollectionConverters._
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.{GraphTraversal, __}
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Order, P}
+import org.apache.tinkerpop.gremlin.structure.T
 import sysmo.reform.db.GraphAppStorage
-import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.data.{graph => G, table => sdt}
 import sysmo.reform.data.{table => dt}
 import sysmo.reform.shared.{query => Q}
 import sdt.{VectorType => VT}
 import sysmo.reform.shared.util.pprint._
 import sdt.Printers._
-import sysmo.coviddata.shared.{data => CD}
+//import sysmo.coviddata.shared.{data => CD}
 import sysmo.coviddata.io.ExcelImporter
-import sysmo.coviddata.shared.data.CovidDatabaseSchema
+import sysmo.coviddata.shared.data.{CovidDatabaseSchema => CDS}
 import sysmo.reform.io.excel.{TableCollectionRead, WorkbookReader}
 import sysmo.reform.shared.data.form.RecordWithMeta
-import sysmo.reform.util.Logging
+import sysmo.reform.util.FuncLogging
+import sysmo.reform.util.Prog._
 
-object OrientDBGraphAppStorage extends Logging {
+object OrientDBGraphAppStorage extends FuncLogging {
   val uri: String = "remote:localhost/covid"
   val factory = new OrientGraphFactory(uri, "sysmo", "sysmopass")
-  val app_storage = new GraphAppStorage(factory, CovidDatabaseSchema)
+  val app_storage = new GraphAppStorage(factory, CDS)
 
   val doc_path = "doc/SampleData_3.xlsx"
+  import sysmo.reform.data.graph.Implicits._
 
-  def test_import(): Unit = {
-    app_storage.drop_schema
-    app_storage.drop_data
-    app_storage.apply_schemas()
+  protected def insert_data_secondary(data: sdt.Table,
+                                      new_vertex_schema: G.VertexSchema,
+                                      new_edge_schema: G.EdgeSchema): Res[Unit] = {
+    app_storage.insert_linked_vertices(
+      data,
+      (g, row) =>
+        g.V().has(T.label, "SocioDemographic")
+          .has("1", row.get("1").v.get),
+      (trav, row) => trav.coalesce(
+          __.V().has(T.label, new_vertex_schema.name).has("1", row.get("1").v.get),
+          __.addV(new_vertex_schema.name)
+        ).b_append_props(new_vertex_schema, row),
+      (trav, row) => trav.coalesce(
+          __.select("from").outE().has(T.label, new_edge_schema.name)
+            .where(__.inV().as("to")),
+          __.addE(new_edge_schema.name).from("from").to("to")
+      )
+    )
+  }
+
+  def test_import(): Res[Unit] = {
+    app_storage.drop_schema().get
+    app_storage.drop_data().get
+    app_storage.apply_schemas().get
     sdt.with_table_manager()(tm => {
       val reader = new WorkbookReader(doc_path, tm)
       val data = reader.read_table_collection(TableCollectionRead(Map(
@@ -38,19 +61,51 @@ object OrientDBGraphAppStorage extends Logging {
         "Clinical_1" -> ExcelImporter.read_clinical_1,
         "Clinical_2" -> ExcelImporter.read_clinical_2,
         "Clinical_4" -> ExcelImporter.read_clinical_4,
-        "Therapy 2" -> ExcelImporter.read_therapy_2,
+        "Therapy_2" -> ExcelImporter.read_therapy_2,
         "Immunology" -> ExcelImporter.read_immunology
       )))
 
-//      pprint(data("Immunology"))
-//      println(data("Clinical_1").column("14a").iterator.foreach(x => println(x.as_real, x.as_date)))
       logger.info("Excel data read")
-      app_storage.upsurt_vertices(CD.SocioDemographic.schema, data("SocioDemographic"), "1")
-      app_storage.upsurt_vertices(CD.Clinical.schema, data("Clinical_1"), "1")
-      app_storage.upsurt_vertices(CD.Clinical.schema, data("Clinical_2"), "1")
-      app_storage.upsurt_vertices(CD.Clinical.schema, data("Clinical_4"), "1")
-      app_storage.upsurt_vertices(CD.Therapy.schema, data("Therapy 2"), "1")
-      app_storage.upsurt_vertices(CD.Immunology.schema, data("Immunology"), "1")
+//      val strategy = CreateOrUpdate("1")
+
+
+      app_storage.insert_vertices(
+        data("SocioDemographic"),
+        (g, row) => g.b_create_vertex(CDS.SocioDemographic.target, row)
+      )
+
+      insert_data_secondary(data("Clinical_1"), CDS.Clinical.target, CDS.HasClinical.target)
+      insert_data_secondary(data("Clinical_2"), CDS.Clinical.target, CDS.HasClinical.target)
+      insert_data_secondary(data("Clinical_4"), CDS.Clinical.target, CDS.HasClinical.target)
+
+      insert_data_secondary(data("Therapy_2"), CDS.Therapy.target, CDS.HasTherapy.target)
+      insert_data_secondary(data("Immunology"), CDS.Immunology.target, CDS.HasImmunology.target)
+
+
+
+//      app_storage.insert_linked_vertices(
+//        data("Clinical_1"),
+//        (trav, row) =>
+//          trav.has(T.label, "SocioDemographic")
+//          .has("1", row.get("1").v.get),
+//        (trav, row) =>
+//          trav.b_find_or_create_vertex(
+//            __.V().has(T.label, "Clinical").has("1", row.get("1").v.get),
+//            __.addV("Clinical").b_append_props(CDS.Clinical.target, row),
+//          ),
+//        (trav, row) => trav.addE("HasClinical")
+//      ).get
+
+//      app_storage.insert_linked_vertices(
+//        CDS.HasTherapy.target, to_other = false, data("Therapy 2"), strategy, find_strategy, edge_strategy
+//      ).get
+//      app_storage.insert_linked_vertices(
+//        CDS.HasImmunology.target, to_other = false, data("Immunology"), strategy, find_strategy, edge_strategy
+//      ).get
+//      app_storage.modify_vertices(CDS.Clinical.schema, data("Clinical_2"), strategy).get
+//      app_storage.modify_vertices(CDS.Clinical.schema, data("Clinical_4"), strategy).get
+//      app_storage.modify_vertices(CDS.Therapy.schema, data("Therapy 2"), strategy).get
+//      app_storage.modify_vertices(CDS.Immunology.schema, data("Immunology"), strategy).get
       logger.info("Data imported into the database")
     })
   }

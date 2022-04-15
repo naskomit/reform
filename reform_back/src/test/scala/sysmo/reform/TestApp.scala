@@ -2,12 +2,14 @@ package sysmo.reform
 
 import sysmo.coviddata.OrientDBGraphAppStorage
 import sysmo.reform.query.GremlinTest
-import sysmo.reform.util.Logging
+import sysmo.reform.util.FuncLogging
+import sysmo.reform.util.Prog._
+//import cats.implicits._
 
-import scala.util.Using
+import scala.util.{Success, Try, Using}
 
-object TestApp extends App with Logging {
-  def fix_names() = {
+object TestApp extends App with FuncLogging {
+  def fix_names(): Res[Unit] = {
     logger.info("Fixing names")
     val name_map = Map(
       95 -> Seq("Иван", "Петров", "Стоянов"),
@@ -35,20 +37,14 @@ object TestApp extends App with Logging {
           .property("1c", item._2(2))
           .iterate()
       }
-
-
     })
-
-
+    Right()
   }
 
-  def do_import(): Unit = {
-    OrientDBGraphAppStorage.test_import()
-    fix_names()
-    logger.info("Finished import!")
+  def do_import(): Res[Unit] = {
+    OrientDBGraphAppStorage.test_import() >>
+    fix_names().info(logger, "Finished import!")
   }
-
-
 
   //    sysmo.reform.data.table.TestTable.test_sysmo_table()
 
@@ -72,7 +68,10 @@ object TestApp extends App with Logging {
   }
 
   def run(): Unit = {
-    do_import()
+    do_import() match {
+      case Right(_) =>
+      case Left(error) => throw error
+    }
 //    test_gremlin()
   }
 

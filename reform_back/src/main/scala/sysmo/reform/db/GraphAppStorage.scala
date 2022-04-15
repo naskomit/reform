@@ -4,30 +4,53 @@ import com.orientechnologies.orient.core.metadata.schema.{OClass, OType}
 import com.typesafe.config.Config
 import org.apache.tinkerpop.gremlin.jsr223.JavaTranslator
 import org.apache.tinkerpop.gremlin.orientdb.{OrientGraph, OrientGraphFactory}
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.{GraphTraversal, GraphTraversalSource}
 import org.apache.tinkerpop.gremlin.process.traversal.{Bytecode, Order, P, Traversal}
-import org.apache.tinkerpop.gremlin.structure.T
+import org.apache.tinkerpop.gremlin.structure.{Edge, T, Vertex}
 import sysmo.reform.shared.data.{graph => G, table => sdt}
 import sysmo.reform.shared.gremlin.GraphsonEncoder
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.shared.{data => D}
-import sysmo.reform.util.Logging
+import sysmo.reform.util.FuncLogging
 import upickle.default._
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
 import sdt.Printers._
+import sysmo.reform.shared.data.graph.{EdgeSchema, ElementSchema}
+import sysmo.reform.shared.data.table.Row
 import sysmo.reform.shared.util.pprint
+import sysmo.reform.util.Prog._
 
-class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSchema) extends Logging {
+class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSchema) extends FuncLogging {
 //  import sysmo.reform.shared.{data => RM}
 //  val schema_map: Map[String, G.EntitySchema] = schemas.map(x => (x.name, x)).toMap
 //  def entity_schema(klass: String): Option[G.EntitySchema] = schema_map.get(klass)
   def classes(graph: OrientGraph): Iterable[OClass] = graph.database.getMetadata.getSchema.getClasses.asScala
-  def transactional[A](f: OrientGraph => Unit) = {
-    val graph  = graph_factory.getTx
-    f(graph)
-    graph.commit()
+  def f_transactional[A](f: OrientGraph => Res[A]): Res[A] = {
+    val graph = graph_factory.getTx
+    val res = f(graph)
+    res match {
+      case Right(_) => graph.commit()
+      case Left(_) => graph.rollback()
+    }
     graph.close()
+    res
+  }
+
+  def transactional[A](f: OrientGraph => A): Res[A] = {
+    val graph = graph_factory.getTx
+    try {
+      val res = f(graph)
+      graph.commit()
+      ok(res)
+    } catch {
+      case e: Throwable => error(e)
+    } finally {
+      graph.close()
+    }
+
   }
 //  def create_schema(rec_meta_list: Seq[RecordMeta[_]]): Unit = {
 //    logger.info("========== Creating classes ==========")
@@ -54,52 +77,72 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
 //    }
 //  }.get_options
 
-  def apply_schemas(): Unit = {
+  def create_entity_props(graph: OrientGraph, schema: ElementSchema, strict: Boolean): Unit = {
+    val entity_class = graph.database.getMetadata.getSchema.getClass(schema.name)
+    entity_class.setStrictMode(strict)
+    schema.props.foreach(prop => {
+      val prop_type = prop.tpe match {
+        case D.StringType() => OType.STRING
+        case D.IntegerType() => OType.INTEGER
+        case D.RealType() => OType.DOUBLE
+        case D.BoolType() => OType.BOOLEAN
+        case D.DateType() => OType.DATE
+        case D.DateTimeType() => OType.DATETIME
+        case _ => throw new IllegalStateException(f"Cannot handle property ${prop}")
+      }
+      entity_class.createProperty(prop.name, prop_type)
+    })
+  }
+
+  def create_vertex_link_props(graph: OrientGraph, schema: EdgeSchema): Unit = {
+    def get_class(x: String) = graph.database.getMetadata.getSchema.getClass(x)
+    val edge_class = get_class(schema.name)
+    val from_class_name = schema.from.get.target.name
+    val from_class = get_class(from_class_name)
+    val to_class_name = schema.to.get.target.name
+    val to_class = get_class(to_class_name)
+
+    edge_class.createProperty(s"out", OType.LINK, from_class)
+    edge_class.createProperty(s"in", OType.LINK, to_class)
+    from_class.createProperty(s"out_${edge_class}", OType.LINK, edge_class)
+    to_class.createProperty(s"in_${edge_class}", OType.LINK, edge_class)
+  }
+
+  def apply_schemas(): Res[Unit] = {
     logger.info("========== Creating database schema ==========")
-    Using(graph_factory.getTx) { graph =>
-      for (schema_ref <- db_schema.vertex_schemas) {
+    transactional { graph =>
+
+      /** Create vertex classes */
+      db_schema.vertex_schemas.foreach(schema_ref => {
         val schema = schema_ref.target
         if (graph.existClass(schema.name))
           throw new IllegalStateException(f"Class ${schema.name} already exists")
-//          logger.warn()
         else {
-          schema match {
-            case x: G.VertexSchema => {
-              logger.info(f"Creating vertex class ${schema.name}")
-              graph.createVertexClass(schema.name)
-            }
-//            case x: G.EdgeSchema => {
-//              logger.info(f"Creating edge class ${schema.name}")
-//              graph.createEdgeClass(schema.name)
-//            }
-          }
-
-          val entity_class = graph.database.getMetadata.getSchema.getClass(schema.name)
-          entity_class.setStrictMode(true)
-          schema.props.foreach(prop => {
-            val prop_type = prop.tpe match {
-              case D.StringType() => OType.STRING
-              case D.IntegerType() => OType.INTEGER
-              case D.RealType() => OType.DOUBLE
-              case D.BoolType() => OType.BOOLEAN
-              case D.DateType() => OType.DATE
-              case D.DateTimeType() => OType.DATETIME
-              case _ => throw new IllegalStateException(f"Cannot handle property ${prop}")
-            }
-            entity_class.createProperty(prop.name, prop_type)
-          })
-
+          logger.info(f"Creating vertex class ${schema.name}")
+          graph.createVertexClass(schema.name)
+          create_entity_props(graph, schema, true)
         }
+      })
 
+      /** Create edge classes */
+      db_schema.edge_schemas.foreach(schema_ref => {
+        val schema = schema_ref.target
+        if (graph.existClass(schema.name))
+          throw new IllegalStateException(f"Class ${schema.name} already exists")
+        else {
+          logger.info(f"Creating edge class ${schema.name}")
+          graph.createEdgeClass(schema.name)
+          create_entity_props(graph, schema, true)
+          create_vertex_link_props(graph, schema)
+        }
+      })
 
-
-      }
-    }.get
+    }
   }
 
-  def drop_schema: Unit = {
+  def drop_schema(): Res[Unit] = {
     logger.info("========== Dropping classes ==========")
-    Using(graph_factory.getTx) { graph =>
+    transactional { graph =>
       classes(graph).filter(k => k.isSubClassOf("V") && k.getName != "V").foreach(k => {
         logger.info(f"Dropping node class ${k.getName}")
         graph.database.getMetadata.getSchema.dropClass(k.getName)
@@ -108,21 +151,21 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
         logger.info(f"Dropping edge class ${k.getName}")
         graph.database.getMetadata.getSchema.dropClass(k.getName)
       })
-    }.get
+    }
   }
 
-  def list_schema: Unit = {
+  def list_schema: Res[Unit] = {
     logger.info("========== Listing classes ==========")
-    Using(graph_factory.getTx) { graph =>
+    transactional { graph =>
       classes(graph).filter(k => k.isSubClassOf("V") && k.getName != "V")
         .foreach(k => logger.info(f"Node class ${k.getName}"))
       classes(graph).filter(k => k.isSubClassOf("E") && k.getName != "E")
         .foreach(k => logger.info(f"Edge class ${k.getName}"))
-    }.get
+    }
   }
 
   def read_schema(klass: String): sdt.Schema = {
-    Using(graph_factory.getNoTx) { graph => {
+    transactional { graph => {
       val k = classes(graph).filter(k => k.getName == klass)
       if (k.isEmpty)
         return throw new IllegalArgumentException(f"Cannot find class $klass")
@@ -149,11 +192,11 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
     }}.get
   }
 
-  def drop_data: Unit = {
+  def drop_data(): Res[Unit] = {
     logger.info("========== Dropping graph data ==========")
-    Using(graph_factory.getTx) { graph =>
+    transactional { graph =>
       graph.traversal().V().drop().iterate()
-    }.get
+    }
   }
 
 //  def import_batch[U](data: Seq[U])(implicit meta_source: RecordWithMeta[U]): Unit = {
@@ -171,43 +214,80 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
 //    graph.close()
 //  }
 
-  def upsurt_vertices(graph_schema: G.VertexSchema, table: sdt.Table, id_column: String): Unit = {
-    val graph = graph_factory.getTx
-    val g = graph.traversal()
-    for (row <- table.row_iter) {
-      val vertex_props = table.schema.fields.foldLeft(
-        Seq[(String, Any)]()
-      )((acc, field) => {
-        graph_schema.prop(field.name).map(prop => {
-          row.get(field.name).v match {
-            case Some(x) => acc :+ (prop.name, x)
-            case None => acc
-          }
-        }).getOrElse(acc)
-      })
+//  def insert_vertex(g: GraphTraversalSource, vertex_schema: G.VertexSchema, props: Row): Res[Unit] = {
+//    val vertex_props = vertex_schema.props.foldLeft(
+//      Seq[(String, Any)]()
+//    )((acc, prop) => {
+//      props.get(prop.name).v match {
+//        case Some(x) => acc :+ (prop.name, x)
+//        case None => acc
+//      }
+//    })
+//    insert_vertex(g, vertex_schema, vertex_props)
+//    val x : Map[String, String]
+//    x.get()
+//  }
 
-      row.get(id_column).v match {
-        case None => {
-          println(row)
-          throw new IllegalStateException(f"No value for `id` attribute in column $id_column")
-        }
-        case Some(id_value) => {
-          val vertex_trav = g.V().has(T.label, graph_schema.name).has(id_column, id_value)
-          val vertex = if (vertex_trav.hasNext) {
-            logger.info(f"Updating vetex with `$id_column` = ${row.get(id_column).v.get}")
-            vertex_trav.next()
-          } else {
-            logger.info(f"Adding vetex with `$id_column` = ${row.get(id_column).v.get}")
-            graph.addVertex(List[Any](T.label, graph_schema.name): _*)
-          }
-          vertex_props.foldLeft(g.V(vertex))((trav, kv) => trav.property(kv._1, kv._2)).iterate()
-        }
-      }
+//  case class UpdateStrategy(v: Int)
+//  object UpdateStrategy {
+//    object duplicate_error extends UpdateStrategy(0)
+//    object duplicate_update extends UpdateStrategy(0)
+//  }
 
+//  def modify_vertices(schema: G.ElementSchema, table: sdt.Table,
+//                      strategy: ElementModificationStrategy): Res[Unit] = {
+//    f_transactional {graph =>
+//      val g = graph.traversal()
+//      table.row_iter.foldLeft(ok())((acc, row) =>
+//        acc.flatMap(_ => ModifyElementOps.modify_vertex(g, schema, row, strategy).unit)
+//      )
+//    }
+//  }
+
+//  def insert_linked_vertices(edge_schema: G.EdgeSchema, to_other: Boolean, table: sdt.Table,
+//                             this_vertex_strategy: ElementModificationStrategy,
+//                             other_vertex_strategy: ElementFindingStrategy,
+//                             edge_strategy: ElementModificationStrategy): Res[Unit] = {
+//    f_transactional {graph =>
+//      val g = graph.traversal()
+//      table.row_iter.foldLeft(ok())((acc, row) =>
+//        acc.flatMap(_ => ModifyElementOps.add_linked_vertex(
+//          g, edge_schema, to_other, row, this_vertex_strategy, other_vertex_strategy, edge_strategy
+//        ).unit)
+//      )
+//    }
+//  }
+  type RowTraversalSourceFn[S, B] = (GraphTraversalSource, sdt.Row) => GraphTraversal[S, B]
+  type RowTraversalFn[S, A, B] = (GraphTraversal[S, A], sdt.Row) => GraphTraversal[S, B]
+
+  def insert_vertices(table: sdt.Table, create: RowTraversalSourceFn[Vertex, Vertex]): Res[Unit] = {
+    f_transactional {graph =>
+      val g = graph.traversal()
+      table.row_iter.foldLeft(ok())((acc, row) =>
+        acc.map(_ => create(g, row).next())
+      )
     }
-    graph.commit()
-    graph.close()
   }
+
+  def insert_linked_vertices(table: sdt.Table,
+                             from: RowTraversalSourceFn[Vertex, Vertex],
+                             to: RowTraversalFn[Vertex, Vertex, Vertex],
+                             edge: RowTraversalFn[Vertex, Vertex, Edge]): Res[Unit] = {
+    f_transactional { graph =>
+      val g = graph.traversal()
+      table.row_iter.foldLeft(ok())((acc, row) =>
+        acc.map(trav => from(g, row).as("from"))
+          .map(trav => to(trav, row).as("to"))
+          .map(trav => {
+//            val final_trav = trav
+            val final_trav = edge(trav, row)
+            println(GremlinIO.writeValueAsString(final_trav))
+            final_trav.next()
+          })
+      )
+    }
+  }
+
 
   def query_table(q: Q.Query, tm: sdt.TableManager): sdt.Table = {
     val gremlin_scala_bc = Q.Query2GremlinCompiler.compile(q)
