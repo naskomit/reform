@@ -3,18 +3,18 @@ package sysmo.coviddata
 import scala.util.{Success, Try, Using}
 import scala.jdk.CollectionConverters._
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.{GraphTraversal, __}
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.{GraphTraversal, GraphTraversalSource, __}
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions
 import org.apache.tinkerpop.gremlin.process.traversal.{Order, P}
-import org.apache.tinkerpop.gremlin.structure.T
+import org.apache.tinkerpop.gremlin.structure.{Edge, T, Vertex}
 import sysmo.reform.db.GraphAppStorage
 import sysmo.reform.shared.data.{graph => G, table => sdt}
 import sysmo.reform.data.{table => dt}
 import sysmo.reform.shared.{query => Q}
-import sdt.{VectorType => VT}
+import sdt.{Row, VectorType => VT}
 import sysmo.reform.shared.util.pprint._
 import sdt.Printers._
-//import sysmo.coviddata.shared.{data => CD}
+import sysmo.reform.data.graph.CompositeTraversals
 import sysmo.coviddata.io.ExcelImporter
 import sysmo.coviddata.shared.data.{CovidDatabaseSchema => CDS}
 import sysmo.reform.io.excel.{TableCollectionRead, WorkbookReader}
@@ -33,22 +33,24 @@ object OrientDBGraphAppStorage extends FuncLogging {
   protected def insert_data_secondary(data: sdt.Table,
                                       new_vertex_schema: G.VertexSchema,
                                       new_edge_schema: G.EdgeSchema): Res[Unit] = {
-    app_storage.insert_linked_vertices(
-      data,
-      (g, row) =>
+    app_storage.insert_from_table(data, (tb =>
+      tb.start("from",(g, row) =>
         g.V().has(T.label, "SocioDemographic")
-          .has("1", row.get("1").v.get),
-      (trav, row) => trav.coalesce(
-          __.V().has(T.label, new_vertex_schema.name).has("1", row.get("1").v.get),
-          __.addV(new_vertex_schema.name)
-        ).b_append_props(new_vertex_schema, row),
-      (trav, row) => trav.coalesce(
-          __.select("from").outE().has(T.label, new_edge_schema.name)
-            .where(__.inV().as("to")),
-          __.addE(new_edge_schema.name).from("from").to("to")
+          .has("1", row.get("1").v.get)
+      ).extend("to", (trav, row) =>
+          trav.b_update_or_create_vertex(
+            __.V().has(T.label, new_vertex_schema.name).has("1", row.get("1").v.get),
+            new_vertex_schema, row
+          )
+      ).extend("edge", (trav, row) =>
+        trav.b_update_or_create_edge(
+          __.select("from").outE().has(T.label, new_edge_schema.name).where(__.inV().as("to")),
+          new_edge_schema, row, "from", "to"
+        )
       )
-    )
+    ))
   }
+
 
   def test_import(): Res[Unit] = {
     app_storage.drop_schema().get

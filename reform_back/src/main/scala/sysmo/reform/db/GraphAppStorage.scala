@@ -288,6 +288,21 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
     }
   }
 
+  import sysmo.reform.data.graph.CompositeTraversals._
+  def insert_from_table(table: sdt.Table,
+                        tb: TraversalBuilderStart[sdt.Row] => TraversalBuilder[sdt.Row]): Res[Unit] = {
+    f_transactional { graph =>
+      val g = graph.traversal()
+      table.row_iter.foldLeft(ok())((acc, row) =>
+        acc.map(_ => {
+          val builder_start = new TraversalBuilderStart[sdt.Row](g, row)
+          val final_trav = tb(builder_start).build
+          println(GremlinIO.writeValueAsString(final_trav))
+          final_trav.next()
+        })
+      )
+    }
+  }
 
   def query_table(q: Q.Query, tm: sdt.TableManager): sdt.Table = {
     val gremlin_scala_bc = Q.Query2GremlinCompiler.compile(q)

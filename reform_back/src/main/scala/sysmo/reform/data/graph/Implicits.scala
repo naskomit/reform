@@ -1,7 +1,7 @@
 package sysmo.reform.data.graph
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.{GraphTraversal, GraphTraversalSource, __}
-import org.apache.tinkerpop.gremlin.structure.Vertex
+import org.apache.tinkerpop.gremlin.structure.{Edge, Vertex}
 import sysmo.reform.shared.data.graph.VertexSchema
 import sysmo.reform.shared.data.{graph => G, table => sdt}
 
@@ -42,19 +42,25 @@ object Implicits {
     type TraversalFn1[P1, R] = Function1[GraphTraversal[S, P1], GraphTraversal[S, R]]
 
 
-
-    def b_find_or_create_vertex(find: GraphTraversal[S, Vertex], create: GraphTraversal[S, Vertex]): GraphTraversal[S, Vertex] = {
-      trav.coalesce(
-        find,
-        create
-      )
-    }
-
     def b_find_or_create_vertex(find: GraphTraversal[S, Vertex], schema: G.VertexSchema, row: sdt.Row): GraphTraversal[S, Vertex] = {
       trav.coalesce(
         find,
         __.addV(schema.name).b_append_props(schema, row)
       )
+    }
+
+    def b_update_or_create_vertex(find: GraphTraversal[S, Vertex], schema: G.VertexSchema, row: sdt.Row): GraphTraversal[S, Vertex] = {
+      trav.coalesce(
+        find,
+        __.addV(schema.name)
+      ).b_append_props(schema, row)
+    }
+
+    def b_update_or_create_edge(find: GraphTraversal[S, Edge], schema: G.EdgeSchema, row: sdt.Row, from: String, to: String): GraphTraversal[S, Edge] = {
+      trav.coalesce(
+        find,
+        __.addE(schema.name).from(from).to(to)
+      ).b_append_props(schema, row)
     }
   }
 }
