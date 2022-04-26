@@ -57,8 +57,10 @@ class VectorIterator[V](vec: Vector[V, _]) extends Iterator[Option[V]] {
 }
 
 // TODO Not safe (not auto close-able)
-abstract class VectorBuilder[V, Storage <: VectorStorage[V]](storage: Storage)(implicit tci: VectorTypeclass[V]) {
-  def tpe: VectorType.Value = tci.tpe
+// (storage: Storage)(implicit tci: VectorTypeclass[V])
+trait VectorBuilder[V, Storage <: VectorStorage[V]] {
+  val storage: Storage
+  def tpe: VectorType.Value
   def toVector: Vector[V, VectorStorage[V]]
 }
 
@@ -67,9 +69,10 @@ abstract class VectorBuilder[V, Storage <: VectorStorage[V]](storage: Storage)(i
 //}
 
 class IncrementalVectorBuilder[V, Storage <: VectorStorage[V]]
-  (storage: Storage)(implicit tci: VectorTypeclass[V])
-    extends VectorBuilder[V, Storage](storage) {
+  (val storage: Storage)(implicit tci: VectorTypeclass[V])
+    extends VectorBuilder[V, Storage] {
   var num_elements: Int = 0
+  def tpe: VectorType.Value = tci.tpe
   def append(value: Option[V]): Unit = {
     num_elements += 1
     value match {

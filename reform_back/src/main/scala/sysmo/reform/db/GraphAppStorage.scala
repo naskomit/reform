@@ -52,30 +52,6 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
     }
 
   }
-//  def create_schema(rec_meta_list: Seq[RecordMeta[_]]): Unit = {
-//    logger.info("========== Creating classes ==========")
-//    Using(graph_factory.getTx)  { graph =>
-//      for (rec_meta <- rec_meta_list) {
-//        if (graph.existClass(rec_meta.id))
-//          logger.warn(f"Class ${rec_meta.id} already exists")
-//        else
-//          logger.info(f"Creating node class ${rec_meta.id}")
-//          graph.createVertexClass(rec_meta.id)
-//        val vertex_class = graph.database.getMetadata.getSchema.getClass(rec_meta.id)
-//        vertex_class.setStrictMode(true)
-//        rec_meta.field_keys.foreach(field => {
-//          val prop_type = rec_meta.fields(field).tpe match {
-//            case RM.StringType() => OType.STRING
-//            case RM.IntegerType() => OType.INTEGER
-//            case RM.RealType() => OType.DOUBLE
-//            case RM.BoolType() => OType.BOOLEAN
-//          }
-//          vertex_class.createProperty(field.toString, prop_type)
-//        })
-//
-//      }
-//    }
-//  }.get_options
 
   def create_entity_props(graph: OrientGraph, schema: ElementSchema, strict: Boolean): Unit = {
     val entity_class = graph.database.getMetadata.getSchema.getClass(schema.name)
@@ -104,8 +80,15 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
 
     edge_class.createProperty(s"out", OType.LINK, from_class)
     edge_class.createProperty(s"in", OType.LINK, to_class)
-    from_class.createProperty(s"out_${edge_class}", OType.LINK, edge_class)
-    to_class.createProperty(s"in_${edge_class}", OType.LINK, edge_class)
+    schema.from_mult match {
+      case G.MultOne | G.MultOptOne => from_class.createProperty(s"out_${edge_class}", OType.LINK, edge_class)
+      case G.MultMany => from_class.createProperty(s"out_${edge_class}", OType.LINKLIST, edge_class)
+    }
+    schema.to_mult match {
+      case G.MultOne | G.MultOptOne => to_class.createProperty(s"in_${edge_class}", OType.LINK, edge_class)
+      case G.MultMany => to_class.createProperty(s"in_${edge_class}", OType.LINKLIST, edge_class)
+    }
+
   }
 
   def apply_schemas(): Res[Unit] = {
@@ -195,68 +178,11 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
   def drop_data(): Res[Unit] = {
     logger.info("========== Dropping graph data ==========")
     transactional { graph =>
+      graph.traversal().E().drop().iterate()
       graph.traversal().V().drop().iterate()
     }
   }
 
-//  def import_batch[U](data: Seq[U])(implicit meta_source: RecordWithMeta[U]): Unit = {
-//    val meta = meta_source._meta
-//    val prop_args_init = List[Any](T.label, meta.id)
-//
-//    val graph = graph_factory.getNoTx
-//    data.foreach(row => {
-//      val prop_args = meta.field_keys.foldLeft(prop_args_init)((acc, item) =>
-//        acc ++ Seq(meta.fields(item).name, meta.get_value(row, item))
-//      )
-//
-//      graph.addVertex(prop_args: _*)
-//    })
-//    graph.close()
-//  }
-
-//  def insert_vertex(g: GraphTraversalSource, vertex_schema: G.VertexSchema, props: Row): Res[Unit] = {
-//    val vertex_props = vertex_schema.props.foldLeft(
-//      Seq[(String, Any)]()
-//    )((acc, prop) => {
-//      props.get(prop.name).v match {
-//        case Some(x) => acc :+ (prop.name, x)
-//        case None => acc
-//      }
-//    })
-//    insert_vertex(g, vertex_schema, vertex_props)
-//    val x : Map[String, String]
-//    x.get()
-//  }
-
-//  case class UpdateStrategy(v: Int)
-//  object UpdateStrategy {
-//    object duplicate_error extends UpdateStrategy(0)
-//    object duplicate_update extends UpdateStrategy(0)
-//  }
-
-//  def modify_vertices(schema: G.ElementSchema, table: sdt.Table,
-//                      strategy: ElementModificationStrategy): Res[Unit] = {
-//    f_transactional {graph =>
-//      val g = graph.traversal()
-//      table.row_iter.foldLeft(ok())((acc, row) =>
-//        acc.flatMap(_ => ModifyElementOps.modify_vertex(g, schema, row, strategy).unit)
-//      )
-//    }
-//  }
-
-//  def insert_linked_vertices(edge_schema: G.EdgeSchema, to_other: Boolean, table: sdt.Table,
-//                             this_vertex_strategy: ElementModificationStrategy,
-//                             other_vertex_strategy: ElementFindingStrategy,
-//                             edge_strategy: ElementModificationStrategy): Res[Unit] = {
-//    f_transactional {graph =>
-//      val g = graph.traversal()
-//      table.row_iter.foldLeft(ok())((acc, row) =>
-//        acc.flatMap(_ => ModifyElementOps.add_linked_vertex(
-//          g, edge_schema, to_other, row, this_vertex_strategy, other_vertex_strategy, edge_strategy
-//        ).unit)
-//      )
-//    }
-//  }
   type RowTraversalSourceFn[S, B] = (GraphTraversalSource, sdt.Row) => GraphTraversal[S, B]
   type RowTraversalFn[S, A, B] = (GraphTraversal[S, A], sdt.Row) => GraphTraversal[S, B]
 
@@ -269,24 +195,24 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
     }
   }
 
-  def insert_linked_vertices(table: sdt.Table,
-                             from: RowTraversalSourceFn[Vertex, Vertex],
-                             to: RowTraversalFn[Vertex, Vertex, Vertex],
-                             edge: RowTraversalFn[Vertex, Vertex, Edge]): Res[Unit] = {
-    f_transactional { graph =>
-      val g = graph.traversal()
-      table.row_iter.foldLeft(ok())((acc, row) =>
-        acc.map(trav => from(g, row).as("from"))
-          .map(trav => to(trav, row).as("to"))
-          .map(trav => {
-//            val final_trav = trav
-            val final_trav = edge(trav, row)
-            println(GremlinIO.writeValueAsString(final_trav))
-            final_trav.next()
-          })
-      )
-    }
-  }
+//  def insert_linked_vertices(table: sdt.Table,
+//                             from: RowTraversalSourceFn[Vertex, Vertex],
+//                             to: RowTraversalFn[Vertex, Vertex, Vertex],
+//                             edge: RowTraversalFn[Vertex, Vertex, Edge]): Res[Unit] = {
+//    f_transactional { graph =>
+//      val g = graph.traversal()
+//      table.row_iter.foldLeft(ok())((acc, row) =>
+//        acc.map(trav => from(g, row).as("from"))
+//          .map(trav => to(trav, row).as("to"))
+//          .map(trav => {
+////            val final_trav = trav
+//            val final_trav = edge(trav, row)
+//            println(GremlinIO.writeValueAsString(final_trav))
+//            final_trav.next()
+//          })
+//      )
+//    }
+//  }
 
   import sysmo.reform.data.graph.CompositeTraversals._
   def insert_from_table(table: sdt.Table,
@@ -297,7 +223,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
         acc.map(_ => {
           val builder_start = new TraversalBuilderStart[sdt.Row](g, row)
           val final_trav = tb(builder_start).build
-          println(GremlinIO.writeValueAsString(final_trav))
+//          println(GremlinIO.writeValueAsString(final_trav))
           final_trav.next()
         })
       )

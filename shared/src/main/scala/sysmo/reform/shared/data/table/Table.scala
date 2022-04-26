@@ -1,12 +1,15 @@
 package sysmo.reform.shared.data.table
 
+import sysmo.reform.shared.util.RecordView
+
 trait TableBuilder {
   def :+(row_data: Map[String, Option[Any]]): Unit
   def append_value_map(row_data: Map[String, Value[_]]): Unit
+  def append_record(row_data: RecordView[Value[_]]): Unit
   def toTable: Table
 }
 
-class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) extends TableBuilder {
+class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder], manager: TableManager) extends TableBuilder {
   private val column_map = col_builders.zip(schema.fields).map(x => (x._2.name, x._1)).toMap
   override def :+(row_data: Map[String, Option[Any]]): Unit = {
     for (field <- schema.fields) {
@@ -28,7 +31,15 @@ class IncrementalTableBuilder(schema: Schema, col_builders: Seq[SeriesBuilder]) 
     }
   }
 
-  override def toTable: Table = new TableImpl(schema, col_builders.map(_.toSeries))
+  def append_record(row_data: RecordView[Value[_]]): Unit = {
+    for (field <- schema.fields) {
+      val value = row_data.get(field.name)
+      column_map(field.name).append_value(value)
+    }
+
+  }
+
+  override def toTable: Table = new TableImpl(schema, col_builders.map(_.toSeries), manager)
 }
 
 trait Table {
@@ -40,6 +51,7 @@ trait Table {
   def column(name: String): Series
   def row(row_id: Int): Row
   def row_iter: Iterator[Row]
+  def manager: TableManager
   def column_iter: Iterator[Series] = new Iterator[Series] {
     var index = 0
     override def hasNext: Boolean = index < ncol
@@ -50,7 +62,7 @@ trait Table {
   }
 }
 
-class TableImpl(var schema: Schema, var column_data: Seq[Series]) extends Table {
+class TableImpl(var schema: Schema, var column_data: Seq[Series], _manager: TableManager) extends Table {
   private var columnMap: Map[String, Series] =
     column_data.zip(schema.fields).map(x => (x._2.name, x._1)).toMap
 
@@ -63,4 +75,5 @@ class TableImpl(var schema: Schema, var column_data: Seq[Series]) extends Table 
     new Row(this, column_data.map(cd => cd.get(row_id)))
   }
   def row_iter: Iterator[Row] = new RowIterator(this)
+  def manager: TableManager = _manager
 }

@@ -67,7 +67,14 @@ object TestApp extends App with FuncLogging {
     setup.run()
   }
 
+  def run_table_tests(): Unit = {
+    import sysmo.reform.shared.tests.TableDataTest
+    TableDataTest.basic_tests()
+    TableDataTest.group_test()
+  }
+
   def run(): Unit = {
+//    run_table_tests()
     do_import() match {
       case Right(_) =>
       case Left(error) => throw error

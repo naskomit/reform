@@ -109,7 +109,7 @@ object Transport extends CirceTransport {
     override def apply(c: HCursor): Decoder.Result[Table] = {
       c.downField("columns").as[Seq[Series]].map(columns => {
         val schema = Schema(columns.map(x => x.field))
-        new TableImpl(schema, columns)
+        new TableImpl(schema, columns, table_manager)
       })
     }
   }

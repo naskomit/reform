@@ -39,9 +39,30 @@ package object table {
     else
       dynamic_table_managers.value.get
 
+  def table_from_columns(table_manager: TableManager, schema: Schema, data: Tuple2[String, Seq[_]]*): Table = {
+    assert(schema.fields.size == data.length, "Table data must be ")
+    val nrow = data(0)._2.length
+    for (i <- 0 until data.length) {
+      if (data(i)._2.length != nrow) {
+        throw new IllegalArgumentException(s"Number of data points in column ${data(i)._1} is different from the number of rows $nrow" )
+      }
+    }
+    val tb_1 = table_manager.incremental_table_builder(schema)
+    for (r <- 0 until nrow) {
+      val row_data = data.map {
+        case (name, col_data) => (name, Some(col_data(r)))
+      }.toMap
+      tb_1 :+ row_data
+    }
+    tb_1.toTable
+  }
+
+
 
   object default {
     def create_table_manager: DefaultTableManager = DefaultTableManager()
     val implicits = DefaultVector
   }
+
+  implicit class ops(table: Table) extends TableOps(table)
 }

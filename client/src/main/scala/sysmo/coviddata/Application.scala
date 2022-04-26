@@ -21,7 +21,7 @@ object AppConfig extends ApplicationConfiguration {
       G.Schema.table_schema_builder(CD.Clinical.schema).build
     ),
     NamedValue("Therapy", Some("Терапия"),
-      G.Schema.table_schema_builder(CD.Therapy.schema).build
+      G.Schema.table_schema_builder(CD.Therapy2.schema).build
     ),
     NamedValue("Immunology", Some("Имунология"),
       G.Schema.table_schema_builder(CD.Immunology.schema).build

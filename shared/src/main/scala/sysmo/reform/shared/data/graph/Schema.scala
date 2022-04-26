@@ -43,6 +43,11 @@ object Schema {
       props += bld.build
       this
     }
+
+    def transform(f: this.type => _): this.type = {
+      f(this)
+      this
+    }
   }
 
   class VertexSchemaBuilder(val name: String) extends EntityBuilder {
@@ -77,9 +82,10 @@ object Schema {
   def edge_builder(name: String) = new EdgeSchemaBuilder(name)
 }
 
+trait VertexClass extends VCRef {def _uid: String = target.name}
+trait EdgeClass extends ECRef {def _uid: String = target.name}
+
 trait DatabaseSchema {
-  trait VertexClass extends VCRef {def _uid: String = target.name}
-  trait EdgeClass extends ECRef {def _uid: String = target.name}
   val vertex_schemas: Seq[VertexClass]
   val edge_schemas: Seq[EdgeClass]
   protected lazy val vertex_schema_map: Map[String, VertexClass] = vertex_schemas.map(x => (x.uid, x)).toMap

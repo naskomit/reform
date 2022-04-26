@@ -38,6 +38,7 @@ trait Series extends Iterable[Value[_]] {
   def to_categorical(categories: Option[Seq[String]] = None): SeriesCategorical
   override def toString: String
   def vmap(result_field: Field)(f: Value[_] => Value[_]): Series
+  def manager: TableManager
 }
 
 trait SeriesCategorical extends Series {
@@ -97,6 +98,7 @@ class SeriesImpl(val field: Field, val data: Vector[_, _]) extends SeriesCategor
     counter.toSeq
   }
 
+  def manager: TableManager = data.manager
   override def toString: String = data.toString
 
   override def iterator: Iterator[Value[_]] = new SeriesIterator(this)

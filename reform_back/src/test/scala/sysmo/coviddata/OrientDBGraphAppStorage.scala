@@ -51,10 +51,31 @@ object OrientDBGraphAppStorage extends FuncLogging {
     ))
   }
 
+  protected def insert_data_multiple(data: sdt.Table,
+                                      new_vertex_schema: G.VertexSchema,
+                                      new_edge_schema: G.EdgeSchema): Res[Unit] = {
+    app_storage.insert_from_table(data, (tb =>
+      tb.start("from",(g, row) =>
+        g.V().has(T.label, "SocioDemographic")
+          .has("1", row.get("1").v.get)
+      ).extend("to", (trav, row) =>
+        trav.addV(new_vertex_schema.name).b_append_props(new_vertex_schema, row)
+//        trav.b_update_or_create_vertex(
+//          __.V().has(T.label, new_vertex_schema.name).has("1", row.get("1").v.get),
+//          new_vertex_schema, row
+//        )
+      ).extend("edge", (trav, row) =>
+        trav.b_update_or_create_edge(
+          __.select("from").outE().has(T.label, new_edge_schema.name).where(__.inV().as("to")),
+          new_edge_schema, row, "from", "to"
+        )
+      )
+      ))
+  }
 
   def test_import(): Res[Unit] = {
-    app_storage.drop_schema().get
     app_storage.drop_data().get
+    app_storage.drop_schema().get
     app_storage.apply_schemas().get
     sdt.with_table_manager()(tm => {
       val reader = new WorkbookReader(doc_path, tm)
@@ -62,15 +83,18 @@ object OrientDBGraphAppStorage extends FuncLogging {
         "SocioDemographic" -> ExcelImporter.read_sociodemographic,
         "Clinical_1" -> ExcelImporter.read_clinical_1,
         "Clinical_2" -> ExcelImporter.read_clinical_2,
+        "Clinical_3" -> ExcelImporter.read_clinical_lab,
         "Clinical_4" -> ExcelImporter.read_clinical_4,
+        "Therapy_1" -> ExcelImporter.read_therapy_1,
         "Therapy_2" -> ExcelImporter.read_therapy_2,
+        "Therapy_Lab" -> ExcelImporter.read_therapy_lab,
         "Immunology" -> ExcelImporter.read_immunology
       )))
 
       logger.info("Excel data read")
 //      val strategy = CreateOrUpdate("1")
 
-
+//      data("Therapy_Lab").pprint()
       app_storage.insert_vertices(
         data("SocioDemographic"),
         (g, row) => g.b_create_vertex(CDS.SocioDemographic.target, row)
@@ -78,9 +102,12 @@ object OrientDBGraphAppStorage extends FuncLogging {
 
       insert_data_secondary(data("Clinical_1"), CDS.Clinical.target, CDS.HasClinical.target)
       insert_data_secondary(data("Clinical_2"), CDS.Clinical.target, CDS.HasClinical.target)
+      insert_data_multiple(data("Clinical_3"), CDS.ClinicalLab.target, CDS.HasClinicalLab.target)
       insert_data_secondary(data("Clinical_4"), CDS.Clinical.target, CDS.HasClinical.target)
 
-      insert_data_secondary(data("Therapy_2"), CDS.Therapy.target, CDS.HasTherapy.target)
+      insert_data_multiple(data("Therapy_1"), CDS.Therapy1.target, CDS.HasTherapy1.target)
+      insert_data_secondary(data("Therapy_2"), CDS.Therapy2.target, CDS.HasTherapy2.target)
+      insert_data_multiple(data("Therapy_Lab"), CDS.TherapyLab.target, CDS.HasTherapyLab.target)
       insert_data_secondary(data("Immunology"), CDS.Immunology.target, CDS.HasImmunology.target)
 
 

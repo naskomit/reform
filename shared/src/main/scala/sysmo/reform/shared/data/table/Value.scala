@@ -16,6 +16,13 @@ sealed trait Value[T] {
   def as_bool: Option[Boolean] = None
   def as_char: Option[String] = v.map(_.toString)
   def as_date: Option[java.util.Date] = None
+  def equals(other: Value[_]): Boolean = {
+    (v, other.v) match {
+      case (Some(_v), Some(other_v)) => _v == other_v
+      case (None, None) => true
+      case _ => false
+    }
+  }
 }
 case class RealValue(v: Option[Double]) extends Value[Double] {
   override def as_real: Option[Double] = v

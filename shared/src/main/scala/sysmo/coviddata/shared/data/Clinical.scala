@@ -1,11 +1,10 @@
 package sysmo.coviddata.shared.data
 
-import sysmo.reform.shared.data.{table => sdt}
+import sysmo.reform.shared.data.{graph => G}
 import sysmo.reform.shared.data.{Property => Prop}
 
 object Clinical {
-  import sysmo.reform.shared.data.graph._
-  val schema : VertexSchema = Schema.vertex_builder("Clinical").label("Клинични")
+  val schema : G.VertexSchema = G.Schema.vertex_builder("Clinical").label("Клинични")
     // Част 2 - Клин.I
 //    .link(Link.builder("1", SocioDemographic_Graph.schema))
     .prop(Prop.int("1").label("№"))
@@ -104,5 +103,22 @@ object Clinical {
     .prop(Prop.string("50").label("Ден от влошаването"))
 
 //    .prop(Prop.string("").label(""))
+    .build
+}
+
+object ClinicalLab {
+  val schema: G.VertexSchema = G.Schema.vertex_builder("ClinicalLab")
+    .prop(Prop.int("1").label("№"))
+    .prop(Prop.string("1a").label("Име"))
+    .prop(Prop.string("1b").label("Презиме"))
+    .prop(Prop.string("1c").label("Фамилия"))
+    .prop(Prop.string("day").label("Ден от изследването"))
+    .transform(Lab.add_standard_panel)
+    .prop(Prop.string("pH"))
+    .prop(Prop.string("pCO2"))
+    .prop(Prop.string("pO2"))
+    .prop(Prop.string("общ бел"))
+    .prop(Prop.string("алб"))
+
     .build
 }

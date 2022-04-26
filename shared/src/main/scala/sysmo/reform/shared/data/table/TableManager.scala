@@ -22,7 +22,7 @@ trait TableManager extends AutoCloseable {
 
   def incremental_table_builder(schema: Schema): TableBuilder = {
     val col_builders = schema.fields.map(x => incremental_series_builder(x))
-    new IncrementalTableBuilder(schema, col_builders)
+    new IncrementalTableBuilder(schema, col_builders, this)
   }
 
   def vec_from[V](seq: Seq[V], name: String)(implicit tv: VectorTypeclass[V]): Vector[V, VectorStorage[V]] = {

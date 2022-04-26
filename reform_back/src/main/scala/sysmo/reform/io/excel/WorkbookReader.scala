@@ -33,7 +33,16 @@ case class Row(index: Int) extends Move
 case class PositionAt(row: Int, col: Int) extends Move
 
 case class Read(field_id: String) extends Action
-case class ReadRow(actions: Seq[Action]) extends Action
+case class AssertValue(value: sdt.Value[_], tpe: sdt.FieldType) extends Action
+case class CheckValue(check: sdt.Value[_] => Boolean, tpe: sdt.FieldType) extends Action
+
+sealed trait ReadRow
+case class ReadSimpleRow(actions: Seq[Action]) extends ReadRow
+case class ReadMultiColumnBlockRow(fixed: ReadSimpleRow,
+                                   n_max: Int,
+                                   variable: ReadSimpleRow,
+                                   drop_empty_blocks: Boolean = true) extends ReadRow
+
 object ReadRow {
   class Builder(schema: sdt.Schema) {
     private var actions = mutable.ArrayBuffer[Action]()
@@ -50,6 +59,10 @@ object ReadRow {
       actions += Column(ref.getCol)
       this
     }
+    def shift(n: Int = 1): Builder = {
+      actions += Right(n)
+      this
+    }
     def shift_read(field_id: String): Builder = {
       actions ++= Seq(Right(), Read(field_id))
       this
@@ -63,10 +76,87 @@ object ReadRow {
       this
     }
 
-    def build: ReadRow = ReadRow(actions.toSeq)
+    def assert_value(v: Double): Builder = {
+      actions += AssertValue(
+        sdt.RealValue(Some(v)), sdt.FieldType(sdt.VectorType.Real)
+      )
+      this
+    }
+
+    def assert_value(v: Int): Builder = {
+      actions += AssertValue(
+        sdt.IntValue(Some(v)), sdt.FieldType(sdt.VectorType.Int)
+      )
+      this
+    }
+
+    def assert_value(v: Boolean): Builder = {
+      actions += AssertValue(
+        sdt.BoolValue(Some(v)), sdt.FieldType(sdt.VectorType.Bool)
+      )
+      this
+    }
+
+    def assert_value(v: String): Builder = {
+      actions += AssertValue(
+        sdt.CharValue(Some(v)), sdt.FieldType(sdt.VectorType.Char)
+      )
+      this
+    }
+
+    def check_real_value(check: sdt.Value[_] => Boolean): Builder = {
+      actions += CheckValue(
+        check, sdt.FieldType(sdt.VectorType.Real)
+      )
+      this
+    }
+
+    def check_int_value(check: sdt.Value[_] => Boolean): Builder = {
+      actions += CheckValue(
+        check, sdt.FieldType(sdt.VectorType.Int)
+      )
+      this
+    }
+    def check_bool_value(check: sdt.Value[_] => Boolean): Builder = {
+      actions += CheckValue(
+        check, sdt.FieldType(sdt.VectorType.Bool)
+      )
+      this
+    }
+    def check_char_value(check: sdt.Value[_] => Boolean): Builder = {
+      actions += CheckValue(
+        check, sdt.FieldType(sdt.VectorType.Char)
+      )
+      this
+    }
+
+    def build: ReadSimpleRow = ReadSimpleRow(actions.toSeq)
+  }
+
+  class MultiColumnBlockBuilder(schema: sdt.Schema) {
+    val fixed_builder = new Builder(schema)
+    val variable_builder = new Builder(schema)
+    var _n_max: Int = -1
+
+    def fixed(f: Builder => Unit): this.type = {
+      f(fixed_builder)
+      this
+    }
+    def variable(n_max: Int, f: Builder => Unit): this.type = {
+      f(variable_builder)
+      _n_max = n_max
+      this
+    }
+    def build: ReadMultiColumnBlockRow = ReadMultiColumnBlockRow(
+      fixed_builder.build,
+      _n_max,
+      variable_builder.build
+    )
   }
 
   def builder(schema: sdt.Schema): Builder  = new Builder(schema)
+
+  def multi_column_block_builder(schema: sdt.Schema) = new MultiColumnBlockBuilder(schema)
 }
 
 case class ReadBlock(schema: sdt.Schema, worksheet: String,
@@ -136,10 +226,12 @@ class WorkbookReader(file_path: String, table_manager: sdt.TableManager) extends
     }
   }
 
-  def read_row(prog: ReadRow, schema: sdt.Schema, start: PositionAt): Map[String, sdt.Value[_]] = {
+  type ValueMap = Map[String, sdt.Value[_]]
+
+  def read_row(prog: ReadSimpleRow, schema: sdt.Schema, start: PositionAt): (ValueMap, PositionAt) = {
     var row = start.row
     var col = start.col
-    prog.actions.foldLeft(Map[String, sdt.Value[_]]()) {(acc, action) => {
+    val row_values = prog.actions.foldLeft(Map[String, sdt.Value[_]]()) {(acc, action) => {
       action match {
         case Left(n) => {col -= n; acc}
         case Right(n) => {col += n; acc}
@@ -153,9 +245,41 @@ class WorkbookReader(file_path: String, table_manager: sdt.TableManager) extends
         case Up(n) => {row -= n; acc}
         case Column(index) => {col = index; acc}
         case PositionAt(r, c) => {row = r; col = c; acc}
-        case ReadRow(_) => throw new IllegalStateException("Cannot have action read row here")
+        case AssertValue(value, field_type) => {
+          val cell_value = read_value(row, col, sdt.Field("", field_type))
+          if (!value.equals(cell_value)) {
+            throw new IllegalStateException(s"Value in cell ${(row, col)} is not equal to ${value.v.get}!")
+          }
+          acc
+        }
+        case CheckValue(check, field_type) => {
+          val cell_value = read_value(row, col, sdt.Field("", field_type))
+          if (!check(cell_value)) {
+            throw new IllegalStateException(s"Value in cell ${(row, col)} fails check!")
+          }
+          acc
+        }
       }
     }}
+    val end_position = PositionAt(row, col)
+    (row_values, end_position)
+  }
+
+  def read_multi_column_block(prog: ReadMultiColumnBlockRow, schema: sdt.Schema, start: PositionAt): (Seq[ValueMap], PositionAt) = {
+    var (fixed_data, end_position) = read_row(prog.fixed, schema, start)
+    val result_accumulator = mutable.ArrayBuffer[ValueMap]()
+    var i = 0
+    while (i < prog.n_max) {
+      val row_variable = read_row(prog.variable, schema, end_position)
+      val variable_data = row_variable._1
+      end_position = row_variable._2
+      if (!(variable_data.forall { case (k, v) => v.is_na} && prog.drop_empty_blocks)) {
+        result_accumulator += (fixed_data ++ variable_data)
+      }
+      i += 1
+    }
+    (result_accumulator.toSeq, end_position)
+
   }
 
   def read_block(prog: ReadBlock, workbook: XSSFWorkbook): sdt.Table = {
@@ -166,11 +290,18 @@ class WorkbookReader(file_path: String, table_manager: sdt.TableManager) extends
       var row_index = prog.start.row
       for (row <- sheet.rowIterator().asScala) {
         if (row.getRowNum >= row_index) {
-          val values = read_row(prog.read_row, prog.schema, prog.start.copy(row = row_index))
-          if (prog.drop_empty_rows && values.forall(x => x._2.is_na)) {
-
-          } else {
-            builder.append_value_map(values)
+          prog.read_row match {
+            case rr: ReadSimpleRow => {
+              val (values, _) = read_row(rr, prog.schema, prog.start.copy(row = row_index))
+              if (prog.drop_empty_rows && values.forall(x => x._2.is_na)) {
+              } else {
+                builder.append_value_map(values)
+              }
+            }
+            case rr: ReadMultiColumnBlockRow => {
+              val (values, _) = read_multi_column_block(rr, prog.schema, prog.start.copy(row = row_index))
+              values.foreach(v => builder.append_value_map(v))
+            }
           }
           row_index += 1
         }
