@@ -211,7 +211,7 @@ object ExcelImporter {
 
     ReadBlock(
       schema,
-      "Част 8-Терап.III",
+      "Част 7-Терап.II",
       PositionAt(4, 0),
       read_row
     )

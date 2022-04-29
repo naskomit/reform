@@ -1,5 +1,6 @@
 package sysmo.reform.shared.data.table
 
+import io.circe.DecodingFailure
 import sysmo.reform.shared.util.CirceTransport
 
 object Transport extends CirceTransport {
@@ -98,8 +99,11 @@ object Transport extends CirceTransport {
     }
   }
 
+  implicit val codec_schema: Codec[Schema] = deriveCodec[Schema]
+
   implicit val enc_table: Encoder[Table] = new Encoder[Table] {
     override def apply(a: Table): Json = Json.obj(
+      "schema" -> a.schema.asJson,
       "$type" -> "Table".asJson,
       "columns" -> a.column_iter.map(_.asJson).toSeq.asJson
     )
@@ -107,10 +111,14 @@ object Transport extends CirceTransport {
 
   implicit val dec_table: Decoder[Table] = new Decoder[Table] {
     override def apply(c: HCursor): Decoder.Result[Table] = {
-      c.downField("columns").as[Seq[Series]].map(columns => {
-        val schema = Schema(columns.map(x => x.field))
-        new TableImpl(schema, columns, table_manager)
-      })
+      val e_columns = c.downField("columns").as[Seq[Series]]
+      val e_schema = c.downField("schema").as[Schema]
+      (e_columns, e_schema) match {
+        case (Right(columns), Right(schema)) => Right(new TableImpl(schema, columns, table_manager))
+        case _ => Left(DecodingFailure.fromThrowable(new RuntimeException("Failed to decode table"), c.history))
+      }
+
+
     }
   }
 

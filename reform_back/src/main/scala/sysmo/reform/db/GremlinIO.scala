@@ -11,9 +11,9 @@ object GremlinIO {
   val GRAPHSON_WRITER_3_0 = graphson.GraphSONWriter.build().create()
   def readValue[T](value: String, clazz: Class[_ <: T]): T = try {
     val in = new ByteArrayInputStream(value.getBytes("UTF-8"))
-    try
+    try {
       GRAPHSON_READER_3_0.readObject(in, clazz)
-    catch {
+    } catch {
       case e: IOException =>
         throw new RuntimeException(e)
     } finally if (in != null) in.close()

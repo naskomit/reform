@@ -5,6 +5,7 @@ import sysmo.reform.shared.data.{Property => Prop}
 
 object Therapy1 {
   val schema: G.VertexSchema = G.Schema.vertex_builder("Therapy1")
+    .label("Терапия 1")
     .prop(Prop.int("1").label("№"))
     .prop(Prop.string("1a").label("Име"))
     .prop(Prop.string("1b").label("Презиме"))
@@ -19,6 +20,7 @@ object Therapy1 {
 
 object Therapy2 {
   val schema : G.VertexSchema = G.Schema.vertex_builder("Therapy2")
+    .label("Терапия 2")
     .prop(Prop.int("1").label("№"))
     .prop(Prop.string("1a").label("Име"))
     .prop(Prop.string("1b").label("Презиме"))
@@ -37,6 +39,7 @@ object Therapy2 {
 
 object TherapyLab {
   val schema: G.VertexSchema = G.Schema.vertex_builder("TherapyLab")
+    .label("Терапия Лаборатория")
     .prop(Prop.int("1").label("№"))
     .prop(Prop.string("1a").label("Име"))
     .prop(Prop.string("1b").label("Презиме"))

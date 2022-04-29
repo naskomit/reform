@@ -36,7 +36,7 @@ object IntuitiveLayout extends ApplicationLayout {
     }
 
     def panel_link(p: Props, x: Page) = {
-      <.li(p.router.link(x)(<.i(^.className := x.icon), x.label))
+      <.li(p.router.link(x)(<.i(^.className := x.icon), x.make_label))
     }
 
     def click_handler(x: PageBase, leaf: Boolean)(e: ReactEventFromInput): Callback = Callback {
@@ -59,7 +59,7 @@ object IntuitiveLayout extends ApplicationLayout {
           val is_active = s.active_item.startsWith(x.path)
           <.li(^.classSet("has-child" -> true, "active" -> is_active),
             <.a(^.href := "#", ^.onClick==> click_handler(x, leaf = false),
-              <.span(x.label)),
+              <.span(x.make_label)),
             <.ul(^.maxHeight:= (if (is_active) x.children.length * p.elem_height else 0).toString + "px", child_tag_mod)
           )
         }

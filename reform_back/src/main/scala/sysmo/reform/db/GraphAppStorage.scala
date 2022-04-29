@@ -19,7 +19,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
 import sdt.Printers._
 import sysmo.reform.shared.data.graph.{EdgeSchema, ElementSchema}
-import sysmo.reform.shared.data.table.Row
+import sysmo.reform.shared.data.table.{Row, Schema}
 import sysmo.reform.shared.util.pprint
 import sysmo.reform.util.Prog._
 
@@ -171,7 +171,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
         }
         sdt.Field(p.getName, sdt.FieldType(field_type, ext_class = ext_class))
       }).toSeq
-      sdt.Schema(fields)
+      sdt.Schema(klass, None, fields)
     }}.get
   }
 
@@ -238,7 +238,7 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
     Using(graph_factory.getTx) { graph =>
       val g = graph.traversal
       val trav: Traversal.Admin[_, _] = JavaTranslator.of(g).translate(gremlin_native_bc)
-      val schema = q match {
+      val schema: Schema = q match {
         case Q.BasicQuery(source, columns_opt, _, _, _) => source match {
           case Q.SingleTable(id, _, _) => {
             columns_opt.map(columns => {
@@ -246,9 +246,12 @@ class GraphAppStorage(graph_factory: OrientGraphFactory, db_schema: G.DatabaseSc
                 case Some(sch: G.VertexSchema) => G.Schema.table_schema_builder(sch).build
                 case _ => throw new IllegalArgumentException(s"No VertexSchema named $id")
               }
-
-              columns.map(col => db_table_schema.field(col.id).get)
-            }).map(columns => sdt.Schema(columns)).orElse(Some(read_schema(id))).get
+              // Only select some of the columns
+              sdt.Schema(
+                db_table_schema.name, db_table_schema.label,
+                columns.map(col => db_table_schema.field(col.id).get)
+              )
+            }).orElse(Some(read_schema(id))).get
           }
           case _ => throw new IllegalArgumentException("Can only handle query with a single table source")
         }

@@ -38,7 +38,7 @@ object Graph2TableSchema {
     }
 
     def build: T.Schema = {
-      T.Schema(fields = schema.props.map(prop2field))
+      T.Schema(schema.name, schema.label, fields = schema.props.map(prop2field))
     }
   }
 

@@ -13,7 +13,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import sysmo.reform.util.log.Logging
 
 // TODO this is specific
-class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableService with Logging {
+class ServerTableDataSource(schemas: Schema*) extends TableService with Logging {
   import sdt.Transport._
   import Q.Transport._
 
@@ -34,7 +34,7 @@ class ServerTableDataSource(schemas: NamedValue[Schema]*) extends TableService w
 
   override def table_schema(table_id: String): Future[Schema] = {
     schemas.find(x => x.name == table_id) match {
-      case Some(NamedValue(_, _, schema)) => Future.successful(schema)
+      case Some(schema) => Future.successful(schema)
       case None => Future.failed(new IllegalArgumentException(s"No table $table_id found"))
     }
   }

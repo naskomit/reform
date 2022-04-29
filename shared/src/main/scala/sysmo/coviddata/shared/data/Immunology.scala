@@ -5,6 +5,7 @@ import sysmo.reform.shared.data.{Property => Prop}
 
 object Immunology {
   val schema : G.VertexSchema = G.Schema.vertex_builder("Immunology")
+    .label("Имунология")
     .prop(Prop.int("1").label("№"))
     .prop(Prop.string("1a").label("Име"))
     .prop(Prop.string("1b").label("Презиме"))

@@ -10,8 +10,8 @@ import sysmo.reform.util.log.Logging
 
 trait ReactApplication extends Logging {
   val react_node: String
-  val pages: PageCollection
-  val app_config: ApplicationConfiguration
+  def pages: PageCollection
+  def app_config: ApplicationConfiguration
   val layout: ApplicationLayout
 
   def main(args: Array[String]): Unit = {

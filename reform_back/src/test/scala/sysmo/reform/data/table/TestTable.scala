@@ -39,7 +39,7 @@ object TestTable {
       println(s1)
 
       // Testing table
-      val schema = sdt.Schema(Seq(
+      val schema = sdt.Schema("t1", None, Seq(
         sdt.Field("real", sdt.FieldType(sdt.VectorType.Real)),
         sdt.Field("int", sdt.FieldType(sdt.VectorType.Int)),
         sdt.Field("bool", sdt.FieldType(sdt.VectorType.Bool)),

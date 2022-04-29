@@ -15,14 +15,14 @@ object PredefinedTableViewer extends ReactComponent {
 
   import japgolly.scalajs.react._
 
-  case class Props(table_data_source: TableService, table_id: String)
+  case class Props(table_data_source: TableService, table_id: String, table_label: Option[String])
   case class State(table_schema: Option[Schema], table_id_loaded: String)
 
   final class Backend($: BackendScope[Props, State]) {
     def render(p: Props, s: State): VdomElement = {
       <.div(
         <.div(^.cls:= "page-title",
-          <.h1(p.table_id)
+          <.h1(p.table_label.getOrElse(p.table_id).toString)
         ),
         <.div(^.cls:= "wrapper wrapper-white",
           s.table_schema match{
@@ -42,7 +42,7 @@ object PredefinedTableViewer extends ReactComponent {
     ).flatMap(schema => $.modState(s => s.copy(table_schema = Some(schema), table_id_loaded = p.table_id)).asAsyncCallback)
   }
 
-  val component = ScalaComponent.builder[Props]("HomePage")
+  val component = ScalaComponent.builder[Props]("PredefinedTableViewer")
     .initialState(State(None, ""))
     .renderBackend[Backend]
     .componentDidMount(f => f.backend.load_schema(f.props))
@@ -54,6 +54,6 @@ object PredefinedTableViewer extends ReactComponent {
     })
     .build
 
-  def apply(app_config: ApplicationConfiguration, table_id: String) =
-    component(Props(app_config.table_source, table_id))
+  def apply(app_config: ApplicationConfiguration, table_id: String, table_label: Option[String]) =
+    component(Props(app_config.table_source, table_id, table_label))
 }

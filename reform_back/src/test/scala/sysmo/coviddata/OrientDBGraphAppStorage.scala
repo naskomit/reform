@@ -27,7 +27,7 @@ object OrientDBGraphAppStorage extends FuncLogging {
   val factory = new OrientGraphFactory(uri, "sysmo", "sysmopass")
   val app_storage = new GraphAppStorage(factory, CDS)
 
-  val doc_path = "doc/SampleData_3.xlsx"
+  val doc_path = "data/raw/SampleData_3.xlsx"
   import sysmo.reform.data.graph.Implicits._
 
   protected def insert_data_secondary(data: sdt.Table,
@@ -139,56 +139,56 @@ object OrientDBGraphAppStorage extends FuncLogging {
     })
   }
 
-  def query_data() = {
-    val graph = factory.getTx
-    val g = graph.traversal()
-    println("============= All data ============= ")
-    g.V()
-      //      .by(__.unfold())
-      .valueMap().`with`(WithOptions.tokens, WithOptions.all)
-      .asScala.foreach(println)
-    println("============= Filtered data ============= ")
-    val t2 = g.V()
-      .hasLabel("PatientRecord")
-      .and(
-        __.has("age", P.gt(35.0)),
-        __.has("gender", P.`eq`("жена"))
-      )
-      //.valueMap().`with`(WithOptions.tokens, WithOptions.all)
-      .order().by("age", Order.desc)
-//      .range(1, 2)
-      .valueMap()
-      .select("first_name", "father_name", "last_name", "gender", "age", "education")
-//      .by(__.unfold)
-
-//    val data_in = t2.asScala.map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
-//    println(data_in.toSeq)
-    val schema = sdt.Schema(Seq(
-      sdt.Field("first_name", sdt.FieldType(VT.Char)), sdt.Field("father_name", sdt.FieldType(VT.Char)),
-      sdt.Field("last_name", sdt.FieldType(VT.Char)), sdt.Field("gender", sdt.FieldType(VT.Char)),
-      sdt.Field("age", sdt.FieldType(VT.Int)), sdt.Field("education", sdt.FieldType(VT.Char))
-    ))
-
-
-    Using(dt.arrow.ArrowTableManager()) { tm => {
-      val tb_1 = tm.incremental_table_builder(schema)
-      t2.asScala.foreach(x => {
-        val prop_map = x.asInstanceOf[java.util.Map[String, Any]].asScala.toMap
-            .view.mapValues {
-              case el: java.util.List[_] => Some(el.get(0))
-              case x => Some(x)
-            }.toMap
-
-        tb_1 :+ prop_map
-      })
-      val tbl_1 = tb_1.toTable
-      pprint(tbl_1)
-    }}.get
-
-    println()
-
-    graph.close()
-  }
+//  def query_data() = {
+//    val graph = factory.getTx
+//    val g = graph.traversal()
+//    println("============= All data ============= ")
+//    g.V()
+//      //      .by(__.unfold())
+//      .valueMap().`with`(WithOptions.tokens, WithOptions.all)
+//      .asScala.foreach(println)
+//    println("============= Filtered data ============= ")
+//    val t2 = g.V()
+//      .hasLabel("PatientRecord")
+//      .and(
+//        __.has("age", P.gt(35.0)),
+//        __.has("gender", P.`eq`("жена"))
+//      )
+//      //.valueMap().`with`(WithOptions.tokens, WithOptions.all)
+//      .order().by("age", Order.desc)
+////      .range(1, 2)
+//      .valueMap()
+//      .select("first_name", "father_name", "last_name", "gender", "age", "education")
+////      .by(__.unfold)
+//
+////    val data_in = t2.asScala.map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
+////    println(data_in.toSeq)
+//    val schema = sdt.Schema(Seq(
+//      sdt.Field("first_name", sdt.FieldType(VT.Char)), sdt.Field("father_name", sdt.FieldType(VT.Char)),
+//      sdt.Field("last_name", sdt.FieldType(VT.Char)), sdt.Field("gender", sdt.FieldType(VT.Char)),
+//      sdt.Field("age", sdt.FieldType(VT.Int)), sdt.Field("education", sdt.FieldType(VT.Char))
+//    ))
+//
+//
+//    Using(dt.arrow.ArrowTableManager()) { tm => {
+//      val tb_1 = tm.incremental_table_builder(schema)
+//      t2.asScala.foreach(x => {
+//        val prop_map = x.asInstanceOf[java.util.Map[String, Any]].asScala.toMap
+//            .view.mapValues {
+//              case el: java.util.List[_] => Some(el.get(0))
+//              case x => Some(x)
+//            }.toMap
+//
+//        tb_1 :+ prop_map
+//      })
+//      val tbl_1 = tb_1.toTable
+//      pprint(tbl_1)
+//    }}.get
+//
+//    println()
+//
+//    graph.close()
+//  }
 
   def test_query_table(): Unit = {
     Using(dt.arrow.ArrowTableManager()) { tm => {

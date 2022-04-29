@@ -16,7 +16,7 @@ object TableDataTest {
         tm.vec_from(Seq(true, true, false), "v3_bool"),
         tm.vec_from(Seq("John", "Peter", "James"), "v3_char")
       )
-      val schema = sdt.Schema.builder
+      val schema = sdt.Schema.builder("t1")
         .real("real")
         .int("int")
         .bool("bool")
@@ -44,7 +44,7 @@ object TableDataTest {
 
   def group_test(): Unit = {
     sdt.with_table_manager() { tm =>
-      val schema = sdt.Schema.builder
+      val schema = sdt.Schema.builder("t1")
         .real("real")
         .int("int")
         .bool("bool")

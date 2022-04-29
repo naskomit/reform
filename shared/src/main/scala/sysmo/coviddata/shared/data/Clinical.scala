@@ -4,7 +4,8 @@ import sysmo.reform.shared.data.{graph => G}
 import sysmo.reform.shared.data.{Property => Prop}
 
 object Clinical {
-  val schema : G.VertexSchema = G.Schema.vertex_builder("Clinical").label("Клинични")
+  val schema : G.VertexSchema = G.Schema.vertex_builder("Clinical")
+    .label("Клинични")
     // Част 2 - Клин.I
 //    .link(Link.builder("1", SocioDemographic_Graph.schema))
     .prop(Prop.int("1").label("№"))
@@ -108,6 +109,7 @@ object Clinical {
 
 object ClinicalLab {
   val schema: G.VertexSchema = G.Schema.vertex_builder("ClinicalLab")
+    .label("Клинични лаборатория")
     .prop(Prop.int("1").label("№"))
     .prop(Prop.string("1a").label("Име"))
     .prop(Prop.string("1b").label("Презиме"))

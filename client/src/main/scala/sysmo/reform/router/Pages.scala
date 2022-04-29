@@ -3,17 +3,16 @@ package sysmo.reform.router
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ApplicationPanel
+import sysmo.reform.shared.util.INamed
 
-trait PageBase {
-  def name : String
-  def label: String = name
-  def icon: String
+trait PageBase extends INamed {
+  val icon: String
   var path: String = ""
 }
 
 trait Page extends PageBase {
   def url: String = "#" + name
-  def panel: ApplicationPanel
+  val panel: ApplicationPanel
 }
 
 trait Category extends PageBase {
@@ -63,7 +62,7 @@ object PageCollection {
       case x: Page => x
       case _ => throw new IllegalArgumentException("The first item of the PageCollection should be the home page")
     }
-    val coll = new PageCollection(pages.toSeq, Some(home))
+    val coll = new PageCollection(pages, Some(home))
     coll.compute_path("Root")
     coll
   }

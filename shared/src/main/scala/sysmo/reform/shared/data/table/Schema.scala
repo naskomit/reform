@@ -36,7 +36,8 @@ object Field {
 }
 
 
-case class Schema(fields: Seq[Field], metadata: Map[String, String] = Map()) {
+case class Schema(name: String, label: Option[String], fields: Seq[Field], metadata: Map[String, String] = Map())
+extends INamed {
   private val field_map = fields.zipWithIndex.map({case (field, index) => (field.name, index)}).toMap
   def field(index: Int): Option[Field] = if (index < fields.length) Some(fields(index)) else None
   def field(name: String): Option[Field] = field_index(name).map(index => fields(index))
@@ -44,8 +45,13 @@ case class Schema(fields: Seq[Field], metadata: Map[String, String] = Map()) {
 }
 
 object Schema {
-  class Builder {
+  class Builder(name: String) {
+    var _label: Option[String] = None
     private var fields = Seq[Field]()
+    def label(v: String): this.type = {
+      _label = Some(v)
+      this
+    }
     def field(name: String, tpe: VectorType.Value): this.type = {
       val builder = new Field.FieldBuilder(name, tpe)
       fields = fields :+ builder.build
@@ -67,7 +73,7 @@ object Schema {
     def char(name: String): this.type = field(name, VectorType.Char)
     def char(name: String, b: FieldBuilder => _): this.type = field(name, VectorType.Char, b)
 
-    def build: Schema = Schema(fields)
+    def build: Schema = Schema(name, _label, fields)
   }
-  def builder : Builder = new Builder()
+  def builder(name: String) : Builder = new Builder(name)
 }
