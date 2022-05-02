@@ -11,6 +11,8 @@ services:
       - 8182:8182 # Gremlin server
       - 2480:2480 # OrientDb http
       - 2424:2424 # OrientDb binary
+    networks:
+      - net-1
     environment:
       - ORIENTDB_OPTS_MEMORY=-Xms2G -Xmx2G
 #    command: ["/bin/bash", "-c", "sleep infinity"]
@@ -19,3 +21,15 @@ services:
       - ../data/orientdb/databases/:/orientdb/databases
       - ../data/orientdb/backup/:/orientdb/backup
       - ../data/orientdb/config/:/orientdb/config
+
+  app-server:
+    container_name: app-server
+    image: server:0.1.0-SNAPSHOT
+    ports:
+      - 9000:9000
+    networks:
+      - net-1
+
+networks:
+  net-1:
+

@@ -1,6 +1,5 @@
 package sysmo.reform.components.table
 
-import japgolly.scalajs.react.component.Scala.RawMounted
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ReactComponent

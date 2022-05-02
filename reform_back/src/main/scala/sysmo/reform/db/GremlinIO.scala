@@ -9,7 +9,7 @@ object GremlinIO {
   import org.apache.tinkerpop.gremlin.structure.io.graphson
   val GRAPHSON_READER_3_0 = graphson.GraphSONReader.build().create()
   val GRAPHSON_WRITER_3_0 = graphson.GraphSONWriter.build().create()
-  def readValue[T](value: String, clazz: Class[_ <: T]): T = try {
+  def readValue[T](value: String, clazz: Class[_ <: T]): T = {
     val in = new ByteArrayInputStream(value.getBytes("UTF-8"))
     try {
       GRAPHSON_READER_3_0.readObject(in, clazz)
@@ -19,7 +19,7 @@ object GremlinIO {
     } finally if (in != null) in.close()
   }
 
-  def writeValueAsString(value: Any): String = try {
+  def writeValueAsString(value: Any): String = {
     val out = new ByteArrayOutputStream
     try {
       GRAPHSON_WRITER_3_0.writeObject(out, value)

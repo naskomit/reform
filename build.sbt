@@ -1,8 +1,14 @@
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport.webpackBundlingMode
+import com.typesafe.sbt.packager.docker._
 
 ThisBuild / organization := "sysmo"
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
+
+ThisBuild / javaOptions ++= Seq(
+  "-Dpidfile.path=/dev/null",
+  "-Dplay.http.secret.key='djdsgfldfjnglkwemf;lsdfnsv lk123453lksdvnsdfvkndxcv;ldf'"
+)
 
 lazy val root = (project in file("."))
   .aggregate(server, client, macros, shared.jvm, shared.js)
@@ -75,8 +81,11 @@ lazy val server = project
     pipelineStages := Seq(digest, gzip),
     // triggers scalaJSPipeline when using compile or continuous compilation
     Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
+    dockerChmodType := DockerChmodType.UserGroupWriteExecute,
+    dockerBaseImage := "openjdk:11",
+    dockerExposedPorts += 9000,
   )
-  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin)
+  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin)
   .dependsOn(reform_back)
 
 lazy val client = project
@@ -133,5 +142,6 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
 
   )
 
+lazy val graph_browser = project
 
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s} //andThen {s: State => "run" :: s}
