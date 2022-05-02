@@ -1,7 +1,6 @@
 logs
 project/project
-project/target
-target
+target/
 tmp
 .history
 dist
@@ -34,3 +33,4 @@ bin/
 /data/orientdb/databases
 /log
 /*.log
+node_modules/
