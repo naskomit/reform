@@ -1,0 +1,18 @@
+@(title: String)(content: Html)
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>@title</title>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/bluewhite.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/fonts.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/ag-grid.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/ag-theme-alpine.css")">
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
+  </head>
+  <body>
+    @content
+    @scripts("covidhub_frontend")
+  </body>
+</html>

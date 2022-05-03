@@ -10,15 +10,35 @@ ThisBuild / javaOptions ++= Seq(
   "-Dplay.http.secret.key='djdsgfldfjnglkwemf;lsdfnsv lk123453lksdvnsdfvkndxcv;ldf'"
 )
 
+/** =================== Reform ====================== */
+
 lazy val root = (project in file("."))
-  .aggregate(server, client, macros, shared.jvm, shared.js)
+  .aggregate(covidhub_backend, covidhub_frontend, covidhub_shared.jvm, covidhub_shared.js)
 
-lazy val macros = project
-  .settings(
-    libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
-  )
+val circeVersion = "0.14.1"
 
-lazy val reform_back = project
+lazy val reform_shared = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("reform_shared"))
+  .jvmSettings(
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided",
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core",
+      "io.circe" %% "circe-generic",
+      "io.circe" %% "circe-parser",
+      "io.circe" %% "circe-generic-extras"
+    ).map(_ % circeVersion)
+  ).jsSettings(
+  libraryDependencies ++= Seq(
+    "io.circe" %%% "circe-core",
+    "io.circe" %%% "circe-generic",
+    "io.circe" %%% "circe-parser",
+    "io.circe" %%% "circe-generic-extras"
+  ).map(_ % circeVersion)
+
+)
+
+lazy val reform_backend = project
   .settings(
     // Logging
 //    libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.36",
@@ -59,7 +79,6 @@ lazy val reform_back = project
     libraryDependencies += "org.scalanlp" %% "breeze" % "2.0.1-RC1",
 
     // Ammonite REPL
-    libraryDependencies += "com.lihaoyi" %% "autowire" % "0.3.3",
     libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
 
 
@@ -69,11 +88,55 @@ lazy val reform_back = project
       Seq(file)
     }.taskValue,
 
-  ).dependsOn(shared.jvm)
+  ).dependsOn(reform_shared.jvm)
 
-lazy val server = project
+lazy val reform_frontend = project
   .settings(
-    scalaJSProjects := Seq(client),
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "2.0.0",
+      "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
+      "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
+      "com.lihaoyi" %%% "autowire" % "0.3.3",
+      //    "com.lihaoyi" %%% "upickle" % "1.4.3",
+      //    "org.typelevel" %%% "cats-effect" % "3.3.5",
+      //    "co.fs2" %%% "fs2-core" % "3.2.0",
+      "io.monix" %%% "monix" % "3.4.0",
+    ),
+    Compile / npmDependencies ++= Seq(
+      "react" -> "17.0.0",
+      "react-dom" -> "17.0.0",
+      "ag-grid-react"     -> "26.2.0",
+      "ag-grid-community" -> "26.2.0",
+      "react-select" ->  "5.2.2",
+      "plotly.js" -> "1.47.4",
+      "mermaid" -> "8.14.0"
+    )
+  )
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .dependsOn(reform_shared.js)
+
+
+
+
+
+// lazy val macros = project
+//   .settings(
+//     libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
+//   )
+
+/** =================== Covid Hub ====================== */
+
+lazy val covidhub_shared = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("covidhub_shared"))
+  .jsConfigure(_.enablePlugins(ScalaJSWeb))
+  .settings()
+  .dependsOn(reform_shared)
+
+lazy val covidhub_backend = project
+  .settings(
+    scalaJSProjects := Seq(covidhub_frontend),
     libraryDependencies += guice,
     libraryDependencies += "com.vmunier" %% "scalajs-scripts" % "1.2.0",
 //    libraryDependencies += "com.lihaoyi" %% "upickle" % "1.4.3",
@@ -86,62 +149,21 @@ lazy val server = project
     dockerExposedPorts += 9000,
   )
   .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin)
-  .dependsOn(reform_back)
+  .dependsOn(reform_backend, covidhub_shared.jvm)
 
-lazy val client = project
+
+lazy val covidhub_frontend = project
   .settings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.0.0",
-    libraryDependencies += "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
-    libraryDependencies += "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
-    libraryDependencies += "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
-    libraryDependencies += "com.lihaoyi" %%% "autowire" % "0.3.3",
-//    libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.3",
-//    libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.3.5",
-//    libraryDependencies += "co.fs2" %%% "fs2-core" % "3.2.0",
-    libraryDependencies += "io.monix" %%% "monix" % "3.4.0",
 
-    Compile / npmDependencies ++= Seq(
-      "react" -> "17.0.0",
-      "react-dom" -> "17.0.0",
-      "ag-grid-react"     -> "26.2.0",
-      "ag-grid-community" -> "26.2.0",
-      "react-select" ->  "5.2.2",
-      "plotly.js" -> "1.47.4",
-      "mermaid" -> "8.14.0"
-    ),
+    scalaJSLinkerConfig ~= { _.withOptimizer(false) },
     scalaJSUseMainModuleInitializer := true,
+    // Compile / mainClass := Some("sysmo.coviddata.Application"),
     webpackBundlingMode := BundlingMode.LibraryOnly(),
-    webpackEmitSourceMaps := false
+    webpackEmitSourceMaps := true
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
-  .dependsOn(shared.js)
+  .dependsOn(reform_frontend, covidhub_shared.js)
 
-val circeVersion = "0.14.1"
+// lazy val graph_browser = project
 
-lazy val shared = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("shared"))
-  .jsConfigure(_.enablePlugins(ScalaJSWeb))
-  .settings(
-    libraryDependencies += "com.lihaoyi" %%% "upickle" % "1.4.3",
-    libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core",
-      "io.circe" %% "circe-generic",
-      "io.circe" %% "circe-parser",
-      "io.circe" %% "circe-generic-extras"
-    ).map(_ % circeVersion)
-  ).jvmSettings(
-    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided"
-  ).jsSettings(
-    libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core",
-      "io.circe" %%% "circe-generic",
-      "io.circe" %%% "circe-parser",
-      "io.circe" %%% "circe-generic-extras"
-    ).map(_ % circeVersion)
-
-  )
-
-lazy val graph_browser = project
-
-onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s} //andThen {s: State => "run" :: s}
+onLoad in Global := (onLoad in Global).value andThen {s: State => "project covidhub_backend" :: s} //andThen {s: State => "run" :: s}
