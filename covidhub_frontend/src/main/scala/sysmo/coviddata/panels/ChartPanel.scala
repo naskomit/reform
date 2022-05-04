@@ -6,8 +6,7 @@ import sysmo.reform.components.chart.ChartContainer
 import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.{chart => Ch}
-import sysmo.reform.shared.data.{TableService, graph => G}
-import sysmo.coviddata.shared.{data => CD}
+import sysmo.reform.shared.data.TableService
 import sysmo.reform.ApplicationConfiguration
 
 import scala.scalajs.js

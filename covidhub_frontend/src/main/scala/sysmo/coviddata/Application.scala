@@ -6,10 +6,10 @@ import router.{HomePage, Plots}
 import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
-import sysmo.coviddata.panels.TableGroupPanel
 import sysmo.reform.services.ServerTableDataSource
 import sysmo.reform.shared.data.{TableService, graph => G, table => sdt}
 import sysmo.coviddata.shared.data.{CovidDatabaseSchema => CDS}
+import sysmo.reform.components.panels.TableGroupPanel
 import sysmo.reform.shared.data.table.Schema
 
 object AppConfig extends ApplicationConfiguration {
