@@ -53,10 +53,6 @@ trait FieldOptionProvider {
 }
 
 trait Interdependency
-trait ValueDependencyHandler {
-  def value(v: Record.ValueMap) = NoValue
-  def choices(v: Record.ValueMap)
-}
 case class ValueDependency(sink: String, sources: Seq[String]) extends Interdependency
 case class ActivationDependency(sink: String, sources: Seq[String]) extends Interdependency
 case class VisibilityDependency(sink: String, sources: Seq[String]) extends Interdependency

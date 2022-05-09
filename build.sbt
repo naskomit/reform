@@ -81,7 +81,6 @@ lazy val reform_backend = project
     // Ammonite REPL
     libraryDependencies += "com.lihaoyi" % "ammonite" % "2.5.2" % "test" cross CrossVersion.full,
 
-
     Test / sourceGenerators += Def.task {
       val file = (Test / sourceManaged).value / "amm.scala"
       IO.write(file, """object amm extends App { ammonite.AmmoniteMain.main(args) }""")
@@ -157,7 +156,6 @@ lazy val covidhub_frontend = project
 
     scalaJSLinkerConfig ~= { _.withOptimizer(false) },
     scalaJSUseMainModuleInitializer := true,
-    // Compile / mainClass := Some("sysmo.coviddata.Application"),
     webpackBundlingMode := BundlingMode.LibraryOnly(),
     webpackEmitSourceMaps := true
   )

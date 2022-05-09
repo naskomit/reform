@@ -1,6 +1,6 @@
 package sysmo.reform.shared.util
 
-trait INamed {
+trait INamed extends Product with Serializable {
   val name: String
   val label: Option[String]
   def make_label: String = label.getOrElse(name)
