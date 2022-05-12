@@ -25,7 +25,7 @@ object ChartPanel extends ApplicationPanel {
           <.div(^.cls:= "page-title",
             <.h1("Charts")
           ),
-          <.div(^.className:= "row", ^.style:= js.Dictionary("margin-top" -> vmargin, "margin-bottom" -> vmargin),
+          <.div(^.className:= "row", ^.style:= js.Dictionary("marginTop" -> vmargin, "marginBottom" -> vmargin),
             <.div(^.className:= "col-md-1"),
             <.div(^.className:= "col-md-10",
               <.div(^.cls:= "wrapper wrapper-white",

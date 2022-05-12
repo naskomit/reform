@@ -13,7 +13,6 @@ object StringEditor extends AbstractEditor {
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
-    println("Created StringEditor backend")
     val action_generator : ActionStreamGenerator[EditorAction] = ActionStreamGenerator[EditorAction]
 
     def render (p: Props, s: State): VdomElement = {
@@ -62,7 +61,6 @@ object StringEditor extends AbstractEditor {
 
   def apply(id : String, manager_id : String, label : String, value : FieldValue,
             action_listener: Observer[EditorAction], focused : Boolean = false) = {
-    println("StringEditor creating")
     component(Props(id, manager_id, label, value, focused, action_listener))
 
   }

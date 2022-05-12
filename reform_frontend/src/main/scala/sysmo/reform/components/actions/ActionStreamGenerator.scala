@@ -28,12 +28,11 @@ class ActionStreamGenerator[U] {
     }
   }
 
-  def stop() : Callback = {
+  def stop() : Unit = {
     subscription match {
       case Some(subscr) => subscription = None
       case None => throw new IllegalStateException("Action stream already stopped")
     }
-    Callback.empty
   }
 
   def dispatch(action : U) : Unit =

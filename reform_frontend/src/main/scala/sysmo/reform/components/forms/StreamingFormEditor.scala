@@ -7,8 +7,9 @@ import monix.execution.{Ack, Cancelable}
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 import monix.execution.Scheduler.Implicits.global
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.editors.{AsyncSelectEditor, EditorAction, StringEditor, UpdateValue}
+import sysmo.reform.components.editors.{AsyncSelectEditor, StringEditor}
 import sysmo.reform.components.actions.ActionHub
+import sysmo.reform.components.editors.{EditorAction, UpdateValue}
 import sysmo.reform.data.{RecordAction, StreamingRecordManager, UpdateField}
 import sysmo.reform.shared.{data => D}
 import sysmo.reform.shared.data.form.{FieldOptionProvider, Record, RecordMeta}

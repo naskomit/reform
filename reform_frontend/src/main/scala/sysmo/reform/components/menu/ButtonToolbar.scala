@@ -23,7 +23,7 @@ object ButtonToolbar extends ReactComponent {
       <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
         p.controls.map {
           case Button(name, cb) => <.button(^.key:= name,
-            ^.cls := "btn btn-primary", ^.style:= js.Dictionary("margin-left" -> p.margin, "margin-right" -> p.margin)
+            ^.cls := "btn btn-primary", ^.style:= js.Dictionary("marginLeft" -> p.margin, "marginRight" -> p.margin)
             , name, ^.onClick --> cb)
         }.toTagMod
 
