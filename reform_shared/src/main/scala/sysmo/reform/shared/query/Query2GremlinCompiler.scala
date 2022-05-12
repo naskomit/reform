@@ -1,5 +1,6 @@
 package sysmo.reform.shared.query
 
+import sysmo.reform.shared.expr._
 import sysmo.reform.shared.gremlin.bytecode.{Symbols => S}
 import sysmo.reform.shared.gremlin.{bytecode => bc}
 

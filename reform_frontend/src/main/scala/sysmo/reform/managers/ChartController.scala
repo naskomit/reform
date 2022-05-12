@@ -6,6 +6,7 @@ import sysmo.reform.shared.chart.{ChartRequest, ChartSettings, DistributionOptio
 import sysmo.reform.shared.data.TableService
 import sysmo.reform.shared.data.form.{RecordMeta, RecordOptionProvider, RecordWithMeta}
 import sysmo.reform.shared.{chart => Ch}
+import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
 
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -29,7 +30,7 @@ class DistributionChartController
       case Right(settings) => ChartRequest(
         Map(
           "Data" -> Ch.QuerySource(Q.BasicQuery(
-            Q.SingleTable(settings.data_id), Some(Seq(Q.ColumnRef(settings.column_id)))
+            Q.SingleTable(settings.data_id), Some(Seq(E.ColumnRef(settings.column_id)))
           ))
         ),
         Seq(Ch.DistributionSettings("Data", settings.column_id))

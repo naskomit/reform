@@ -1,7 +1,8 @@
 package sysmo.reform.components.table.aggrid
 
 import org.scalajs.dom
-import sysmo.reform.shared.query._
+import sysmo.reform.shared.{expr => E}
+import sysmo.reform.shared.{query => Q}
 
 import scala.scalajs.js
 import js.JSConverters._
@@ -61,7 +62,7 @@ object AgGridFacades extends Logging {
   }
 
 
-  def extract_filter(flt_js : ColumnFilterJS, column: String): Option[PredicateExpression] = {
+  def extract_filter(flt_js : ColumnFilterJS, column: String): Option[E.PredicateExpression] = {
       val flt = ColumnFilter.fromJS(flt_js)
       println("Filter")
       println(flt)
@@ -72,8 +73,8 @@ object AgGridFacades extends Logging {
           val cond1 = extract_filter(flt_binary.condition1, column)
           val cond2 = extract_filter(flt_binary.condition2, column)
           (op, cond1, cond2) match {
-            case ("AND", Some(c1), Some(c2)) => Some(LogicalAnd(c1, c2))
-            case ("OR", Some(c1), Some(c2)) => Some(LogicalOr(c1, c2))
+            case ("AND", Some(c1), Some(c2)) => Some(E.LogicalAnd(c1, c2))
+            case ("OR", Some(c1), Some(c2)) => Some(E.LogicalOr(c1, c2))
             case _ => {logger.warn(s"Cannot decode filter ${(op, cond1, cond2)}"); None}
           }
         }
@@ -81,35 +82,35 @@ object AgGridFacades extends Logging {
         case ColumnFilter(Some("text"), None, Some(pred_str)) => {
           val f = flt_js.asInstanceOf[TextFilterModelJS]
           val predicate = pred_str match {
-            case "equals" => StringPredicateOp.Equal
-            case "notEqual" => StringPredicateOp.NotEqual
-            case "contains" => StringPredicateOp.Containing
-            case "notContains" => StringPredicateOp.NotContaining
-            case "startsWith" => StringPredicateOp.StartingWith
-            case "endsWith" => StringPredicateOp.EndingWith
+            case "equals" => E.StringPredicateOp.Equal
+            case "notEqual" => E.StringPredicateOp.NotEqual
+            case "contains" => E.StringPredicateOp.Containing
+            case "notContains" => E.StringPredicateOp.NotContaining
+            case "startsWith" => E.StringPredicateOp.StartingWith
+            case "endsWith" => E.StringPredicateOp.EndingWith
 
           }
-          Some(StringPredicate(predicate, ColumnRef(column), Val(f.filter)))
+          Some(E.StringPredicate(predicate, E.ColumnRef(column), E.Val(f.filter)))
         }
 
         case ColumnFilter(Some("number"), None, Some(pred_str)) => {
           val f = flt_js.asInstanceOf[NumberFilterModelJS]
           if (pred_str == "inRange") {
-            Some(LogicalAnd(
-              NumericalPredicate(NumericalPredicateOp.>=, ColumnRef(column), Val(f.filter)),
-              NumericalPredicate(NumericalPredicateOp.<=, ColumnRef(column), Val(f.filterTo))
+            Some(E.LogicalAnd(
+              E.NumericalPredicate(E.NumericalPredicateOp.>=, E.ColumnRef(column), E.Val(f.filter)),
+              E.NumericalPredicate(E.NumericalPredicateOp.<=, E.ColumnRef(column), E.Val(f.filterTo))
             ))
           } else {
             val predicate = pred_str match {
-              case "equals" => NumericalPredicateOp.Equal
-              case "notEqual" => NumericalPredicateOp.NotEqual
-              case "lessThan" => NumericalPredicateOp.<
-              case "lessThanOrEqual" => NumericalPredicateOp.<=
-              case "greaterThan" => NumericalPredicateOp.>
-              case "greaterThanOrEqual" => NumericalPredicateOp.>=
+              case "equals" => E.NumericalPredicateOp.Equal
+              case "notEqual" => E.NumericalPredicateOp.NotEqual
+              case "lessThan" => E.NumericalPredicateOp.<
+              case "lessThanOrEqual" => E.NumericalPredicateOp.<=
+              case "greaterThan" => E.NumericalPredicateOp.>
+              case "greaterThanOrEqual" => E.NumericalPredicateOp.>=
 
             }
-            Some(NumericalPredicate(predicate, ColumnRef(column), Val(f.filter)))
+            Some(E.NumericalPredicate(predicate, E.ColumnRef(column), E.Val(f.filter)))
           }
         }
 

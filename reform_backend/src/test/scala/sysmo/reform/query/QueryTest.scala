@@ -4,6 +4,7 @@ import io.circe.{Decoder, Encoder}
 import io.circe.syntax._
 import io.circe.parser.parse
 import sysmo.reform.shared.util.pprint
+import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
 
 import Q.Transport._
@@ -22,11 +23,11 @@ object QueryTest {
     val q = Q.BasicQuery(
       Q.SingleTable("PatientRecord", None, None),
       None,
-      Some(Q.QueryFilter(Q.LogicalOr(
-        Q.NumericalPredicate(Q.NumericalPredicateOp.<, Q.ColumnRef("age"), Q.Val(35.0)),
-        Q.StringPredicate(Q.StringPredicateOp.Equal, Q.ColumnRef("gender"), Q.Val("жена"))
+      Some(Q.QueryFilter(E.LogicalOr(
+        E.NumericalPredicate(E.NumericalPredicateOp.<, E.ColumnRef("age"), E.Val(35.0)),
+        E.StringPredicate(E.StringPredicateOp.Equal, E.ColumnRef("gender"), E.Val("жена"))
       ))),
-      Some(Q.QuerySort(Q.ColumnSort(Q.ColumnRef("age"), false))),
+      Some(Q.QuerySort(Q.ColumnSort(E.ColumnRef("age"), false))),
       Some(Q.QueryRange(0, 100))
     )
 
