@@ -65,6 +65,8 @@ lazy val reform_backend = project
     libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.36.0.3",
     // Monix
     libraryDependencies += "io.monix" %% "monix" % "3.4.0",
+    // Tinkergraph
+    libraryDependencies += "org.apache.tinkerpop" % "tinkergraph-gremlin" % "3.4.7",
     // OrientDB
     libraryDependencies += "com.orientechnologies" % "orientdb-client" % "3.2.5",
     libraryDependencies += "com.orientechnologies" % "orientdb-gremlin" % "3.2.5",
