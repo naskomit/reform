@@ -2,8 +2,9 @@ package sysmo.reform.components.forms3.editors
 
 import sysmo.reform.shared.data.{form3 => F}
 import F.{FormData => FD}
-
+import sysmo.reform.components.forms3.FormDataHandler
 import sysmo.reform.shared.util.LabeledValue
+
 import scala.{math => M}
 
 object FloatEditorComponent extends EncodedTextualEditor[Double] {
@@ -37,8 +38,8 @@ object FloatEditorComponent extends EncodedTextualEditor[Double] {
   //  implicit val props_reuse = Reusability.by((_ : Props).value)
   //  implicit val state_reuse = Reusability.derive[State]
 
-  def apply(editor: EditorType, value: FieldValueType, form_dispatcher: EditorAction.Dispatcher): Unmounted = {
-    component(Props(editor, value, form_dispatcher))
+  def apply(editor: EditorType, value: FieldValueType, data_handler: FormDataHandler): Unmounted = {
+    component(Props(editor, value, data_handler))
 
   }
 

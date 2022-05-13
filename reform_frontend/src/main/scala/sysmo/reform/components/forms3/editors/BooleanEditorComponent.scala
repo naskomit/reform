@@ -2,11 +2,12 @@ package sysmo.reform.components.forms3.editors
 
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
+import sysmo.reform.components.forms3.FormDataHandler
 import sysmo.reform.shared.data.form3.{BooleanEditor, FormData => FD}
 import sysmo.reform.shared.util.LabeledValue
 
 object BooleanEditorComponent extends AbstractEditor[Boolean] {
-  case class Props(editor: BooleanEditor, value: FieldValueType, form_dispatcher: EditorAction.Dispatcher)
+  case class Props(editor: BooleanEditor, value: FieldValueType, data_handler: FormDataHandler)
   case class State()
 
   def format(v: FieldValueType): Boolean = {
@@ -38,7 +39,7 @@ object BooleanEditorComponent extends AbstractEditor[Boolean] {
     }
 
     def on_click(p: Props)(event: ReactEventFromInput): Callback = Callback {
-      p.form_dispatcher.dispatch(
+      p.data_handler.dispatch(
         SetFieldValue(p.editor.path, FD.SomeValue(LabeledValue(!format(p.value))))
       )
     }
@@ -61,8 +62,8 @@ object BooleanEditorComponent extends AbstractEditor[Boolean] {
       //      .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(editor: BooleanEditor, value: FieldValueType, form_dispatcher: EditorAction.Dispatcher): Unmounted = {
-    component(Props(editor, value, form_dispatcher))
+  def apply(editor: BooleanEditor, value: FieldValueType, data_handler: FormDataHandler): Unmounted = {
+    component(Props(editor, value, data_handler))
 
   }
 

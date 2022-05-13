@@ -5,16 +5,20 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.shared.data.{form3 => F}
-import sysmo.reform.components.forms3.FormComponent
-import sysmo.reform.shared.data.form3.{FormData => FD}
+import sysmo.reform.components.forms3.{FormDataHandler, FormEditorComponent}
+import F.{FormData => FD}
+import sysmo.reform.shared.util.LabeledValue
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object AnalysisPanel extends ApplicationPanel {
   import japgolly.scalajs.react._
 
-  case class Props(form: F.Form, data: FD.ValueMap)
+  case class Props(form: F.Form, data_handler: FormDataHandler)
   case class State()
   final class Backend($: BackendScope[Props, State]) {
-    def render (p: Props, s: State): VdomElement = FormComponent(p.form, p.data)
+    def render (p: Props, s: State): VdomElement = FormEditorComponent(p.form, p.data_handler)
   }
 
   val component =
@@ -59,7 +63,7 @@ object AnalysisPanel extends ApplicationPanel {
       .build
   }
 
-  val refrigeration_data: FD.ValueMap = {
+  val refrigeration_data_init: FD.ValueMap = {
     import FD._
     ValueMap.builder
       .value("aname", "Cycle 1")
@@ -83,8 +87,14 @@ object AnalysisPanel extends ApplicationPanel {
 //    )
   }
 
+  val refrigeration_data_handler: FormDataHandler = new FormDataHandler {
+    override val initial_data: FD.ValueMap = refrigeration_data_init
+    override def get_choices(path: F.ElementPath, data: FD.ValueMap): Future[Seq[LabeledValue[_]]] = path match {
+      case Seq("cycle_params", "fluid") => Future(Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x)))
+    }
+  }
+
   def apply(app_config: ApplicationConfiguration): Unmounted = {
-    logger.info(refrigeration_data.toString)
-    component(Props(refrigeration_form, refrigeration_data))
+    component(Props(refrigeration_form, refrigeration_data_handler))
   }
 }

@@ -2,12 +2,13 @@ package sysmo.reform.components.forms3.editors
 
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
-import sysmo.reform.shared.data.form3.{FormData => FD, SelectEditor}
-import sysmo.reform.shared.util.LabeledValue
+import sysmo.reform.components.forms3.FormDataHandler
 import sysmo.reform.components.select.ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
+import sysmo.reform.shared.data.form3.{SelectEditor, FormData => FD}
+import sysmo.reform.shared.util.LabeledValue
 
 object SelectEditorComponent extends AbstractEditor[String] {
-  case class Props(editor: SelectEditor, value: FD.CharValue, form_dispatcher: EditorAction.Dispatcher)
+  case class Props(editor: SelectEditor, value: FD.CharValue, data_handler: FormDataHandler)
 
   case class State()
 
@@ -54,8 +55,8 @@ object SelectEditorComponent extends AbstractEditor[String] {
       //      .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(editor: SelectEditor, value: FD.CharValue, form_dispatcher: EditorAction.Dispatcher): Unmounted = {
-    component(Props(editor, value, form_dispatcher))
+  def apply(editor: SelectEditor, value: FD.CharValue, data_handler: FormDataHandler): Unmounted = {
+    component(Props(editor, value, data_handler))
   }
 
 }

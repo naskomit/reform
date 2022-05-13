@@ -2,15 +2,17 @@ package sysmo.reform.components.forms3.editors
 
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
+import sysmo.reform.components.forms3.FormDataHandler
 import sysmo.reform.shared.data.{form3 => F}
 import sysmo.reform.shared.data.form3.{FormData => FD}
 import sysmo.reform.shared.util.LabeledValue
+
 import scala.{math => M}
 
 trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
   val display_name: String
   type EditorType <: F.FieldEditor
-  case class Props(editor: EditorType, value: FD.FieldValue[VT], form_dispatcher: EditorAction.Dispatcher)
+  case class Props(editor: EditorType, value: FD.FieldValue[VT], data_handler: FormDataHandler)
   case class State(local_value: String, status: Status, focused: Boolean)
 
   def format(value: FieldValueType): String
@@ -57,7 +59,7 @@ trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
         case Some(x) => $.modState(s => s.copy(
           local_value = format(FD.SomeValue(LabeledValue(x))), status = Valid, focused = false
         )) >> Callback {
-          p.form_dispatcher.dispatch(SetFieldValue(p.editor.path, FD.SomeValue(LabeledValue(x))))
+          p.data_handler.dispatch(SetFieldValue(p.editor.path, FD.SomeValue(LabeledValue(x))))
         }
         case None => $.modState(s => s.copy(status = Error("Invalid value", s.local_value)))
       }

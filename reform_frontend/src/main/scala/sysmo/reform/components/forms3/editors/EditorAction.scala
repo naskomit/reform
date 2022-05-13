@@ -1,9 +1,8 @@
 package sysmo.reform.components.forms3.editors
 
-import monix.reactive.Observer
 import sysmo.reform.components.ReactAction
-import sysmo.reform.shared.data.form3.{ElementPath, FormData => FD}
 import sysmo.reform.components.forms3.ActionDispatcher
+import sysmo.reform.shared.data.form3.{ElementPath, FormData => FD}
 
 trait EditorAction extends ReactAction
 object EditorAction {
