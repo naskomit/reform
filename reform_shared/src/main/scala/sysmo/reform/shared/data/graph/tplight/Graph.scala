@@ -31,10 +31,10 @@ object Direction {
   case object BOTH extends Direction
 }
 
-trait Element[IdType] {
-  val id: IdType
+trait Element {
+  val id: Any
   val label: String
-  val graph: Graph[IdType]
+  val graph: Graph
   /** Returns set of property keys */
   def keys: Set[String]
   /** Returns property */
@@ -55,21 +55,21 @@ trait Element[IdType] {
   }
 }
 
-trait Vertex[IdType] extends Element[IdType] {
-  def add_edge(label: String, to: Vertex[IdType], key_values: Tuple2[PropId, Any]*): Edge[IdType]
+trait Vertex extends Element {
+  def add_edge(label: String, to: Vertex, key_values: Tuple2[PropId, Any]*): Edge
 }
 
-trait Edge[IdType] extends Element[IdType] {
-  def vertices(direction: Direction): Seq[Vertex[IdType]]
-  val out_vertex: Vertex[IdType]
-  val in_vertex : Vertex[IdType]
-  def both_vertices: Seq[Vertex[IdType]] = vertices(Direction.BOTH)
+trait Edge extends Element {
+  def vertices(direction: Direction): Seq[Vertex]
+  val out_vertex: Vertex
+  val in_vertex : Vertex
+  def both_vertices: Seq[Vertex] = vertices(Direction.BOTH)
 }
 
 trait Property[+V] {
   val key: String
   val value: Option[V]
-  val element: Element[_]
+  val element: Element
   def is_present: Boolean = value.isDefined
   def or_else[SV >: V](other: => SV): SV = value.getOrElse(other)
   def empty: Property[V] = Property.empty
@@ -86,11 +86,10 @@ object Property {
   def empty[V]: Property[V] = _empty
 }
 
-trait Graph[ID] {
-  type IdType = ID
-  def add_vertex(label: String, key_values: Tuple2[PropId, Any]*): Vertex[IdType]
+trait Graph {
+  def add_vertex(label: String, key_values: Tuple2[PropId, Any]*): Vertex
 //  def add_vertex(label: String): Vertex[IdType] = add_vertex(PropId.label -> label)
-  def traversal(): GraphTraversalSource[IdType] = new GraphTraversalSource[IdType](this)
-  def vertices(vertex_ids: IdType*): Iterator[Vertex[IdType]]
-  def edges(edge_ids: IdType*): Iterator[Edge[IdType]]
+  def traversal(): GraphTraversalSource = new GraphTraversalSource(this)
+  def vertices(vertex_ids: Any*): Iterator[Vertex]
+  def edges(edge_ids: Any*): Iterator[Edge]
 }

@@ -5,17 +5,17 @@ import sysmo.reform.shared.data.graph.{tplight => TPL}
 import scala.collection.mutable
 
 
-trait ElementHelper[IdType] {
-  def new_id(): IdType
+trait ElementHelper {
+  def new_id(): Any
 }
 
-class MemGraph[ID](element_helper: ElementHelper[ID]) extends TPL.Graph[ID] {
-  protected val vertex_map: mutable.HashMap[IdType, TPL.Vertex[IdType]] = mutable.HashMap()
-  protected val edge_map: mutable.HashMap[IdType, TPL.Edge[IdType]] = mutable.HashMap()
+class MemGraph(element_helper: ElementHelper) extends TPL.Graph {
+  protected val vertex_map: mutable.HashMap[Any, TPL.Vertex] = mutable.HashMap()
+  protected val edge_map: mutable.HashMap[Any, TPL.Edge] = mutable.HashMap()
 //  protected val element_helper = new ElementHelper //[IdType]
 
-  protected[memg] def add_element[V <: TPL.Element[IdType]]
-  (label: String, key_values: Seq[Tuple2[TPL.PropId, Any]])(constr: (MemGraph[IdType], IdType, String) => V): V = {
+  protected[memg] def add_element[V <: TPL.Element]
+  (label: String, key_values: Seq[Tuple2[TPL.PropId, Any]])(constr: (MemGraph, Any, String) => V): V = {
     val id = element_helper.new_id()
 //    val label: Option[String] = Some(key_values.collect {case (k, v) if k == TPL.PropId.label => v})
 //      .flatMap {
@@ -34,15 +34,15 @@ class MemGraph[ID](element_helper: ElementHelper[ID]) extends TPL.Graph[ID] {
     element
   }
 
-  protected[memg] def insert_edge(edge: MemEdge[IdType]): Unit = edge_map += (edge.id -> edge)
+  protected[memg] def insert_edge(edge: MemEdge): Unit = edge_map += (edge.id -> edge)
 
-  override def add_vertex(label: String, key_values: Tuple2[TPL.PropId, Any]*): TPL.Vertex[IdType] = {
-    val vertex = add_element(label, key_values)((_, eid, elabel) => MemVertex[IdType](this, eid, elabel))
+  override def add_vertex(label: String, key_values: Tuple2[TPL.PropId, Any]*): TPL.Vertex = {
+    val vertex = add_element(label, key_values)((_, eid, elabel) => new MemVertex(this, eid, elabel))
     vertex_map += (vertex.id -> vertex)
     vertex
   }
 
-  override def vertices(vertex_ids: IdType*): Iterator[TPL.Vertex[IdType]] = {
+  override def vertices(vertex_ids: Any*): Iterator[TPL.Vertex] = {
     if (vertex_ids.isEmpty) {
       vertex_map.iterator.map(_._2)
     } else {
@@ -53,7 +53,7 @@ class MemGraph[ID](element_helper: ElementHelper[ID]) extends TPL.Graph[ID] {
     }
   }
 
-  override def edges(edge_ids: IdType*): Iterator[TPL.Edge[IdType]] = {
+  override def edges(edge_ids: Any*): Iterator[TPL.Edge] = {
     if (edge_ids.isEmpty) {
       edge_map.iterator.map(_._2)
     } else edge_ids.iterator.map(x => edge_map.get(x)).collect {
@@ -64,7 +64,7 @@ class MemGraph[ID](element_helper: ElementHelper[ID]) extends TPL.Graph[ID] {
 }
 
 object MemGraph {
-  class EH[IdType] extends ElementHelper[Int] {
+  class EH extends ElementHelper {
     private var next_id: Int = 0
     def new_id(): Int = {
       next_id += 1
@@ -72,5 +72,5 @@ object MemGraph {
     }
   }
 
-  def apply(): MemGraph[Int] = new MemGraph[Int](new EH)
+  def apply(): MemGraph = new MemGraph(new EH)
 }

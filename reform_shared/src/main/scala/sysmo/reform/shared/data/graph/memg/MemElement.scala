@@ -4,7 +4,7 @@ import sysmo.reform.shared.data.graph.tplight.{Element, Property}
 
 import scala.collection.mutable
 
-trait MemElement[IdType] extends Element[IdType] {
+trait MemElement extends Element {
   protected val properties: mutable.HashMap[String, Property[_]] = mutable.HashMap()
 
   /** Returns set of property keys */

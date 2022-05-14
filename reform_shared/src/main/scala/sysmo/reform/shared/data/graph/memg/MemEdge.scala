@@ -4,10 +4,9 @@ import sysmo.reform.shared.data.graph.tplight.{Direction, Edge, Graph, Property,
 
 import scala.collection.mutable
 
-case class MemEdge[IdType](graph: MemGraph[IdType], id: IdType, label: String, in_vertex: MemVertex[IdType], out_vertex: MemVertex[IdType])
-  extends MemElement[IdType] with Edge[IdType] {
-
-  override def vertices(direction: Direction): Seq[Vertex[IdType]] = {
+case class MemEdge(graph: MemGraph, id: Any, label: String, in_vertex: MemVertex, out_vertex: MemVertex)
+  extends MemElement with Edge {
+  override def vertices(direction: Direction): Seq[Vertex] = {
     direction match {
       case Direction.IN => Seq(in_vertex)
       case Direction.OUT => Seq(out_vertex)

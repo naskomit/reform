@@ -4,7 +4,7 @@ import sysmo.reform.shared.data.graph.tplight._
 import sysmo.reform.shared.data.graph.memg.MemGraph
 
 object MemGraphTests extends App {
-  def create_modern(): Graph[Int] = {
+  def create_modern(): Graph = {
     import PropId._
     val graph = MemGraph()
     /** Create vertices */
@@ -51,7 +51,7 @@ object MemGraphTests extends App {
   }
 
   def test_graph(): Unit = {
-    val graph: Graph[Int] = create_modern()
+    val graph: Graph = create_modern()
     println(graph.vertices().toSeq)
     println(graph.edges().toSeq)
     println(graph.vertices(1))
