@@ -1,11 +1,11 @@
 package sysmo.reform.graph
+import org.scalatest.funspec.AnyFunSpec
+import sysmo.reform.shared.gremlin.memg.MemGraph
+import sysmo.reform.shared.gremlin.tplight.Graph
 
-import sysmo.reform.shared.data.graph.tplight._
-import sysmo.reform.shared.data.graph.memg.MemGraph
-
-object MemGraphTests extends App {
+class MemGraphTests extends AnyFunSpec {
   def create_modern(): Graph = {
-    import PropId._
+    import sysmo.reform.shared.gremlin.tplight.PropId._
     val graph = MemGraph()
     /** Create vertices */
     val marko = graph.add_vertex(
@@ -50,12 +50,43 @@ object MemGraphTests extends App {
     graph
   }
 
-  def test_graph(): Unit = {
+  def with_modern(f: Graph => Unit): Unit = {
     val graph: Graph = create_modern()
-    println(graph.vertices().toSeq)
-    println(graph.edges().toSeq)
-    println(graph.vertices(1))
+    f(graph)
   }
 
-  test_graph()
+  describe("A modern graph") {
+    with_modern { graph =>
+      it("should have 6 vertices") {
+        assert(graph.vertices().size == 6)
+      }
+      it("should have 6 edges") {
+        assert(graph.edges().size == 6)
+      }
+      it("vertex 1 should have keys") {
+        assert(graph.vertices(1).flatMap(_.keys).toSet[String] == Set("name", "age"))
+      }
+      it("vertices 1,3 should have names (\"marko\", \"lop\")") {
+        assert(
+          graph.vertices(1, 3).map(_.property("name").value).toSet
+            ==
+            Set("marko", "lop").map(Some(_)), "Incorrect keys"
+        )
+      }
+    }
+
+  }
+
+  describe("A modern graph traversal") {
+    with_modern { graph =>
+      val g = graph.traversal()
+      it("should get vertex 1") {
+        val t1 = g.V(1)
+        t1.foreach(println)
+      }
+      it("") {
+
+      }
+    }
+  }
 }

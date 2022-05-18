@@ -43,6 +43,10 @@ lazy val reform_backend = project
     // Logging
 //    libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.36",
 //    libraryDependencies += "org.slf4j" % "slf4j-reload4j" % "1.7.36",
+    // Testing
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.12",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % "test",
+
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10",
 //    libraryDependencies += "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.17.1",
     libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.9.0",

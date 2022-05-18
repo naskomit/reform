@@ -1,6 +1,6 @@
-package sysmo.reform.shared.data.graph.memg
+package sysmo.reform.shared.gremlin.memg
 
-import sysmo.reform.shared.data.graph.tplight.{Element, Property}
+import sysmo.reform.shared.gremlin.tplight.{Element, Property}
 
 import scala.collection.mutable
 

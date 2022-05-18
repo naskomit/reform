@@ -1,27 +1,31 @@
-package sysmo.reform.shared.data.graph.tplight
+package sysmo.reform.shared.gremlin.tplight
 
 import scala.language.implicitConversions
 
-trait PropId
+//trait PropId
 
 object PropId {
-  case object label extends PropId {
-    override def toString: String = "LABEL"
-  }
-  case object id extends PropId {
-    override def toString: String = "ID"
-  }
-  case object key extends PropId {
-    override def toString: String = "KEY"
-  }
-
-  case object value extends PropId {
-    override def toString: String = "VALUE"
-  }
-  case class StringId(v: String) extends PropId
-
-  implicit def Str2PropId(x: Tuple2[String, Any]): Tuple2[PropId, Any] =
-    PropId.StringId(x._1) -> x._2
+  val label: String = "LABEL"
+  val id: String = "ID"
+  val key: String = "KEY"
+  val value: String = "VALUE"
+//  case object label extends PropId {
+//    override def toString: String = "LABEL"
+//  }
+//  case object id extends PropId {
+//    override def toString: String = "ID"
+//  }
+//  case object key extends PropId {
+//    override def toString: String = "KEY"
+//  }
+//
+//  case object value extends PropId {
+//    override def toString: String = "VALUE"
+//  }
+//  case class StringId(v: String) extends PropId
+//
+//  implicit def Str2PropId(x: Tuple2[String, Any]): Tuple2[PropId, Any] =
+//    PropId.StringId(x._1) -> x._2
 }
 
 trait Direction
@@ -56,7 +60,7 @@ trait Element {
 }
 
 trait Vertex extends Element {
-  def add_edge(label: String, to: Vertex, key_values: Tuple2[PropId, Any]*): Edge
+  def add_edge(label: String, to: Vertex, key_values: (String, Any)*): Edge
 }
 
 trait Edge extends Element {
@@ -87,9 +91,9 @@ object Property {
 }
 
 trait Graph {
-  def add_vertex(label: String, key_values: Tuple2[PropId, Any]*): Vertex
+  def add_vertex(label: String, key_values: (String, Any)*): Vertex
 //  def add_vertex(label: String): Vertex[IdType] = add_vertex(PropId.label -> label)
-  def traversal(): GraphTraversalSource = new GraphTraversalSource(this)
+  def traversal(): GraphTraversalSource = new GraphTraversalSource(this, Bytecode())
   def vertices(vertex_ids: Any*): Iterator[Vertex]
   def edges(edge_ids: Any*): Iterator[Edge]
 }

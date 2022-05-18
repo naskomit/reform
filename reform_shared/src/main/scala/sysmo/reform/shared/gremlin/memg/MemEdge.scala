@@ -1,8 +1,6 @@
-package sysmo.reform.shared.data.graph.memg
+package sysmo.reform.shared.gremlin.memg
 
-import sysmo.reform.shared.data.graph.tplight.{Direction, Edge, Graph, Property, Vertex}
-
-import scala.collection.mutable
+import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Vertex}
 
 case class MemEdge(graph: MemGraph, id: Any, label: String, in_vertex: MemVertex, out_vertex: MemVertex)
   extends MemElement with Edge {
