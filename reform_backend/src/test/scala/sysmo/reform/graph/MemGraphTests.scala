@@ -133,6 +133,23 @@ class MemGraphTests extends AnyFunSpec {
         val t1 = g.V(1).outE("knows").valueMap[Any]().build
         assert(t1.map(_("weight")).toSet == Set(0.5, 1.0))
       }
+
+      it("test map") {
+        val t1 = g.V(1).map[String](x => x.get.get.value[String]("name").get).build
+        println(t1.toSeq)
+      }
+
+      it("test flatMap") {
+
+      }
+
+      it("test filter") {
+
+      }
+
+      it("test sideEffect") {
+
+      }
     }
   }
 }
