@@ -1,13 +1,13 @@
 package sysmo.reform.shared.gremlin.tplight.steps
 
-import sysmo.reform.shared.gremlin.tplight.{Edge, Element, Graph, GraphTraversal, Traverser, TraverserGenerator, Vertex}
+import sysmo.reform.shared.gremlin.tplight.{AbstractStep, Edge, Element, Graph, GraphTraversalBuilder, Traversal, Traverser, TraverserGenerator, Vertex}
 
 import scala.annotation.tailrec
 
-class GraphStep[S, E <: Element](val traversal: GraphTraversal[_, _], ids: Seq[Any])
+class GraphStep[E <: Element](ids: Seq[Any])
                              (implicit iter_supplier: (Graph, Seq[Any]) => Iterator[E])
-  extends AbstractStep[S, E] {
-  val iter: Iterator[E] = iter_supplier(traversal.graph, ids)
+  extends AbstractStep[Nothing, E] {
+  lazy val iter: Iterator[E] = iter_supplier(traversal.graph, ids)
   var done: Boolean = false
 
   override def process_next_start: Option[Traverser[E]] = _proc_next

@@ -1,18 +1,16 @@
-package sysmo.reform.shared.gremlin.tplight.steps
-
-
-import sysmo.reform.shared.gremlin.tplight.{GraphTraversal, Traverser}
+package sysmo.reform.shared.gremlin.tplight
 
 import scala.annotation.tailrec
 
 trait TraversalStep[S, E] extends Iterator[Traverser[E]] {
-  val traversal: GraphTraversal[_, _]
-  def next_step: Option[TraversalStep[E ,_]] = traversal.neighbours.next.get(this).map(_.asInstanceOf[TraversalStep[E ,_]])
-  def prev_step: Option[TraversalStep[_, S]] = traversal.neighbours.prev.get(this).map(_.asInstanceOf[TraversalStep[_ ,S]])
+  var traversal: Traversal[_, _] = null
+  def next_step: Option[TraversalStep[E ,_]] = traversal.next_step(this).map(_.asInstanceOf[TraversalStep[E ,_]])
+  def prev_step: Option[TraversalStep[_, S]] = traversal.prev_step(this).map(_.asInstanceOf[TraversalStep[_ ,S]])
 }
 
 trait AbstractStep[S, E] extends TraversalStep[S, E] {
-  var next_end: Option[Traverser[E]] = None
+  protected val starts: ExpandableStepIterator[S] = new ExpandableStepIterator[S](this)
+  protected var next_end: Option[Traverser[E]] = None
   def process_next_start: Option[Traverser[E]]
 
   // TODO
@@ -61,10 +59,9 @@ trait AbstractStep[S, E] extends TraversalStep[S, E] {
 
 object TraversalStep {
   class Empty[S, E] extends TraversalStep[S, E] {
-    val traversal = null
     override def hasNext: Boolean = false
     override def next(): Traverser[E] =
-      throw new IllegalAccessException("This code should not be reachable!")
+      throw new NoSuchElementException
   }
   object Empty {
     def apply[S, E]: Empty[S, E] = new Empty[S, E]

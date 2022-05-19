@@ -60,14 +60,19 @@ trait Element {
 }
 
 trait Vertex extends Element {
+  /** Returns adjacent vertices */
+  def vertices(direction: Direction, edge_labels: Seq[String]): Iterator[Vertex]
+  /** Returns edges attached to the vertex */
+  def edges(direction: Direction, edge_labels: Seq[String]): Iterator[Edge]
+  /** Adds a new edge to the graph */
   def add_edge(label: String, to: Vertex, key_values: (String, Any)*): Edge
 }
 
 trait Edge extends Element {
-  def vertices(direction: Direction): Seq[Vertex]
+  def vertices(direction: Direction): Iterator[Vertex]
   val out_vertex: Vertex
   val in_vertex : Vertex
-  def both_vertices: Seq[Vertex] = vertices(Direction.BOTH)
+  def both_vertices: Iterator[Vertex] = vertices(Direction.BOTH)
 }
 
 trait Property[+V] {

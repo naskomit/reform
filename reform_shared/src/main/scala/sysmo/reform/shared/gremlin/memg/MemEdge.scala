@@ -2,13 +2,13 @@ package sysmo.reform.shared.gremlin.memg
 
 import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Vertex}
 
-case class MemEdge(graph: MemGraph, id: Any, label: String, in_vertex: MemVertex, out_vertex: MemVertex)
+case class MemEdge(graph: MemGraph, id: Any, label: String, out_vertex: MemVertex, in_vertex: MemVertex)
   extends MemElement with Edge {
-  override def vertices(direction: Direction): Seq[Vertex] = {
+  override def vertices(direction: Direction): Iterator[Vertex] = {
     direction match {
-      case Direction.IN => Seq(in_vertex)
-      case Direction.OUT => Seq(out_vertex)
-      case Direction.BOTH => Seq(out_vertex, in_vertex)
+      case Direction.IN => Seq(in_vertex).iterator
+      case Direction.OUT => Seq(out_vertex).iterator
+      case Direction.BOTH => Seq(out_vertex, in_vertex).iterator
     }
   }
 
