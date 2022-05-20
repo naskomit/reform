@@ -7,28 +7,32 @@ import scala.collection.mutable
 
 class DependencyResolution(graph: Graph) {
   val g = graph.traversal()
+  type Vertex2Vertex = Vertex => Iterator[Vertex]
 
   def find_affected(start: Set[Vertex], edge_predicate: Edge => Boolean = {x => true}): Set[Vertex] = {
+    val step: Vertex2Vertex = {v =>
+      v.edges(Direction.OUT, Seq()).filter(edge_predicate).map(x => x.in_vertex)
+    }
     val affected = mutable.HashSet[Vertex]()
     for (v <- start) {
-      _find_affected(Seq(v.vertices(Direction.OUT, Seq())), affected)
+      _find_affected(step, Seq(step(v)), affected)
     }
     affected.toSet
   }
 
   @tailrec
-  private def _find_affected(remaining_out: Seq[Iterator[Vertex]], acc: mutable.Set[Vertex]): Unit = {
+  private def _find_affected(step: Vertex2Vertex, remaining_out: Seq[Iterator[Vertex]], acc: mutable.Set[Vertex]): Unit = {
     if (remaining_out.nonEmpty) {
       if (remaining_out.last.hasNext) {
         val current = remaining_out.last.next()
         if (acc.contains(current)) {
-          _find_affected(remaining_out, acc)
+          _find_affected(step, remaining_out, acc)
         } else {
           acc.add(current)
-          _find_affected(remaining_out :+ current.vertices(Direction.OUT, Seq()), acc)
+          _find_affected(step, remaining_out :+ step(current), acc)
         }
       } else {
-        _find_affected(remaining_out.dropRight(1), acc)
+        _find_affected(step, remaining_out.dropRight(1), acc)
       }
     } else {
 

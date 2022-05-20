@@ -125,6 +125,15 @@ class MemGraphTests extends AnyFunSpec {
         assert(names1(affected) == Set("y2", "c", "d", "y3"))
         assert(names2(resolution) == Seq(Set("c"), Set("y2", "d"), Set("y3")))
       }
+
+      it("resolution for node a with edge predicate") {
+        val modified = Set(vertex_map("a"))
+        val edge_predicate = (e: Edge) => e.label != "dummy_edge"
+        val affected = dep_res.find_affected(modified, edge_predicate)
+        val resolution = dep_res.resolution_seq(modified, edge_predicate)
+        assert(names1(affected) == Set("b", "c", "d", "y3"))
+        assert(names2(resolution) == Seq(Set("b"), Set("c"), Set("d"), Set("y3")))
+      }
     }
   }
 }
