@@ -19,11 +19,9 @@ trait AbstractStep[S, E] extends TraversalStep[S, E] {
 
   @tailrec
   private def produce_traverser: Option[Traverser[E]] = process_next_start match {
-    case Some(trav) => trav.get match {
-      case Some(_) if trav.bulk != 0 => Some(trav)
-      case None => produce_traverser
-    }
+    case Some(trav) if trav.bulk != 0 => Some(trav)
     case None => None
+    case _ => produce_traverser
   }
 
   override def hasNext: Boolean = {

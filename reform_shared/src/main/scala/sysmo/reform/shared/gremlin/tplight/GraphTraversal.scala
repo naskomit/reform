@@ -34,7 +34,7 @@ class DefaultTraversal[S <: Element, E](
   val bytecode: Bytecode, val neighbours: Neighbours[TraversalStep[_, _]])
 extends Traversal[S, E] {
 
-  private var last_traverser: Traverser[E] = Traverser.Empty[E]
+  private var last_traverser: Traverser[E] = Traverser.Empty()
   private val final_end_step: TraversalStep[_, E] =
     if (steps.isEmpty) TraversalStep.Empty[Nothing, E] else steps.last.asInstanceOf[TraversalStep[_, E]]
 
@@ -46,10 +46,7 @@ extends Traversal[S, E] {
       last_traverser = final_end_step.next()
     }
     last_traverser.dec_bulk()
-    last_traverser.get match {
-      case Some(v) => v
-      case None => throw new NoSuchElementException()
-    }
+    last_traverser.get
   }
 }
 

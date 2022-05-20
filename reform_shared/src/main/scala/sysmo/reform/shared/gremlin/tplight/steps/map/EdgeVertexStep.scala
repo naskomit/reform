@@ -5,5 +5,5 @@ import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, GraphTraversalBuild
 class EdgeVertexStep(direction: Direction)
     extends FlatMapStep[Edge, Vertex] {
   override def flat_map(traverser: Traverser[Edge]): Iterator[Vertex] =
-    traverser.get.map(x => x.vertices(direction)).getOrElse(Iterator.empty)
+    traverser.get.vertices(direction)
 }

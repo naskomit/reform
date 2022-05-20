@@ -5,9 +5,7 @@ import sysmo.reform.shared.gremlin.tplight.{Element, Property, Traversal, Traver
 
 class PropertyMapStep[E](keys: Seq[String]) extends MapStep[Element, Map[String, E]] {
   def map(traverser: Traverser[Element]): Map[String, E] = {
-    val element = traverser.get match {
-      case Some(e) => e
-    }
+    val element = traverser.get
     val props: Iterator[Property[E]]  = if (keys.isEmpty) {
       element.properties[E]
     } else {

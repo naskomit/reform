@@ -14,10 +14,9 @@ class VertexStep[E <: Element](direction: Direction, edge_labels: Seq[String])
 object VertexStep {
   implicit val vertex_iter_supplier: (Traverser[Vertex], Direction, Seq[String]) => Iterator[Vertex] =
     (trav, dir, edge_labels) =>
-      trav.get.map(x =>
-        x.vertices(dir, edge_labels)
-      ).getOrElse(Iterator.empty)
+      trav.get.vertices(dir, edge_labels)
 
   implicit val edge_iter_supplier: (Traverser[Vertex], Direction, Seq[String]) => Iterator[Edge] =
-    (trav, dir, edge_labels) => trav.get.map(_.edges(dir, edge_labels)).getOrElse(Iterator.empty)
+    (trav, dir, edge_labels) =>
+      trav.get.edges(dir, edge_labels)
 }

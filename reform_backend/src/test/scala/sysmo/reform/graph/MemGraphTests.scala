@@ -1,74 +1,15 @@
 package sysmo.reform.graph
 import org.scalatest.funspec.AnyFunSpec
-import sysmo.reform.shared.gremlin.memg.MemGraph
-import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, GraphTraversalBuilder, Vertex}
+import sysmo.reform.shared.gremlin.tplight.algo.DependencyResolution
+import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, GraphTraversalBuilder, GraphTraversalSource, Vertex}
 
-case class TestGraph(graph: Graph, vertex_map: Map[String, Vertex], edge_map: Map[String, Edge])
+import scala.collection.mutable
 
 class MemGraphTests extends AnyFunSpec {
-  def create_modern(): TestGraph = {
-    import sysmo.reform.shared.gremlin.tplight.PropId._
-    val graph = MemGraph()
-    /** Create vertices */
-    val marko = graph.add_vertex(
-      "person",
-      "name" -> "marko",
-      "age" -> 29,
-    )
-    val vadas = graph.add_vertex(
-      "person",
-      "name" -> "vadas",
-      "age" -> 27,
-    )
-    val lop = graph.add_vertex(
-      "software",
-      "name" -> "lop",
-      "lang" -> "scala",
-    )
-    val josh = graph.add_vertex(
-      "person",
-      "name" -> "josh",
-      "age" -> 32,
-    )
-    val ripple = graph.add_vertex(
-      "software",
-      "name" -> "ripple",
-      "lang" -> "scala",
-    )
-    val peter = graph.add_vertex(
-      "person",
-      "name" -> "peter",
-      "age" -> 35,
-    )
 
-    /** Create edges */
-    val mv = marko.add_edge("knows", vadas, "weight" -> 0.5)
-    val mj = marko.add_edge("knows", josh, "weight" -> 1.0)
-    val ml = marko.add_edge("created", lop, "weight" -> 0.4)
-    val jr = josh.add_edge("created", ripple, "weight" -> 1.0)
-    val jl = josh.add_edge("created", lop, "weight" -> 0.4)
-    val pl = peter.add_edge("created", lop, "weight" -> 0.2)
-
-    val vertex_map = Map[String, Vertex](
-      "marko" -> marko, "vadas" -> vadas, "lop" -> lop,
-      "josh" -> josh, "ripple" -> ripple, "peter" -> peter
-    )
-
-    val edge_map = Map[String, Edge](
-      "mv" -> mv, "mj" -> mj, "ml" -> ml,
-      "jr" -> jr, "jl" -> jl, "pl" -> pl
-    )
-
-    TestGraph(graph, vertex_map, edge_map)
-  }
-
-  def with_modern(f: TestGraph => Unit): Unit = {
-    val graph: TestGraph = create_modern()
-    f(graph)
-  }
 
   describe("A modern graph") {
-    with_modern { case TestGraph(graph, vertex_map, edge_map) =>
+    TestGraph.with_modern { case TestGraph(graph, vertex_map, edge_map) =>
       it("should have 6 vertices") {
         assert(graph.vertices().size == 6)
       }
@@ -106,7 +47,7 @@ class MemGraphTests extends AnyFunSpec {
   }
 
   describe("A modern graph traversal") {
-    with_modern { case TestGraph(graph, vertex_map, edge_map) =>
+    TestGraph.with_modern { case TestGraph(graph, vertex_map, edge_map) =>
       val g = graph.traversal()
       it("should get vertices 1, 3") {
         val t1 = g.V(1, 3).build
@@ -135,20 +76,54 @@ class MemGraphTests extends AnyFunSpec {
       }
 
       it("test map") {
-        val t1 = g.V(1).map[String](x => x.get.get.value[String]("name").get).build
-        println(t1.toSeq)
+        val t1 = g.V().map[String](x => x.get.value[String]("name").get).build
+        assert(t1.toSet == Set("marko", "vadas", "lop", "josh", "ripple", "peter"))
+        val t2 = g.V()
+          .map(x => x.get.value[String]("lang").getOrElse("N/A"))
+          .build
+        assert(t2.toSet == Set("scala", "N/A"))
       }
 
       it("test flatMap") {
-
-      }
+        // TODO
+     }
 
       it("test filter") {
-
+        val t1 = g.V().filter(x => x.get.value[String]("lang").isDefined).build
+        assert(t1.size == 2)
       }
 
       it("test sideEffect") {
+        val acc = mutable.HashSet[String]()
+        val t1 = g.V()
+          .map[String](x => x.get.value[String]("lang").getOrElse("N/A"))
+          .sideEffect(x => acc.add(x.get)).build
+        t1.foreach(x => 1)
+        assert(acc.toSet == Set("scala", "N/A"))
 
+      }
+    }
+  }
+
+  describe("Finding dependencies") {
+    TestGraph.with_dep { case TestGraph(graph, vertex_map, edge_map) =>
+      val dep_res = new DependencyResolution(graph)
+      def names1(vseq: Set[Vertex]): Set[String] = vseq.map(x => x.value[String]("name").get)
+      def names2(vseq: Seq[Set[Vertex]]): Seq[Any] = vseq.map {x => names1(x)}
+      it("resolution for node a") {
+        val modified = Set(vertex_map("a"))
+        val affected = dep_res.find_affected(modified)
+        val resolution = dep_res.resolution_seq(modified)
+        assert(names1(affected) == Set("b", "y1", "y2", "c", "d", "y3"))
+        assert(names2(resolution) == Seq(Set("b"), Set("y1", "c"), Set("y2", "d"), Set("y3")))
+      }
+
+      it("resolution for node e") {
+        val modified = Set(vertex_map("e"))
+        val affected = dep_res.find_affected(modified)
+        val resolution = dep_res.resolution_seq(modified)
+        assert(names1(affected) == Set("y2", "c", "d", "y3"))
+        assert(names2(resolution) == Seq(Set("c"), Set("y2", "d"), Set("y3")))
       }
     }
   }
