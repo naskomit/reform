@@ -95,6 +95,7 @@ object AnalysisPanel extends ApplicationPanel {
   }
 
   def apply(app_config: ApplicationConfiguration): Unmounted = {
+
     component(Props(refrigeration_form, refrigeration_data_handler))
   }
 }

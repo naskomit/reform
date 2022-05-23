@@ -10,6 +10,11 @@ ThisBuild / javaOptions ++= Seq(
   "-Dplay.http.secret.key='djdsgfldfjnglkwemf;lsdfnsv lk123453lksdvnsdfvkndxcv;ldf'"
 )
 
+val test_libs = Seq(
+  "org.scalactic" %% "scalactic" % "3.2.12",
+  "org.scalatest" %% "scalatest" % "3.2.12" % "test",
+)
+
 /** =================== Reform ====================== */
 
 lazy val root = (project in file("."))
@@ -26,16 +31,19 @@ lazy val reform_shared = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic",
       "io.circe" %% "circe-parser",
-      "io.circe" %% "circe-generic-extras"
-    ).map(_ % circeVersion)
+      "io.circe" %% "circe-generic-extras",
+    ).map(_ % circeVersion),
+    libraryDependencies += "com.lihaoyi" %% "pprint" % "0.7.0",
+    libraryDependencies ++= test_libs,
   ).jsSettings(
   libraryDependencies ++= Seq(
     "io.circe" %%% "circe-core",
     "io.circe" %%% "circe-generic",
     "io.circe" %%% "circe-parser",
-    "io.circe" %%% "circe-generic-extras"
-  ).map(_ % circeVersion)
-
+    "io.circe" %%% "circe-generic-extras",
+  ).map(_ % circeVersion),
+  libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.7.0",
+  libraryDependencies ++= test_libs,
 )
 
 lazy val reform_backend = project
@@ -44,8 +52,7 @@ lazy val reform_backend = project
 //    libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.36",
 //    libraryDependencies += "org.slf4j" % "slf4j-reload4j" % "1.7.36",
     // Testing
-    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.12",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % "test",
+    libraryDependencies ++= test_libs,
 
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10",
 //    libraryDependencies += "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.17.1",

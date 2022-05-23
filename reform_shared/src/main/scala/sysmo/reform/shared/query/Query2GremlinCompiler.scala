@@ -80,7 +80,7 @@ object Query2GremlinCompiler {
 
   def split_column_value(v1: Expression, v2: Expression) = {
     (v1, v2) match {
-      case (ColumnRef(id, _, _), Val(v)) => (id, v)
+      case (ColumnRef(id, _, _), Constant(v)) => (id, v)
       //      case (v: AtomicValue, ColumnRef(id, _, _)) => (id, extract_value(v))
       case _ => ???
     }
@@ -90,9 +90,13 @@ object Query2GremlinCompiler {
     case and: LogicalAnd => bc.Instruction(S.and, and.expr_list.map(x => bc.Bytecode(step = Seq(compile_filter_expr(x)))): _*)
     case or: LogicalOr => bc.Instruction(S.or, or.expr_list.map(x => bc.Bytecode(step = Seq(compile_filter_expr(x)))): _*)
     case LogicalNot(x) => ???
+    case CommonPredicate(op, arg1, arg2) => {
+      val (col_id, v) = split_column_value(arg1, arg2)
+      bc.Instruction(S.has, col_id, common_predicate_op(op, v))
+    }
     case NumericalPredicate(op, arg1, arg2) => {
       val (col_id, v) = split_column_value(arg1, arg2)
-      bc.Instruction(S.has, col_id, numeric_predicate_op(op, v))
+      bc.Instruction(S.has, col_id, numerical_predicate_op(op, v))
     }
     case StringPredicate(op, arg1, arg2) => {
       val (col_id, v: String) = split_column_value(arg1, arg2)
@@ -103,9 +107,12 @@ object Query2GremlinCompiler {
     }
   }
 
-  def numeric_predicate_op[V](op: NumericalPredicateOp.Value, value: V): bc.Predicate[_] = op match {
-    case NumericalPredicateOp.Equal => bc.Predicate.eq_(value)
-    case NumericalPredicateOp.NotEqual => bc.Predicate.neq(value)
+  def common_predicate_op[V](op: CommonPredicateOp.Value, value: V): bc.Predicate[_] = op match {
+    case CommonPredicateOp.Equal => bc.Predicate.eq_(value)
+    case CommonPredicateOp.NotEqual => bc.Predicate.neq(value)
+  }
+
+  def numerical_predicate_op[V](op: NumericalPredicateOp.Value, value: V): bc.Predicate[_] = op match {
     case NumericalPredicateOp.< => bc.Predicate.lt(value)
     case NumericalPredicateOp.<= => bc.Predicate.lte(value)
     case NumericalPredicateOp.> => bc.Predicate.gt(value)
@@ -114,8 +121,6 @@ object Query2GremlinCompiler {
   }
 
   def text_predicate_op(op: StringPredicateOp.Value, value: String): bc.Predicate[_] = op match {
-    case StringPredicateOp.Equal => bc.Predicate.eq_(value)
-    case StringPredicateOp.NotEqual => bc.Predicate.neq(value)
     case StringPredicateOp.Containing => bc.Predicate.containing(value)
     case StringPredicateOp.NotContaining => bc.Predicate.notContaining(value)
     case StringPredicateOp.StartingWith => bc.Predicate.startingWith(value)
@@ -134,8 +139,8 @@ object Query2GremlinCompiler {
       source = SingleTable("PatientRecord", None, None),
       columns = None,
       filter = Some(QueryFilter(LogicalOr(
-        NumericalPredicate(NumericalPredicateOp.<, ColumnRef("age"), Val(35.0)),
-        StringPredicate(StringPredicateOp.Equal, ColumnRef("gender"), Val("жена"))
+        NumericalPredicate(NumericalPredicateOp.<, ColumnRef("age"), Constant(35.0)),
+        CommonPredicate(CommonPredicateOp.Equal, ColumnRef("gender"), Constant("жена"))
       ))),
       sort = Some(QuerySort(ColumnSort(ColumnRef("age"), false))),
       range = Some(QueryRange(0, 100))

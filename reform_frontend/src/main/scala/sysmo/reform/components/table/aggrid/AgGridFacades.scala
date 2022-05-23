@@ -63,6 +63,7 @@ object AgGridFacades extends Logging {
 
 
   def extract_filter(flt_js : ColumnFilterJS, column: String): Option[E.PredicateExpression] = {
+    import E.{Expression => EX}
       val flt = ColumnFilter.fromJS(flt_js)
       println("Filter")
       println(flt)
@@ -82,35 +83,35 @@ object AgGridFacades extends Logging {
         case ColumnFilter(Some("text"), None, Some(pred_str)) => {
           val f = flt_js.asInstanceOf[TextFilterModelJS]
           val predicate = pred_str match {
-            case "equals" => E.StringPredicateOp.Equal
-            case "notEqual" => E.StringPredicateOp.NotEqual
-            case "contains" => E.StringPredicateOp.Containing
-            case "notContains" => E.StringPredicateOp.NotContaining
-            case "startsWith" => E.StringPredicateOp.StartingWith
-            case "endsWith" => E.StringPredicateOp.EndingWith
+            case "equals" => EX.col(column) === EX(f.filter)
+            case "notEqual" => EX.col(column) !== EX(f.filter)
+            case "contains" => EX.col(column).str.containing(EX(f.filter))
+            case "notContains" => EX.col(column).str.not_containing(EX(f.filter))
+            case "startsWith" => EX.col(column).str.starting_with(EX(f.filter))
+            case "endsWith" => EX.col(column).str.ending_with(EX(f.filter))
 
           }
-          Some(E.StringPredicate(predicate, E.ColumnRef(column), E.Val(f.filter)))
+          Some(predicate)
         }
 
         case ColumnFilter(Some("number"), None, Some(pred_str)) => {
           val f = flt_js.asInstanceOf[NumberFilterModelJS]
           if (pred_str == "inRange") {
             Some(E.LogicalAnd(
-              E.NumericalPredicate(E.NumericalPredicateOp.>=, E.ColumnRef(column), E.Val(f.filter)),
-              E.NumericalPredicate(E.NumericalPredicateOp.<=, E.ColumnRef(column), E.Val(f.filterTo))
+              E.NumericalPredicate(E.NumericalPredicateOp.>=, E.ColumnRef(column), E.Constant(f.filter)),
+              E.NumericalPredicate(E.NumericalPredicateOp.<=, E.ColumnRef(column), E.Constant(f.filterTo))
             ))
           } else {
             val predicate = pred_str match {
-              case "equals" => E.NumericalPredicateOp.Equal
-              case "notEqual" => E.NumericalPredicateOp.NotEqual
-              case "lessThan" => E.NumericalPredicateOp.<
-              case "lessThanOrEqual" => E.NumericalPredicateOp.<=
-              case "greaterThan" => E.NumericalPredicateOp.>
-              case "greaterThanOrEqual" => E.NumericalPredicateOp.>=
+              case "equals" => EX.col(column) === EX(f.filter)
+              case "notEqual" => EX.col(column) !== EX(f.filter)
+              case "lessThan" => EX.col(column) < EX(f.filter)
+              case "lessThanOrEqual" => EX.col(column) <= EX(f.filter)
+              case "greaterThan" => EX.col(column) > EX(f.filter)
+              case "greaterThanOrEqual" => EX.col(column) >= EX(f.filter)
 
             }
-            Some(E.NumericalPredicate(predicate, E.ColumnRef(column), E.Val(f.filter)))
+            Some(predicate)
           }
         }
 

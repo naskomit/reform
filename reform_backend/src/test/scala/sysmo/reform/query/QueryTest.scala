@@ -24,8 +24,8 @@ object QueryTest {
       Q.SingleTable("PatientRecord", None, None),
       None,
       Some(Q.QueryFilter(E.LogicalOr(
-        E.NumericalPredicate(E.NumericalPredicateOp.<, E.ColumnRef("age"), E.Val(35.0)),
-        E.StringPredicate(E.StringPredicateOp.Equal, E.ColumnRef("gender"), E.Val("жена"))
+        E.NumericalPredicate(E.NumericalPredicateOp.<, E.ColumnRef("age"), E.Constant(35.0)),
+        E.CommonPredicate(E.CommonPredicateOp.Equal, E.ColumnRef("gender"), E.Constant("жена"))
       ))),
       Some(Q.QuerySort(Q.ColumnSort(E.ColumnRef("age"), false))),
       Some(Q.QueryRange(0, 100))

@@ -8,21 +8,27 @@ object Transport extends CirceTransport {
 
   implicit val codec_ColumnRef: Codec[ColumnRef] = deriveCodec[ColumnRef]
 
-  implicit val enc_Value: Encoder[Val] = Encoder.instance {
-    case Val(y: Int) => y.asJson
-    case Val(y: Double) => y.asJson
-    case Val(y: Boolean) => y.asJson
-    case Val(y: String) => y.asJson
-    case Val(y) => throw new IllegalStateException(f"Cannot handle value $y")
+  implicit val enc_Value: Encoder[Constant] = Encoder.instance {
+    case Constant(y: Int) => y.asJson
+    case Constant(y: Double) => y.asJson
+    case Constant(y: Boolean) => y.asJson
+    case Constant(y: String) => y.asJson
+    case Constant(y) => throw new IllegalStateException(f"Cannot handle value $y")
   }
 
-  implicit val dec_Value: Decoder[Val] = Decoder.instance (x => {
-    x.as[Int].orElse(x.as[Double]).orElse(x.as[Boolean]).orElse(x.as[String]).map(Val)
+  implicit val dec_Value: Decoder[Constant] = Decoder.instance (x => {
+    x.as[Int].orElse(x.as[Double]).orElse(x.as[Boolean]).orElse(x.as[String]).map(Constant)
   })
 
   implicit val codec_LogicalAnd: Codec[LogicalAnd] = deriveCodec
   implicit val codec_LogicalOr: Codec[LogicalOr] = deriveCodec
   implicit val codec_LogicalNot: Codec[LogicalNot] = deriveCodec
+
+  implicit val enc_CommonPredicateOp: Encoder[CommonPredicateOp.Value] =
+    Encoder.instance(x => x.toString.asJson)
+
+  implicit val dec_CommonPredicateOp: Decoder[CommonPredicateOp.Value] =
+    (x : HCursor) => x.as[String].map(CommonPredicateOp.withName)
 
   implicit val enc_NumericalPredicateOp: Encoder[NumericalPredicateOp.Value] =
     Encoder.instance(x => x.toString.asJson)
