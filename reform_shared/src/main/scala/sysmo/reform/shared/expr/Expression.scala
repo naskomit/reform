@@ -1,14 +1,11 @@
 package sysmo.reform.shared.expr
 
-import cats.implicits.{catsSyntaxPartialOrder, catsSyntaxTuple2Semigroupal}
-
-import scala.reflect.ClassTag
-
 /** # Expression */
 sealed trait Expression {
   def ===(other: Expression): PredicateExpression = {
     CommonPredicate(CommonPredicateOp.Equal, this, other)
   }
+
   def !==(other: Expression): PredicateExpression = {
     CommonPredicate(CommonPredicateOp.NotEqual, this, other)
   }
@@ -16,14 +13,25 @@ sealed trait Expression {
   def <(other: Expression): PredicateExpression = {
     NumericalPredicate(NumericalPredicateOp.<, this, other)
   }
+
   def <=(other: Expression): PredicateExpression = {
     NumericalPredicate(NumericalPredicateOp.<=, this, other)
   }
+
   def >(other: Expression): PredicateExpression = {
     NumericalPredicate(NumericalPredicateOp.>, this, other)
   }
+
   def >=(other: Expression): PredicateExpression = {
     NumericalPredicate(NumericalPredicateOp.>=, this, other)
+  }
+
+  def within(container: Seq[Constant]): ContainmentPredicate = {
+    ContainmentPredicate(ContainmentPredicateOp.Within, this, container)
+  }
+
+  def without(container: Seq[Constant]): ContainmentPredicate = {
+    ContainmentPredicate(ContainmentPredicateOp.Without, this, container)
   }
 
   def this_expr: Expression = this
@@ -52,19 +60,6 @@ object Expression {
     def to_error: Throwable = x.left.getOrElse(new Throwable())
   }
 
-  trait Converter[T, U] {
-    def convert(x: T): U
-  }
-
-//  def try_convert[T, U](v: U)(implicit cnv: Converter[T, U]): Result[T] = v match {
-//
-//  }
-
-  def as[T](v: Any)(implicit ev: ClassTag[T]): Result[T] = v match {
-    case x: T => Right(x)
-    case _ => Left(IncorrectTypeError(v, ev.runtimeClass.getName))
-  }
-
   def as_float(v: Result[_]): Result[Double] = v match {
     case Left(e) => Left(e)
     case Right(v: Double) => Right(v)
@@ -89,26 +84,69 @@ object Expression {
     }
   }
 
-  def eval[T](expr: Expression, ctx: Context)(implicit ev: ClassTag[T]): Result[T]  = {
-    expr match {
-      case Constant(v) => as[T](v)
-      case FieldRef(id) => ctx.get(id).toRight(NoSuchFieldError(id))
-        .flatMap(as[T](_))
-      case CommonPredicate(op, arg1, arg2) => op match {
-        case CommonPredicateOp.Equal => as[T](eval(arg1, ctx) == eval(arg2, ctx))
-        case CommonPredicateOp.NotEqual => as[T](eval(arg1, ctx) != eval(arg2, ctx))
+  def bool_eval_until(expr_list: List[PredicateExpression], until: Boolean, ctx: Context): Result[Boolean] = {
+    if (expr_list.isEmpty)
+      Right(!until)
+    else {
+      val (head :: tail) = expr_list
+      eval(head, ctx).flatMap {
+        case x: Boolean if x == until => Right(until)
+        case x: Boolean if x != until => bool_eval_until(tail, until, ctx)
+        case x => Left(IncorrectTypeError(x, Boolean.getClass.getName))
       }
-      case NumericalPredicate(op, arg1, arg2) => op match {
-        case NumericalPredicateOp.< => num_compare(arg1, arg2, compare_fns.<, ctx).flatMap(as[T])
-        case NumericalPredicateOp.<= => num_compare(arg1, arg2, compare_fns.<=, ctx).flatMap(as[T])
-        case NumericalPredicateOp.> => num_compare(arg1, arg2, compare_fns.>, ctx).flatMap(as[T])
-        case NumericalPredicateOp.>= => num_compare(arg1, arg2, compare_fns.>=, ctx).flatMap(as[T])
+
+    }
+  }
+
+  def eval_seq(s: Seq[Expression], ctx: Context): Result[Seq[Any]] = {
+    s.foldLeft[Result[Seq[Any]]](Right(Seq[Any]())) {(acc, item) =>
+      acc match {
+        case Left(err) => Left(err)
+        case Right(vs) => eval(item, ctx) match {
+          case Left(err) => Left(err)
+          case Right(item_value) => Right(vs :+ item_value)
+        }
       }
     }
   }
 
-  def apply(x: Any): Expression = Constant(x)
-  def col(id: String): Expression = ColumnRef(id)
+  def eval(expr: Expression, ctx: Context): Result[Any]  = {
+    expr match {
+      case Constant(v) => Right(v)
+      case FieldRef(id) => ctx.get(id).toRight(NoSuchFieldError(id))
+      case CommonPredicate(op, arg1, arg2) => op match {
+        case CommonPredicateOp.Equal => Right(eval(arg1, ctx) == eval(arg2, ctx))
+        case CommonPredicateOp.NotEqual => Right(eval(arg1, ctx) != eval(arg2, ctx))
+      }
+      case NumericalPredicate(op, arg1, arg2) => op match {
+        case NumericalPredicateOp.< => num_compare(arg1, arg2, compare_fns.<, ctx)
+        case NumericalPredicateOp.<= => num_compare(arg1, arg2, compare_fns.<=, ctx)
+        case NumericalPredicateOp.> => num_compare(arg1, arg2, compare_fns.>, ctx)
+        case NumericalPredicateOp.>= => num_compare(arg1, arg2, compare_fns.>=, ctx)
+      }
+      case LogicalAnd(expr_list @ _*) => bool_eval_until(expr_list.toList, until = false, ctx)
+      case LogicalOr(expr_list @ _*) => bool_eval_until(expr_list.toList, until = true, ctx)
+      case LogicalNot(expr) => eval(expr, ctx).flatMap {
+        case x: Boolean => Right(!x)
+        case x => Left(IncorrectTypeError(x, Boolean.getClass.getName))
+      }
+      case ContainmentPredicate(op, element, container) => {
+        eval(element, ctx) match {
+          case Right(elem_value) => eval_seq(container, ctx)
+            .map {x =>
+              val contains = x.toSet.contains(elem_value)
+              (op == ContainmentPredicateOp.Within && contains) ||
+                (op == ContainmentPredicateOp.Without && !contains)
+            }
+          case Left(err) => Left(err)
+        }
+      }
+    }
+  }
+
+  def apply(x: Any): Constant = Constant(x)
+  def col(id: String): ColumnRef = ColumnRef(id)
+  def field(id: String): FieldRef = FieldRef(id)
 }
 
 /** # Errors */
@@ -132,7 +170,19 @@ case class Constant(v: Any) extends Expression
 //case class StringValue(v: String) extends Expression
 //case class BoolValue(v: Boolean) extends Expression
 
-sealed trait PredicateExpression extends Expression
+sealed trait PredicateExpression extends Expression {
+  def && (other: PredicateExpression): PredicateExpression = {
+    LogicalAnd(this, other)
+  }
+  def || (other: PredicateExpression): PredicateExpression = {
+    LogicalOr(this, other)
+  }
+
+  def not: PredicateExpression = {
+    LogicalNot(this)
+  }
+
+}
 
 case class LogicalAnd(expr_list: PredicateExpression*)
   extends PredicateExpression
@@ -173,7 +223,7 @@ object ContainmentPredicateOp extends PredicateOp {
   val Within, Without = Value
 }
 
-case class ContainmentPredicate(op: ContainmentPredicateOp.Value, arg1: ColumnRef, arg2: Seq[Constant])
+case class ContainmentPredicate(op: ContainmentPredicateOp.Value, element: Expression, container: Seq[Constant])
   extends PredicateExpression
 
 trait Context extends Map[String, Any]
