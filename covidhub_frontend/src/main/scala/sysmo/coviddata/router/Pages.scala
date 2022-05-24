@@ -21,7 +21,7 @@ case object Analysis extends Page {
   val name = "Analysis"
   val label = Some("Analysis")
   val icon = "fa fa-pencil"
-  val panel = P.AnalysisPanel
+  val panel = P.AnalysisPanel2
 }
 
 
