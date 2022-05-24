@@ -88,10 +88,23 @@ object AnalysisPanel2 extends ApplicationPanel {
 //    )
   }
 
-  val refrigeration_data_handler: FormDataHandler = new FormDataHandler {
-    override val initial_data: F.ValueMap = refrigeration_data_init
-    override def get_choices(path: F.ElementPath, data: F.ValueMap): Future[Seq[LabeledValue[_]]] = path match {
-      case Seq("cycle_params", "fluid") => Future(Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x)))
+  object refrigeration_data_handler extends FormDataHandler(graph) {
+    override def initial_data: F.ValueMap = refrigeration_data_init
+    override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
+      val path = element.path
+      logger.info(path.toString)
+      path.segments match {
+        case Seq(_, "cycle_params", "fluid") => Future(Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x)))
+        case Seq(_, "cycle_params", "warm_by") => Future(Seq(
+          LabeledValue("p", Some("Pressure")),
+          LabeledValue("T", Some("Temperature"))
+        ))
+        case Seq(_, "cycle_params", "cold_by") => Future(Seq(
+          LabeledValue("p", Some("Pressure")),
+          LabeledValue("T", Some("Temperature"))
+        ))
+        case _ => Future(Seq())
+      }
     }
 
   }

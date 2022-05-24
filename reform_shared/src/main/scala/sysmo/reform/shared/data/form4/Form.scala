@@ -12,16 +12,6 @@ object ElementPath {
   val Empty = ElementPath(Seq())
 }
 
-trait VertexObj {
-  val vertex: Vertex
-  def graph: Graph = vertex.graph
-  def g: GraphTraversalSource = vertex.graph.traversal()
-  def g_this: GraphTraversalBuilder[Vertex, Vertex] = g.V(vertex.id)
-}
-
-trait EdgeObj {
-  val edge: Edge
-}
 
 trait ExressionNode extends VertexObj {
   def eval[T]: T

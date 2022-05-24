@@ -38,7 +38,7 @@ case class FormElementRenderer(data_handler: FormDataHandler) {
 object FormEditorComponent extends ReactComponent {
   import japgolly.scalajs.react._
   case class Props(form: F.FormGroup, data_handler: FormDataHandler)
-  case class State()
+  case class State(render_ind: Int)
   final class Backend($: BackendScope[Props, State]) {
     def bind(p: Props): Unit  = p.data_handler.bind($)
     def render (p: Props, s: State): VdomElement = {
@@ -47,11 +47,11 @@ object FormEditorComponent extends ReactComponent {
         <.div(^.className:= "page-title",
           <.h1(p.form.descr)
         ),
-        p.data_handler.state match {
-          case FormDataHandler.State.Ready => p.form.elements
+        p.data_handler.handler_state match {
+          case FormDataHandler.HandlerState.Ready => p.form.elements
             .map(elem => element_renderer.render_form_element(elem))
             .toTagMod
-          case FormDataHandler.State.Loading => Processing()
+          case FormDataHandler.HandlerState.Loading => Processing()
         }
       )
     }
@@ -61,7 +61,7 @@ object FormEditorComponent extends ReactComponent {
 
   val component =
     ScalaComponent.builder[Props]("FormEditorComponent")
-      .initialState(State())
+      .initialState(State(0))
       .renderBackend[Backend]
       .componentDidMount(f => {
 //        f.modState(s => s.copy(

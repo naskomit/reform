@@ -3,32 +3,35 @@ package sysmo.reform.components.forms4
 import japgolly.scalajs.react.BackendScope
 import sysmo.reform.components.forms4.editors.{EditorAction, SetFieldValue}
 import sysmo.reform.shared.data.{form4 => F}
-import sysmo.reform.shared.data.form4.FieldEditor
+import sysmo.reform.shared.data.form4.{FieldEditor, GraphObject}
+import sysmo.reform.shared.gremlin.tplight.Graph
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.util.log.Logging
 
 import scala.concurrent.Future
 
-trait FormDataHandler extends Logging {
+abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
   import FormDataHandler._
-  val initial_data: F.ValueMap
-  var state: State = State.Ready
+  def initial_data: F.ValueMap
+  override def graph: Graph = _graph
+  var handler_state: HandlerState = HandlerState.Ready
+
+  var current_data: F.ValueMap = initial_data
   type BackendScopeType = BackendScope[FormEditorComponent.Props, FormEditorComponent.State]
   class Dispatcher($: BackendScopeType) extends EditorAction.Dispatcher {
     override def handle_action(action: EditorAction): Unit = {
-//      action match {
-//        case SetFieldValue(path, value) => $.modState(s => {
-//          val new_state = s.copy(data = s.data.map(_.update(path, value)))
-//          logger.debug(new_state.toString)
-//          new_state
-//        }).runNow()
-//      }
+      action match {
+        case SetFieldValue(path, value) => $.modState(s => {
+          current_data = current_data.update(path, value)
+          logger.debug(current_data.toString)
+          s.copy(render_ind = s.render_ind + 1)
+        }).runNow()
+      }
     }
   }
 
   def get_value(editor: FieldEditor): F.FieldValue[_] = {
-    logger.info(s"get_value: ${editor.path}")
-    initial_data(editor.path)
+    current_data(editor.path)
   }
 
   protected var dispatcher: Option[Dispatcher] = None
@@ -47,13 +50,13 @@ trait FormDataHandler extends Logging {
     }
   }
 
-  def get_choices(path: F.ElementPath, data: F.ValueMap): Future[Seq[LabeledValue[_]]]
+  def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]]
 }
 
 object FormDataHandler {
-  object State extends Enumeration {
+  object HandlerState extends Enumeration {
     val Loading, Ready = Value
   }
-  type State = State.Value
+  type HandlerState = HandlerState.Value
 
 }
