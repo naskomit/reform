@@ -51,7 +51,6 @@ object SelectEditorComponent extends AbstractEditor[String] {
       action_meta.action match {
         case "select-option" => {
           val original_choice = s.choices.find(c => c.value == choice.value).get
-          logger.info(original_choice.toString)
           p.data_handler.dispatch(SetFieldValue(p.editor.path, F.SomeValue(original_choice)))
         }
         case "deselect-option" => throw new IllegalArgumentException("deselect-option")

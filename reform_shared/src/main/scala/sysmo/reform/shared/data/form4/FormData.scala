@@ -18,23 +18,29 @@ case class SomeValue[+V](v: LabeledValue[V]) extends FieldValue[V] {
 case class MultiValue[+V](v: Seq[LabeledValue[V]]) extends FieldValue[V]
 
 object FieldValue {
-  def apply(x: String): FieldValue[String] = SomeValue(LabeledValue(x))
-  def apply(x: String, label: String): FieldValue[String] = SomeValue(LabeledValue(x, Some(label)))
-  def apply(x: Int): FieldValue[Int] = SomeValue(LabeledValue(x))
-  def apply(x: Int, label: String): FieldValue[Int] = SomeValue(LabeledValue(x, Some(label)))
-  def apply(x: Double): FieldValue[Double] = SomeValue(LabeledValue(x))
-  def apply(x: Double, label: String): FieldValue[Double] = SomeValue(LabeledValue(x, Some(label)))
-  def apply(x: Boolean): FieldValue[Boolean] = SomeValue(LabeledValue(x))
-  def apply(x: Boolean, label: String): FieldValue[Boolean] = SomeValue(LabeledValue(x, Some(label)))
-  def apply(x: Option[_]): FieldValue[_] = x match {
-    case None => NoValue
-    case Some(v: LabeledValue[_]) => SomeValue(v)
-    case Some(v) => SomeValue(LabeledValue(v))
+//  def apply(x: String): FieldValue[String] = SomeValue(LabeledValue(x))
+//  def apply(x: String, label: String): FieldValue[String] = SomeValue(LabeledValue(x, Some(label)))
+//  def apply(x: Int): FieldValue[Int] = SomeValue(LabeledValue(x))
+//  def apply(x: Int, label: String): FieldValue[Int] = SomeValue(LabeledValue(x, Some(label)))
+//  def apply(x: Double): FieldValue[Double] = SomeValue(LabeledValue(x))
+//  def apply(x: Double, label: String): FieldValue[Double] = SomeValue(LabeledValue(x, Some(label)))
+//  def apply(x: Boolean): FieldValue[Boolean] = SomeValue(LabeledValue(x))
+//  def apply(x: Boolean, label: String): FieldValue[Boolean] = SomeValue(LabeledValue(x, Some(label)))
+//  def apply(x: Option[_]): FieldValue[_] = x match {
+//    case None => NoValue
+//    case Some(v: LabeledValue[_]) => SomeValue(v)
+//    case Some(v) => SomeValue(LabeledValue(v))
+//  }
+//  def apply(x: Seq[_]): FieldValue[_] = MultiValue(x.map {
+//    case v: LabeledValue[_] => v
+//    case v => LabeledValue(v)
+//  })
+  object implicits {
+    implicit def str2expr(x: String): E.Constant = E.Constant(SomeValue(LabeledValue(x)))
+    implicit def float2expr(x: Double): E.Constant = E.Constant(SomeValue(LabeledValue(x)))
+    implicit def int2expr(x: Int): E.Constant = E.Constant(SomeValue(LabeledValue(x)))
+    implicit def bool2expr(x: Boolean): E.Constant = E.Constant(SomeValue(LabeledValue(x)))
   }
-  def apply(x: Seq[_]): FieldValue[_] = MultiValue(x.map {
-    case v: LabeledValue[_] => v
-    case v => LabeledValue(v)
-  })
 //  def apply[V](v: Any): FieldValue[V] = v match {
 //    case None => NoValue
 //    case Some(x) => SomeValue(LabeledValue[V](x))

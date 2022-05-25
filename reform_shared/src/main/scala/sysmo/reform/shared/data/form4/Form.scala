@@ -43,20 +43,8 @@ trait FormElement extends VertexObj {
   }
   def show(ctx: HandlerContext): E.Result[Boolean] = {
     val show_expr: Expression = vertex.value[E.Expression](Props.show_expr).getOrElse(E.Expression(true))
-    show_expr match {
-      case E.CommonPredicate(op, arg1, arg2) => {
-        println(s"arg1: ${E.Expression.eval(arg1, ctx)}")
-        println(s"arg2: ${E.Expression.eval(arg2, ctx)}")
-      }
-      case _ =>
-    }
     val res = E.as[Boolean](E.Expression.eval(show_expr, ctx))
-    println(s"show[$path]: $res")
     res
-
-//    val show_expr: Option[Vertex] = vertex.vertices(Direction.OUT, Seq("show_if"))
-//      .filter(v => v.label == "Expression").nextOption()
-//    show_expr.forall(_.asInstanceOf[ExressionNode].eval[Boolean])
   }
 }
 
@@ -194,7 +182,6 @@ object FormGroup {
     protected def add_element(element: FormElement): this.type = {
       val new_seq_num = vertex.edges(Direction.OUT, Seq(rel_element))
         .map(e => e.value[Int](seq_num).getOrElse(-1)).toSeq.sorted.lastOption.getOrElse(-1) + 1
-      println("new_seq_num: ", new_seq_num)
       vertex.add_edge(rel_element, element.vertex, (seq_num -> new_seq_num))
       this
     }

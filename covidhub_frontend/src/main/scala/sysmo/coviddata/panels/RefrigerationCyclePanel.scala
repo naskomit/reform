@@ -12,7 +12,7 @@ import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.concurrent.Future
 
-object AnalysisPanel2 extends ApplicationPanel {
+object RefrigerationCyclePanel extends ApplicationPanel {
   import japgolly.scalajs.react._
 
   case class Props(form: F.FormGroup, data_handler: FormDataHandler)
@@ -28,25 +28,9 @@ object AnalysisPanel2 extends ApplicationPanel {
 //      .componentDidMount(f => f.backend.init(f.props))
       .build
 
-//  val analysis_definition_form: F.Form = {
-//    F.Form.builder("analysis_definition")
-//      .field(_.select("general").label("General"))
-//      .field(_.char("analysis_name").label("Analysis Name"))
-//      .group(_.fieldset("dep_var").label("Dependent Variable")
-//        .field(_.select("bm_type").label("Biomarker Type"))
-//        .field(_.select("variable").label("Variable"))
-//        .field(_.select("panel").label("Panel"))
-//        .field(_.select("transformation").label("Transformation"))
-//        .field(_.select("biomarker").label("Biomarker"))
-//        .field(_.bool("scale").label("Scale"))
-//      )
-//      .group(_.fieldset("indep_var").label("Independent Variable"))
-//      .label("Analysis Definition")
-//      .build
-//  }
-
   val graph = MemGraph()
   val refrigeration_form: F.FormGroup = {
+    import F.FieldValue.implicits._
     F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
       .field(_.char("aname").descr("Analysis Name"))
 //      .field(_.int("n_cycles").descr("Number of cycles"))
@@ -55,13 +39,26 @@ object AnalysisPanel2 extends ApplicationPanel {
         .field(_.select("fluid").descr("Working fluid"))
         .field(_.float("flow_rate").descr("Fluid flow rate"))
         .field(_.select("warm_by").descr("Warm side defined by"))
-        .field(_.float("p_warm").descr("Warm side pressure").show(E.field("warm_by") === E(F.FieldValue("p"))))
-        .field(_.float("T_warm").descr("Warm side temperature").show(E.field("warm_by") === E(F.FieldValue("T"))))
+        .field(_.float("p_warm").descr("Warm side pressure").show(E.field("warm_by") === "p"))
+        .field(_.float("T_warm").descr("Warm side temperature").show(E.field("warm_by") === "T"))
         .field(_.select("cold_by").descr("Cold side defined by"))
-        .field(_.float("p_cold").descr("Cold side pressure"))
-        .field(_.float("T_cold").descr("Cold side temperature"))
-      )
-      .build
+        .field(_.float("p_cold").descr("Cold side pressure").show(E.field("cold_by") === "p"))
+        .field(_.float("T_cold").descr("Cold side temperature").show(E.field("cold_by") === "T"))
+      ).group("compressor", _.descr("Compressor")
+        .field(_.select("model"))
+        .field(_.float("isentropic_efficiency").show(E.field(("model")) === "isentropic"))
+        .field(_.float("heat_loss_factor").show(E.field(("model")) === "isentropic"))
+        .field(_.float("isosthermal_efficiency").show(E.field(("model")) === "isothermal"))
+        .field(_.float("temperature_increase").show(E.field(("model")) === "isothermal"))
+      ).group("condenser", _.descr("Condenser")
+        .field(_.select("outlet_by"))
+        .field(_.float("pressure").show(E.field("outlet_by") === "p"))
+        .field(_.float("temperature").show(E.field("outlet_by") === "T"))
+      ).group("evaporator", _.descr("Evaporator")
+        .field(_.select("outlet_by"))
+        .field(_.float("pressure").show(E.field("outlet_by") === "p"))
+        .field(_.float("temperature").show(E.field("outlet_by") === "T"))
+      ).build
   }
 
   val refrigeration_data_init: F.ValueMap = {
@@ -80,32 +77,33 @@ object AnalysisPanel2 extends ApplicationPanel {
           .value("p_cold", 1e5)
           .value("T_cold", 250)
         )
+        //.record("compressor", _.)
       )
       .build
-//      "cycle_params" -> ValueMap.fv(
-//        "fluid" -> "R134a".fv,
-//        "flow_rate" -> 1.5.fv
-//      )
-//    )
   }
 
   object refrigeration_data_handler extends FormDataHandler(graph) {
     override def initial_data: F.ValueMap = refrigeration_data_init
     override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
       val path = element.path
+      val thermodynamic_state_choices = Seq(
+        LabeledValue("p", Some("Pressure")),
+        LabeledValue("T", Some("Temperature"))
+      )
 //      logger.info(path.toString)
-      path.segments match {
-        case Seq(_, "cycle_params", "fluid") => Future(Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x)))
-        case Seq(_, "cycle_params", "warm_by") => Future(Seq(
-          LabeledValue("p", Some("Pressure")),
-          LabeledValue("T", Some("Temperature"))
-        ))
-        case Seq(_, "cycle_params", "cold_by") => Future(Seq(
-          LabeledValue("p", Some("Pressure")),
-          LabeledValue("T", Some("Temperature"))
-        ))
-        case _ => Future(Seq())
+      val choices = path.segments match {
+        case Seq(_, "cycle_params", "fluid") => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
+        case Seq(_, "cycle_params", "warm_by") => thermodynamic_state_choices
+        case Seq(_, "cycle_params", "cold_by") => thermodynamic_state_choices
+        case Seq(_, "condenser", "outlet_by") => thermodynamic_state_choices
+        case Seq(_, "evaporator", "outlet_by") => thermodynamic_state_choices
+        case Seq(_, "compressor", "model") => Seq(
+          LabeledValue("isentropic"),
+          LabeledValue("isothermal"),
+        )
+        case _ => Seq()
       }
+      Future(choices)
     }
 
   }
