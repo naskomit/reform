@@ -6,7 +6,7 @@ import io.circe.syntax._
 import sysmo.reform.util.log.Logging
 
 import scala.concurrent.Future
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 trait ChartService {
   def chart(cd: Ch.ChartRequest): Future[Ch.ChartResult]

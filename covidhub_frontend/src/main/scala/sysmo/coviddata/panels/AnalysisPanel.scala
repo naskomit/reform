@@ -9,7 +9,7 @@ import sysmo.reform.components.forms3.{FormDataHandler, FormEditorComponent}
 import F.{FormData => FD}
 import sysmo.reform.shared.util.LabeledValue
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.concurrent.Future
 
 object AnalysisPanel extends ApplicationPanel {

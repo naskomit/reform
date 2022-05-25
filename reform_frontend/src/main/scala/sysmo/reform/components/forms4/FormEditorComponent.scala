@@ -4,8 +4,9 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.{Processing, ReactComponent}
 import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.util.log.Logging
 
-case class FormElementRenderer(data_handler: FormDataHandler) {
+case class FormElementRenderer(data_handler: FormDataHandler) extends Logging {
   def render_form_element(elem: F.FormElement): VdomElement = {
     elem match {
       case x: F.FieldEditor => render_field_editor(x)
@@ -27,7 +28,15 @@ case class FormElementRenderer(data_handler: FormDataHandler) {
     <.div(
       ^.className:="page-subtitle",
       <.h3(group.descr),
-      group.elements.map(elem => render_form_element(elem)).toTagMod
+      group.elements
+        .filter(elem => elem.show(data_handler.context(group)) match {
+          case Right(x) => x
+          case Left(err) => {
+            logger.error(err)
+            true
+          }
+        })
+        .map(elem => render_form_element(elem)).toTagMod
     )
   }
 

@@ -54,7 +54,6 @@ sealed trait Expression {
 }
 
 object Expression {
-  type Result[T] = Either[EvalError, T]
 
   implicit class ResOps[T](x: Result[T]) {
     def to_error: Throwable = x.left.getOrElse(new Throwable())
@@ -76,7 +75,7 @@ object Expression {
     val >= : CmpFn = (x, y) => x >= y
   }
 
-  def num_compare(arg1: Expression, arg2: Expression, cmp_fn: CmpFn, ctx: Context): Result[Boolean] = {
+  def num_compare(arg1: Expression, arg2: Expression, cmp_fn: CmpFn, ctx: Context[_]): Result[Boolean] = {
     (as_float(eval(arg1, ctx)), as_float(eval(arg2, ctx))) match {
       case (Right(x), Right(y)) => Right(cmp_fn(x, y))
       case (Left(e), _) => Left(e)
@@ -84,7 +83,7 @@ object Expression {
     }
   }
 
-  def bool_eval_until(expr_list: List[PredicateExpression], until: Boolean, ctx: Context): Result[Boolean] = {
+  def bool_eval_until(expr_list: List[PredicateExpression], until: Boolean, ctx: Context[_]): Result[Boolean] = {
     if (expr_list.isEmpty)
       Right(!until)
     else {
@@ -98,7 +97,7 @@ object Expression {
     }
   }
 
-  def eval_seq(s: Seq[Expression], ctx: Context): Result[Seq[Any]] = {
+  def eval_seq(s: Seq[Expression], ctx: Context[_]): Result[Seq[Any]] = {
     s.foldLeft[Result[Seq[Any]]](Right(Seq[Any]())) {(acc, item) =>
       acc match {
         case Left(err) => Left(err)
@@ -110,7 +109,7 @@ object Expression {
     }
   }
 
-  def eval(expr: Expression, ctx: Context): Result[Any]  = {
+  def eval(expr: Expression, ctx: Context[_]): Result[Any]  = {
     expr match {
       case Constant(v) => Right(v)
       case FieldRef(id) => ctx.get(id).toRight(NoSuchFieldError(id))
@@ -226,14 +225,14 @@ object ContainmentPredicateOp extends PredicateOp {
 case class ContainmentPredicate(op: ContainmentPredicateOp.Value, element: Expression, container: Seq[Constant])
   extends PredicateExpression
 
-trait Context extends Map[String, Any]
+trait Context[+T] extends Map[String, T]
 
 object Context {
-  def apply(base: Map[String, Any]): Context = new Context {
-    override def removed(key: String): Map[String, Any] = base.removed(key)
-    override def updated[V1 >: Any](key: String, value: V1): Map[String, V1] = base.updated(key, value)
-    override def get(key: String): Option[Any] = base.get(key)
-    override def iterator: Iterator[(String, Any)] = base.iterator
+  def apply[T](base: Map[String, T]): Context[T] = new Context[T] {
+    override def removed(key: String): Map[String, T] = base.removed(key)
+    override def updated[V1 >: T](key: String, value: V1): Map[String, V1] = base.updated(key, value)
+    override def get(key: String): Option[T] = base.get(key)
+    override def iterator: Iterator[(String, T)] = base.iterator
   }
 }
 

@@ -9,7 +9,7 @@ import sysmo.reform.shared.data.{TableService, table => sdt}
 import sysmo.reform.shared.util.{Named, NamedValue}
 
 import scala.concurrent.Future
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.util.log.Logging
 
 // TODO this is specific

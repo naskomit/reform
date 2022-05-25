@@ -1,11 +1,19 @@
 package sysmo.reform.shared.data.form4
 
+import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, GraphTraversalBuilder, GraphTraversalSource, Vertex}
 import sysmo.reform.shared.util.INamed
-import sysmo.reform.shared.expr.{Expression => E}
+import sysmo.reform.shared.{expr => E}
 
 case class ElementPath(segments: Seq[String]) {
-  def / (k: String): ElementPath = ElementPath(segments :+ k)
+  def / (k: String): ElementPath = {
+    val key_segments: Seq[String] = k.split("/")
+    val new_segments: Seq[String] = key_segments.foldLeft(segments)((acc, segment) => segment match {
+      case ".." => if (acc.nonEmpty) acc.dropRight(1) else acc
+      case x => acc :+ x
+    })
+    ElementPath(new_segments)
+  }
   override def toString: String = segments.mkString("/")
 }
 object ElementPath {
@@ -18,32 +26,58 @@ trait ExressionNode extends VertexObj {
 }
 
 trait FormElement extends VertexObj {
+  import FormElement.Props
   def name: String = vertex.value[String]("name").get
+
   def descr: String = vertex.value[String]("descr").getOrElse(name)
+
   // TODO Very non-optimal, but need repeat for more efficient
   def parent: Option[FormElement] = g_this.in(FormGroup.rel_element).build.nextOption()
-    .map {v => new FormElement {val vertex = v}}
+    .map(v => FormElement.from_vertex(v))
+
   def path: ElementPath = {
     parent match {
       case Some(p) => p.path / name
       case None => ElementPath(Seq(name))
     }
   }
-  def show: Boolean = {
-    val show_expr: Option[Vertex] = vertex.vertices(Direction.OUT, Seq("show_if"))
-      .filter(v => v.label == "Expression").nextOption()
-    show_expr.forall(_.asInstanceOf[ExressionNode].eval[Boolean])
+  def show(ctx: HandlerContext): E.Result[Boolean] = {
+    val show_expr: Expression = vertex.value[E.Expression](Props.show_expr).getOrElse(E.Expression(true))
+    show_expr match {
+      case E.CommonPredicate(op, arg1, arg2) => {
+        println(s"arg1: ${E.Expression.eval(arg1, ctx)}")
+        println(s"arg2: ${E.Expression.eval(arg2, ctx)}")
+      }
+      case _ =>
+    }
+    val res = E.as[Boolean](E.Expression.eval(show_expr, ctx))
+    println(s"show[$path]: $res")
+    res
+
+//    val show_expr: Option[Vertex] = vertex.vertices(Direction.OUT, Seq("show_if"))
+//      .filter(v => v.label == "Expression").nextOption()
+//    show_expr.forall(_.asInstanceOf[ExressionNode].eval[Boolean])
   }
 }
 
 object FormElement {
+  object Props {
+    val descr = "descr"
+    val show_expr = "show_expr"
+  }
+
   trait Builder[+T] {
     protected val graph: Graph
     protected val name: String
     protected val _label: String
     lazy val vertex: Vertex = graph.add_vertex(_label, ("name" -> name))
+
     def descr(v: String): this.type = {
-      vertex.property("descr", v)
+      vertex.property(Props.descr, v)
+      this
+    }
+    def show(expr: E.Expression): this.type = {
+      vertex.property(Props.show_expr, expr)
       this
     }
     def build: T
@@ -141,9 +175,9 @@ object SelectEditor {
 
 case class FormGroup(val vertex: Vertex) extends FormElement {
   def elements: Seq[FormElement] = {
-    g_this.out("has_element").build
-      .toSeq.sortBy(x => x.value[Int](FormGroup.seq_num).getOrElse(0))
-      .map(FormElement.from_vertex)
+    g_this.outE(FormGroup.rel_element).build
+      .toSeq.sortBy(e => e.value[Int](FormGroup.seq_num).getOrElse(0))
+      .map(e => FormElement.from_vertex(e.in_vertex))
   }
 }
 
@@ -160,7 +194,8 @@ object FormGroup {
     protected def add_element(element: FormElement): this.type = {
       val new_seq_num = vertex.edges(Direction.OUT, Seq(rel_element))
         .map(e => e.value[Int](seq_num).getOrElse(-1)).toSeq.sorted.lastOption.getOrElse(-1) + 1
-      vertex.add_edge("has_element", element.vertex, (seq_num -> new_seq_num))
+      println("new_seq_num: ", new_seq_num)
+      vertex.add_edge(rel_element, element.vertex, (seq_num -> new_seq_num))
       this
     }
 

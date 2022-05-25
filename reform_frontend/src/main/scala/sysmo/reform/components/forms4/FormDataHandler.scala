@@ -2,6 +2,7 @@ package sysmo.reform.components.forms4
 
 import japgolly.scalajs.react.BackendScope
 import sysmo.reform.components.forms4.editors.{EditorAction, SetFieldValue}
+import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.data.form4.{FieldEditor, GraphObject}
 import sysmo.reform.shared.gremlin.tplight.Graph
@@ -30,9 +31,10 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
     }
   }
 
-  def get_value(editor: FieldEditor): F.FieldValue[_] = {
-    current_data(editor.path)
-  }
+  def context(base: F.FormElement): F.HandlerContext =
+    new F.HandlerContext(base, current_data)
+
+  def get_value(editor: FieldEditor): F.FieldValue[_] = current_data.get(editor.path)
 
   protected var dispatcher: Option[Dispatcher] = None
 

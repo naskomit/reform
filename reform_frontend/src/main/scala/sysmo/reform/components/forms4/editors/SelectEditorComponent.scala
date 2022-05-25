@@ -6,7 +6,7 @@ import sysmo.reform.components.forms4.FormDataHandler
 import sysmo.reform.components.select.ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.util.LabeledValue
-import scala.concurrent.ExecutionContext.Implicits.global
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 object SelectEditorComponent extends AbstractEditor[String] {
   case class Props(editor: F.SelectEditor, data_handler: FormDataHandler) {
@@ -19,7 +19,7 @@ object SelectEditorComponent extends AbstractEditor[String] {
 
     def render(p: Props, s: State): VdomElement = {
       val value = p.value match {
-        case F.SomeValue(v) => Some(v)
+        case F.SomeValue(v) => Some(label_value(v, s))
         case _ => None
       }
 
@@ -35,11 +35,23 @@ object SelectEditorComponent extends AbstractEditor[String] {
       )
     }
 
+    def label_value(x: LabeledValue[_], s: State): LabeledValue[_] = x match {
+      case LabeledValue(value, Some(label)) => x
+      case LabeledValue(value, None) if s.choices.nonEmpty => s.choices.find(_.value == value).getOrElse(x)
+      case _ => x
+    }
+
+    def load_choices(p: Props, s: State): AsyncCallback[Unit] = {
+      $.modState(s => s.copy(is_loading = true)).async >>
+        AsyncCallback.fromFuture(p.data_handler.get_choices(p.editor)) >>=
+        {choices => $.modState(s => s.copy(choices = choices, is_loading = false)).async}
+    }
     def on_change(p: Props, s: State): RSNC.OnChange = (choice: RSNC.Choice, action_meta: RSNC.ActionMeta) => {
-      logger.info(action_meta.action)
+      logger.info(s"[on_change]: ${action_meta.action} / ${choice.value} : ${choice.label}")
       action_meta.action match {
         case "select-option" => {
           val original_choice = s.choices.find(c => c.value == choice.value).get
+          logger.info(original_choice.toString)
           p.data_handler.dispatch(SetFieldValue(p.editor.path, F.SomeValue(original_choice)))
         }
         case "deselect-option" => throw new IllegalArgumentException("deselect-option")
@@ -51,15 +63,11 @@ object SelectEditorComponent extends AbstractEditor[String] {
     }
 
     def on_input_change(p: Props, s: State): RSNC.OnInputChange = (value: String, action_meta: RSNC.ActionMeta) => {
-      logger.info(value)
-      logger.info(action_meta.action)
+//      logger.info(value)
+//      logger.info(action_meta.action)
     }
 
-    def on_menu_open(p: Props, s: State): RSNC.OnMenuOpen = () => {
-      // load choices
-      p.data_handler.get_choices(p.editor)
-        .map(choices => $.modState(s => s.copy(choices = choices)).runNow())
-    }
+    def on_menu_open(p: Props, s: State): RSNC.OnMenuOpen = () => load_choices(p, s).runNow()
   }
 
 
@@ -70,12 +78,10 @@ object SelectEditorComponent extends AbstractEditor[String] {
 
   val component =
     ScalaComponent.builder[Props]("StringEditor")
-      .initialState(State(Seq(), is_loading = false))
+      .initialState(State(Seq(), is_loading = true))
       .renderBackend[Backend]
-      //      .componentDidMount(f => Callback {
-      //        f.backend.action_generator.start(f.props.action_listener)
-      //      })
-      //      .configure(Reusability.shouldComponentUpdate)
+      .componentDidMount(f => f.backend.load_choices(f.props, f.state))
+//            .configure(Reusability.shouldComponentUpdate)
       .build
 
   def apply(editor: F.SelectEditor, data_handler: FormDataHandler): Unmounted = {

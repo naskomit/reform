@@ -4,7 +4,7 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.syntax._
 import io.circe.parser._
 import scala.concurrent.Future
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.scalajs.js
 import org.scalajs.dom
 

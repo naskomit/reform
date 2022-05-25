@@ -10,7 +10,7 @@ import sysmo.reform.shared.{data => D}
 import sysmo.reform.shared.data.form.{FieldOptionProvider, FieldValue, NoValue, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
 
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 object AsyncSelectEditor extends AbstractEditor {
   import ReactSelectFacades.{ReactSelectNativeComponent => RSNC}

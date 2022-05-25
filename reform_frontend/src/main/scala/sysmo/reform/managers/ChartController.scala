@@ -9,7 +9,7 @@ import sysmo.reform.shared.{chart => Ch}
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
 
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.concurrent.Future
 
 trait ChartController[U <: ChartSettings] {

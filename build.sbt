@@ -106,6 +106,7 @@ lazy val reform_frontend = project
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.0.0",
+      "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
       "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
       "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
       "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",

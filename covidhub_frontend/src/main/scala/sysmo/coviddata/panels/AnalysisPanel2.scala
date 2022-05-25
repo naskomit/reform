@@ -6,9 +6,10 @@ import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.shared.gremlin.memg.MemGraph
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.shared.expr.{Expression => E}
 import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.concurrent.Future
 
 object AnalysisPanel2 extends ApplicationPanel {
@@ -54,8 +55,8 @@ object AnalysisPanel2 extends ApplicationPanel {
         .field(_.select("fluid").descr("Working fluid"))
         .field(_.float("flow_rate").descr("Fluid flow rate"))
         .field(_.select("warm_by").descr("Warm side defined by"))
-        .field(_.float("p_warm").descr("Warm side pressure"))
-        .field(_.float("T_warm").descr("Warm side temperature"))
+        .field(_.float("p_warm").descr("Warm side pressure").show(E.field("warm_by") === E(F.FieldValue("p"))))
+        .field(_.float("T_warm").descr("Warm side temperature").show(E.field("warm_by") === E(F.FieldValue("T"))))
         .field(_.select("cold_by").descr("Cold side defined by"))
         .field(_.float("p_cold").descr("Cold side pressure"))
         .field(_.float("T_cold").descr("Cold side temperature"))
@@ -92,7 +93,7 @@ object AnalysisPanel2 extends ApplicationPanel {
     override def initial_data: F.ValueMap = refrigeration_data_init
     override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
       val path = element.path
-      logger.info(path.toString)
+//      logger.info(path.toString)
       path.segments match {
         case Seq(_, "cycle_params", "fluid") => Future(Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x)))
         case Seq(_, "cycle_params", "warm_by") => Future(Seq(
