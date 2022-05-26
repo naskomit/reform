@@ -40,7 +40,7 @@ trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
         s.status match {
           case Valid => ""
           case Error(msg, value) => <.span(^.className := "help-block", msg)
-          case Warning(msg, value) => <.span(^.className := "help-block", msg)
+          case Warning(msg, value) => <.span(^.className := "help-block text-danger", msg)
         }
 
       )

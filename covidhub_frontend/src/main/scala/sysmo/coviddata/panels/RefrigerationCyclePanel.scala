@@ -33,31 +33,41 @@ object RefrigerationCyclePanel extends ApplicationPanel {
     import F.FieldValue.implicits._
     F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
       .field(_.char("aname").descr("Analysis Name"))
-//      .field(_.int("n_cycles").descr("Number of cycles"))
-//      .field(_.bool("save").descr("Save analysis"))
-      .group("cycle_params", _.descr("Cycle Parameters")
-        .field(_.select("fluid").descr("Working fluid"))
-        .field(_.float("flow_rate").descr("Fluid flow rate"))
-        .field(_.select("warm_by").descr("Warm side defined by"))
-        .field(_.float("p_warm").descr("Warm side pressure").show(E.field("warm_by") === "p"))
-        .field(_.float("T_warm").descr("Warm side temperature").show(E.field("warm_by") === "T"))
-        .field(_.select("cold_by").descr("Cold side defined by"))
-        .field(_.float("p_cold").descr("Cold side pressure").show(E.field("cold_by") === "p"))
-        .field(_.float("T_cold").descr("Cold side temperature").show(E.field("cold_by") === "T"))
-      ).group("compressor", _.descr("Compressor")
-        .field(_.select("model"))
-        .field(_.float("isentropic_efficiency").show(E.field(("model")) === "isentropic"))
-        .field(_.float("heat_loss_factor").show(E.field(("model")) === "isentropic"))
-        .field(_.float("isosthermal_efficiency").show(E.field(("model")) === "isothermal"))
-        .field(_.float("temperature_increase").show(E.field(("model")) === "isothermal"))
-      ).group("condenser", _.descr("Condenser")
-        .field(_.select("outlet_by"))
-        .field(_.float("pressure").show(E.field("outlet_by") === "p"))
-        .field(_.float("temperature").show(E.field("outlet_by") === "T"))
-      ).group("evaporator", _.descr("Evaporator")
-        .field(_.select("outlet_by"))
-        .field(_.float("pressure").show(E.field("outlet_by") === "p"))
-        .field(_.float("temperature").show(E.field("outlet_by") === "T"))
+      .field(_.int("n_cycles").descr("Number of cycles"))
+      .field(_.bool("save").descr("Save analysis"))
+      .group("cycle_definition", _.descr("Cycle definition")
+        .group("cycle_params", _.descr("Cycle Parameters")
+          .field(_.select("fluid").descr("Working fluid"))
+          .field(_.float("flow_rate").descr("Fluid flow rate"))
+          .field(_.select("warm_by").descr("Warm side defined by"))
+          .field(_.float("p_warm").descr("Warm side pressure").show(E.field("warm_by") === "p"))
+          .field(_.float("T_warm").descr("Warm side temperature").show(E.field("warm_by") === "T"))
+          .field(_.select("cold_by").descr("Cold side defined by"))
+          .field(_.float("p_cold").descr("Cold side pressure").show(E.field("cold_by") === "p"))
+          .field(_.float("T_cold").descr("Cold side temperature").show(E.field("cold_by") === "T"))
+        ).group("compressor", _.descr("Compressor")
+          .field(_.select("model"))
+          .field(_.float("isentropic_efficiency").show(E.field(("model")) === "isentropic"))
+          .field(_.float("heat_loss_factor").show(E.field(("model")) === "isentropic"))
+          .field(_.float("isosthermal_efficiency").show(E.field(("model")) === "isothermal"))
+          .field(_.float("temperature_increase").show(E.field(("model")) === "isothermal"))
+        ).group("condenser", _.descr("Condenser")
+          .field(_.select("outlet_by"))
+          .field(_.float("pressure").show(E.field("outlet_by") === "p"))
+          .field(_.float("temperature").show(E.field("outlet_by") === "T"))
+        ).group("evaporator", _.descr("Evaporator")
+          .field(_.select("outlet_by"))
+          .field(_.float("pressure").show(E.field("outlet_by") === "p"))
+          .field(_.float("temperature").show(E.field("outlet_by") === "T"))
+        )
+      ).group("diagram_settings", _.descr("Diagram settings")
+        .field(_.bool("create_process_diagram"))
+        .field(_.bool("isotherms"))
+        .field(_.bool("isochorees"))
+        .field(_.bool("isentrops"))
+      ).group("solver", _.descr("Solver")
+      ).group("result", _.descr("Results")
+
       ).build
   }
 
@@ -90,14 +100,14 @@ object RefrigerationCyclePanel extends ApplicationPanel {
         LabeledValue("p", Some("Pressure")),
         LabeledValue("T", Some("Temperature"))
       )
-//      logger.info(path.toString)
+      logger.info(path.toString)
       val choices = path.segments match {
-        case Seq(_, "cycle_params", "fluid") => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
-        case Seq(_, "cycle_params", "warm_by") => thermodynamic_state_choices
-        case Seq(_, "cycle_params", "cold_by") => thermodynamic_state_choices
-        case Seq(_, "condenser", "outlet_by") => thermodynamic_state_choices
-        case Seq(_, "evaporator", "outlet_by") => thermodynamic_state_choices
-        case Seq(_, "compressor", "model") => Seq(
+        case Seq(_, "cycle_definition", "cycle_params", "fluid") => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
+        case Seq(_, "cycle_definition", "cycle_params", "warm_by") => thermodynamic_state_choices
+        case Seq(_, "cycle_definition", "cycle_params", "cold_by") => thermodynamic_state_choices
+        case Seq(_, "cycle_definition", "condenser", "outlet_by") => thermodynamic_state_choices
+        case Seq(_, "cycle_definition", "evaporator", "outlet_by") => thermodynamic_state_choices
+        case Seq(_, "cycle_definition", "compressor", "model") => Seq(
           LabeledValue("isentropic"),
           LabeledValue("isothermal"),
         )

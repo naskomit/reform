@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.docker._
 
 ThisBuild / organization := "sysmo"
 ThisBuild / scalaVersion := "2.13.5"
-ThisBuild / version      := "0.1.0-SNAPSHOT"
+ThisBuild / version      := "0.1.1-SNAPSHOT"
 
 ThisBuild / javaOptions ++= Seq(
   "-Dpidfile.path=/dev/null",
@@ -111,7 +111,6 @@ lazy val reform_frontend = project
       "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
       "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
       "com.lihaoyi" %%% "autowire" % "0.3.3",
-      //    "com.lihaoyi" %%% "upickle" % "1.4.3",
       //    "org.typelevel" %%% "cats-effect" % "3.3.5",
       //    "co.fs2" %%% "fs2-core" % "3.2.0",
       "io.monix" %%% "monix" % "3.4.0",
