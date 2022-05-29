@@ -8,8 +8,10 @@ import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.expr.{Expression => E}
 import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
-
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import sysmo.reform.components.layouts.{NamedContent, TabbedLayout}
+import japgolly.scalajs.react.vdom.html_<^._
+
 import scala.concurrent.Future
 
 object RefrigerationCyclePanel extends ApplicationPanel {
@@ -18,7 +20,17 @@ object RefrigerationCyclePanel extends ApplicationPanel {
   case class Props(form: F.FormGroup, data_handler: FormDataHandler)
   case class State()
   final class Backend($: BackendScope[Props, State]) {
-    def render (p: Props, s: State): VdomElement = FormEditorComponent(p.form, p.data_handler)
+    def render (p: Props, s: State): VdomElement = {
+      <.div(
+        TabbedLayout(Seq(
+          NamedContent("Tab 1", <.div("The whole of life is just like watching a film. Only it’s as though you always get in ten minutes after the big picture has started, and no-one will tell you the plot, so you have to work it out all yourself from the clues. —from Moving Pictures")),
+          NamedContent("Tab 2", <.div("Real stupidity beats artificial intelligence every time. —from Hogfather")),
+          NamedContent("Tab 3", <.div("It’s not worth doing something unless someone, somewhere, would much rather you weren’t doing it. —from the foreword to The Ultimate Encyclopedia of Fantasy, by David Pringle")),
+          NamedContent("Tab 4", <.div("There are times in life when people must know when not to let go. Balloons are designed to teach small children this.")),
+        )),
+        FormEditorComponent(p.form, p.data_handler)
+      )
+    }
   }
 
   val component =
