@@ -28,11 +28,12 @@ object ElementPath {
 //}
 
 trait FormElementDef extends VertexDef {
-  object Props extends PropertyDef {
+  trait Props extends PropertyDef {
     val name = GO.Property[String]("name")
     val descr = GO.Property[String]("descr")
     val show_expr = GO.Property[E.Expression]("show_expr", Some(E.Expression(true)))
   }
+  val props = new Props {}
 }
 
 trait FormElement extends GO.VertexObj {
@@ -65,11 +66,11 @@ object FormElement {
     lazy val vertex: Vertex = graph.add_vertex(ed.label, ("name" -> name))
 
     def descr(v: String): this.type = {
-      vertex.property(ed.Props.descr.name, v)
+      vertex.property(ed.props.descr.name, v)
       this
     }
     def show(expr: E.Expression): this.type = {
-      vertex.property(ed.Props.show_expr.name, expr)
+      vertex.property(ed.props.show_expr.name, expr)
       this
     }
     def build: T
@@ -173,15 +174,36 @@ object BooleanEditor {
 case class SelectEditor(val vertex: Vertex) extends FieldEditor {
   override type ED = SelectEditor.Def.type
   override val ed: ED = SelectEditor.Def
+  def multiple: Boolean = get(_.multiple).getOrElse(false)
+  def min: Option[Int] = get(_.min)
+  def max: Option[Int] = get(_.max)
 }
 
 object SelectEditor {
   object Def extends FormElementDef {
+    trait Props extends super.Props {
+      val multiple = GO.Property[Boolean]("multiple", Some(false))
+      val min = GO.Property[Int]("min")
+      val max = GO.Property[Int]("max")
+    }
+    override val props = new Props {}
     val label: String = "SelectEditor"
   }
 
   class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[SelectEditor] {
     override protected val ed: Def.type = Def
+    def multiple(max: Option[Int] = None, min: Option[Int] = None): this.type = {
+      vertex.property(Def.props.multiple.name, true)
+      max match {
+        case Some(x) => vertex.property(Def.props.max.name, x)
+        case None => vertex.property(Def.props.max.name).remove()
+      }
+      min match {
+        case Some(x) => vertex.property(Def.props.min.name, x)
+        case None => vertex.property(Def.props.min.name).remove()
+      }
+      this
+    }
     override def build: SelectEditor = {
       new SelectEditor(vertex)
     }
@@ -207,9 +229,10 @@ case class HasElement(edge: Edge) extends EdgeObj {
 
 object HasElementDef extends EdgeDef {
   override val label: String = "has_element"
-  object Props extends PropertyDef {
+  trait Props extends PropertyDef {
     val seq_num = Property[Int]("seq_num")
   }
+  val props = new Props {}
 }
 
 object FormGroup {
@@ -225,9 +248,8 @@ object FormGroup {
     override protected val ed: Def.type = Def
     protected def add_element(element: FormElement): this.type = {
       val new_seq_num = vertex.edges(Direction.OUT, Seq(HasElementDef.label))
-        .map(e => HasElement(e))
-        .map(e => e.get(_.seq_num).getOrElse(-1)).toSeq.sorted.lastOption.getOrElse(-1) + 1
-      vertex.add_edge(HasElementDef.label, element.vertex, (HasElementDef.Props.seq_num.name -> new_seq_num))
+        .map(e => HasElement(e).get(_.seq_num).get).toSeq.sorted.lastOption.getOrElse(-1) + 1
+      vertex.add_edge(HasElementDef.label, element.vertex, (HasElementDef.props.seq_num.name -> new_seq_num))
       this
     }
 

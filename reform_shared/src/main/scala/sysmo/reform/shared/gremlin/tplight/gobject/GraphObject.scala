@@ -21,18 +21,18 @@ trait PropertyDef
 
 trait ElementDef {
   val label: String
-  val Props: PropertyDef
+  type Props <: PropertyDef
+  val props: Props
 
 }
 
 trait ElementObj extends GraphObject {
   type ED <: ElementDef
   val ed: ED
-  type Props = ed.Props.type
-//  def props: Props = ed.Props
+  type Props = ed.Props
   def element: Element
   def get[T](f: Props => Property[T]): Option[T] = {
-    val p = f(ed.Props)
+    val p = f(ed.props)
     element.value[T](p.name) match {
       case Some(x) => Some(x)
       case None => p.default
@@ -40,7 +40,7 @@ trait ElementObj extends GraphObject {
   }
 
   def update(f_list: (Props => SetPropertyValue[_])*): Unit = {
-    val updates = f_list.map(f => f(ed.Props))
+    val updates = f_list.map(f => f(ed.props))
     update(PropertiesUpdate(updates))
   }
 

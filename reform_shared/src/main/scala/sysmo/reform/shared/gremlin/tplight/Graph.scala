@@ -82,7 +82,7 @@ trait Property[+V] {
   def is_present: Boolean = value.isDefined
   def or_else[SV >: V](other: => SV): SV = value.getOrElse(other)
   def empty: Property[V] = Property.empty
-  def remove(): Unit = {}
+  def remove(): Unit
 }
 
 object Property {
@@ -90,6 +90,7 @@ object Property {
     val key = ""
     val value = None
     val element = null
+    def remove(): Unit = {}
   }
 
   def empty[V]: Property[V] = _empty

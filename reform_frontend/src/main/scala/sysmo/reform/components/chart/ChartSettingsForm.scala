@@ -2,7 +2,6 @@ package sysmo.reform.components.chart
 
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms.StreamingFormEditor
 import sysmo.reform.managers.ChartController
 import sysmo.reform.shared.chart.ChartSettings
 import sysmo.reform.util.TypeSingleton
@@ -26,10 +25,10 @@ class ChartSettingsForm[U <: ChartSettings : ClassTag] extends ReactComponent {
         <.h2("Settings"),
         // rec_manager: StreamingRecordManager[U], record_id: String,
         //                         meta: RecordMeta[U], layout : FormLayout = ColumnarLayout(2)
-        StreamingFormEditor(
-          p.chart_manager.rec_mngr, "",
-          p.chart_manager.settings_meta
-        )
+//        StreamingFormEditor(
+//          p.chart_manager.rec_mngr, "",
+//          p.chart_manager.settings_meta
+//        )
       )
     }
   }

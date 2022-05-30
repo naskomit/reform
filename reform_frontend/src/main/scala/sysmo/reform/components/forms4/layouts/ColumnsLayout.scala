@@ -19,7 +19,7 @@ case class Builder(p: ColumnsLayoutComponent.Props, children: PropsChildren) {
   private val grid: mutable.ArrayBuffer[VdomElement] = mutable.ArrayBuffer()
   private var row_index = 0
   private var elem_index = 0
-  private val base_col_width = 0.25
+  private val base_col_width = 0.33
 
   def build_row: Unit = {
     val key = row_index.toString

@@ -55,13 +55,9 @@ object BooleanEditorComponent extends AbstractEditor[Boolean] {
   //  implicit val state_reuse = Reusability.derive[State]
 
   val component =
-    ScalaComponent.builder[Props]("StringEditor")
+    ScalaComponent.builder[Props]("BooleanEditor")
       .initialState(State())
       .renderBackend[Backend]
-      //      .componentDidMount(f => Callback {
-      //        f.backend.action_generator.start(f.props.action_listener)
-      //      })
-      //      .configure(Reusability.shouldComponentUpdate)
       .build
 
   def apply(editor: F.BooleanEditor, data_handler: FormDataHandler): Unmounted = {

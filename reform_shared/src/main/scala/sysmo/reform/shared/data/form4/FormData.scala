@@ -96,6 +96,7 @@ object ValueMap {
     def value(k: String, v: Double): this.type = value(k, SomeValue(LabeledValue(v)))
     def value(k: String, v: Boolean): this.type = value(k, SomeValue(LabeledValue(v)))
     def value(k: String, v: String): this.type = value(k, SomeValue(LabeledValue(v)))
+    def value(k: String, v: Seq[_]): this.type = value(k, MultiValue(v.map(LabeledValue(_))))
 
     def build: ValueMap = new ValueMap(data)
   }

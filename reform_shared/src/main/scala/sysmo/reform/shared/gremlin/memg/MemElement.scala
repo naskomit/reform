@@ -6,23 +6,23 @@ import sysmo.reform.shared.gremlin.tplight.Property
 import scala.collection.mutable
 
 trait MemElement extends Element {
-  protected val properties: mutable.HashMap[String, Property[_]] = mutable.HashMap()
+  protected[memg] val _properties: mutable.HashMap[String, Property[_]] = mutable.HashMap()
 
   /** Returns set of property keys */
-  override def keys: Set[String] = properties.keys.toSet
+  override def keys: Set[String] = _properties.keys.toSet
 
   /** Returns property */
   override def property[V](key: String): Property[V] =
-    properties.getOrElse(key, Property.empty[V]).asInstanceOf[Property[V]]
+    _properties.getOrElse(key, Property.empty[V]).asInstanceOf[Property[V]]
 
   /** Set or update property */
   override def property[V](key: String, value: V): Property[V] = {
     val prop = new MemProperty[V](key, Some(value), this)
-    properties += (key -> prop)
+    _properties += (key -> prop)
     prop
   }
 
   /** Returns property value */
   override def value[V](key: String): Option[V] =
-    properties.get(key).flatMap(x => x.value).map(_.asInstanceOf[V])
+    _properties.get(key).flatMap(x => x.value).map(_.asInstanceOf[V])
 }

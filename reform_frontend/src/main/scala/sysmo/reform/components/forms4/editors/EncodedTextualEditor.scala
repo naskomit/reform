@@ -75,14 +75,6 @@ trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
     ScalaComponent.builder[Props](display_name)
       .initialStateFromProps(p => State(format(p.value), Valid, focused = false))
       .renderBackend[Backend]
-      //      .componentDidMount(f => Callback {
-      //        f.backend.action_generator.start(f.props.action_listener)
-      //      })
-      //      .configure(Reusability.shouldComponentUpdate)
       .build
-
-//  def apply(editor: FloatEditor, value: ValueType, form_dispatcher: EditorAction.Dispatcher): Unmounted = {
-//    component(Props(editor, value, form_dispatcher))
-//  }
 
 }
