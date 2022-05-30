@@ -1,6 +1,7 @@
 package sysmo.reform.shared.gremlin.tplight.steps.map
 
-import sysmo.reform.shared.gremlin.tplight.{Element, Property, Traversal, Traverser}
+import sysmo.reform.shared.gremlin.tplight.Property
+import sysmo.reform.shared.gremlin.tplight.{Element, Traversal, Traverser}
 
 
 class PropertyMapStep[E](keys: Seq[String]) extends MapStep[Element, Map[String, E]] {

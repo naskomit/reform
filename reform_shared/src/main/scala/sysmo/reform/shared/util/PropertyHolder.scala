@@ -2,7 +2,7 @@ package sysmo.reform.shared.util
 
 import scala.collection.mutable
 
-case class Property[T](val name: String, val default: T) {
+case class Property[T](name: String, default: T) {
   def :=(v: T): (Property[T], Option[T]) = {
     (this, Some(v))
   }

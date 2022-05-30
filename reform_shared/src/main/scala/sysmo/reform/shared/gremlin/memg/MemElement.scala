@@ -1,6 +1,7 @@
 package sysmo.reform.shared.gremlin.memg
 
-import sysmo.reform.shared.gremlin.tplight.{Element, Property}
+import sysmo.reform.shared.gremlin.tplight.Element
+import sysmo.reform.shared.gremlin.tplight.Property
 
 import scala.collection.mutable
 

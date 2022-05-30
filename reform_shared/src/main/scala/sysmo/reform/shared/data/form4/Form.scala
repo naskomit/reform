@@ -1,6 +1,8 @@
 package sysmo.reform.shared.data.form4
 
 import sysmo.reform.shared.expr.Expression
+import sysmo.reform.shared.gremlin.tplight.gobject.{EdgeDef, EdgeObj, Property, PropertyDef, VertexDef}
+import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
 import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, GraphTraversalBuilder, GraphTraversalSource, Vertex}
 import sysmo.reform.shared.util.INamed
 import sysmo.reform.shared.{expr => E}
@@ -21,18 +23,25 @@ object ElementPath {
 }
 
 
-trait ExressionNode extends VertexObj {
-  def eval[T]: T
+//trait ExressionNode extends GO.VertexObj {
+//  def eval[T]: T
+//}
+
+trait FormElementDef extends VertexDef {
+  object Props extends PropertyDef {
+    val name = GO.Property[String]("name")
+    val descr = GO.Property[String]("descr")
+    val show_expr = GO.Property[E.Expression]("show_expr", Some(E.Expression(true)))
+  }
 }
 
-trait FormElement extends VertexObj {
-  import FormElement.Props
-  def name: String = vertex.value[String]("name").get
-
-  def descr: String = vertex.value[String]("descr").getOrElse(name)
+trait FormElement extends GO.VertexObj {
+  override type ED <: FormElementDef
+  def name: String = get(_.name).get
+  def descr: String = get(_.descr).getOrElse(name)
 
   // TODO Very non-optimal, but need repeat for more efficient
-  def parent: Option[FormElement] = g_this.in(FormGroup.rel_element).build.nextOption()
+  def parent: Option[FormElement] = g_this.in(HasElementDef.label).build.nextOption()
     .map(v => FormElement.from_vertex(v))
 
   def path: ElementPath = {
@@ -42,51 +51,46 @@ trait FormElement extends VertexObj {
     }
   }
   def show(ctx: HandlerContext): E.Result[Boolean] = {
-    val show_expr: Expression = vertex.value[E.Expression](Props.show_expr).getOrElse(E.Expression(true))
+    val show_expr: Expression = get(_.show_expr).get
     val res = E.as[Boolean](E.Expression.eval(show_expr, ctx))
     res
   }
 }
 
 object FormElement {
-  object Props {
-    val descr = "descr"
-    val show_expr = "show_expr"
-  }
-
-  trait Builder[+T] {
+  trait Builder[+T <: FormElement] {
+    protected val ed: FormElementDef
     protected val graph: Graph
     protected val name: String
-    protected val _label: String
-    lazy val vertex: Vertex = graph.add_vertex(_label, ("name" -> name))
+    lazy val vertex: Vertex = graph.add_vertex(ed.label, ("name" -> name))
 
     def descr(v: String): this.type = {
-      vertex.property(Props.descr, v)
+      vertex.property(ed.Props.descr.name, v)
       this
     }
     def show(expr: E.Expression): this.type = {
-      vertex.property(Props.show_expr, expr)
+      vertex.property(ed.Props.show_expr.name, expr)
       this
     }
     def build: T
   }
 
   def from_vertex(v: Vertex): FormElement = v.label match {
-    case StringEditor.label => StringEditor(v)
-    case FloatEditor.label => FloatEditor(v)
-    case IntegerEditor.label => IntegerEditor(v)
-    case BooleanEditor.label => BooleanEditor(v)
-    case SelectEditor.label => SelectEditor(v)
-    case FormGroup.label => FormGroup(v)
+    case StringEditor.Def.label => StringEditor(v)
+    case FloatEditor.Def.label => FloatEditor(v)
+    case IntegerEditor.Def.label => IntegerEditor(v)
+    case BooleanEditor.Def.label => BooleanEditor(v)
+    case SelectEditor.Def.label => SelectEditor(v)
+    case FormGroup.Def.label => FormGroup(v)
   }
 }
 
-sealed trait FieldEditor extends FormElement {
+trait FieldEditor extends FormElement {
 
 }
 
 object FieldEditor {
-  trait Builder[+T] extends FormElement.Builder[T]
+  trait Builder[+T <: FieldEditor] extends FormElement.Builder[T]
   type BuilderBase = Builder[FieldEditor]
   class BuilderSource(graph: Graph) {
     def char(name: String): StringEditor.Builder = new StringEditor.Builder(graph, name)
@@ -97,11 +101,16 @@ object FieldEditor {
   }}
 
 case class StringEditor(val vertex: Vertex) extends FieldEditor {
+  override type ED = StringEditor.Def.type
+  override val ed: ED = StringEditor.Def
 }
+
 object StringEditor {
-  val label: String = "StringEditor"
+  object Def extends FormElementDef {
+    val label = "StringEditor"
+  }
   class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[StringEditor] {
-    override protected val _label: String = label
+    override protected val ed: Def.type = Def
     override def build: StringEditor = {
       StringEditor(vertex)
     }
@@ -109,12 +118,16 @@ object StringEditor {
 }
 
 case class FloatEditor(val vertex: Vertex) extends FieldEditor {
+  override type ED = FloatEditor.Def.type
+  override val ed: ED = FloatEditor.Def
 }
 
 object FloatEditor {
-  val label: String = "FloatEditor"
+  object Def extends FormElementDef {
+    val label: String = "FloatEditor"
+  }
   class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[FloatEditor] {
-    override protected val _label: String = label
+    override protected val ed: Def.type = Def
     override def build: FloatEditor = {
       FloatEditor(vertex)
     }
@@ -122,12 +135,17 @@ object FloatEditor {
 }
 
 case class IntegerEditor(val vertex: Vertex) extends FieldEditor {
+  override type ED = IntegerEditor.Def.type
+  override val ed: ED = IntegerEditor.Def
 }
 
 object IntegerEditor {
-  val label: String = "IntegerEditor"
+  object Def extends FormElementDef {
+    val label: String = "IntegerEditor"
+  }
+
   class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[IntegerEditor] {
-    override protected val _label: String = label
+    override protected val ed: Def.type = Def
     override def build: IntegerEditor = {
       IntegerEditor(vertex)
     }
@@ -135,12 +153,17 @@ object IntegerEditor {
 }
 
 case class BooleanEditor(val vertex: Vertex) extends FieldEditor {
+  override type ED = BooleanEditor.Def.type
+  override val ed: ED = BooleanEditor.Def
 }
 
 object BooleanEditor {
-  val label: String = "BooleanEditor"
+  object Def extends FormElementDef {
+    val label: String = "BooleanEditor"
+  }
+
   class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[BooleanEditor] {
-    override protected val _label: String = label
+    override protected val ed: Def.type = Def
     override def build: BooleanEditor = {
       BooleanEditor(vertex)
     }
@@ -148,12 +171,17 @@ object BooleanEditor {
 }
 
 case class SelectEditor(val vertex: Vertex) extends FieldEditor {
+  override type ED = SelectEditor.Def.type
+  override val ed: ED = SelectEditor.Def
 }
 
 object SelectEditor {
-  val label: String = "SelectEditor"
+  object Def extends FormElementDef {
+    val label: String = "SelectEditor"
+  }
+
   class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[SelectEditor] {
-    override protected val _label: String = label
+    override protected val ed: Def.type = Def
     override def build: SelectEditor = {
       new SelectEditor(vertex)
     }
@@ -162,27 +190,44 @@ object SelectEditor {
 }
 
 case class FormGroup(val vertex: Vertex) extends FormElement {
+  override type ED = FormGroup.Def.type
+  override val ed: ED = FormGroup.Def
+
   def elements: Seq[FormElement] = {
-    g_this.outE(FormGroup.rel_element).build
-      .toSeq.sortBy(e => e.value[Int](FormGroup.seq_num).getOrElse(0))
+    g_this.outE(HasElementDef.label).build
+      .toSeq.sortBy(e => HasElement(e).get(_.seq_num).getOrElse(0))
       .map(e => FormElement.from_vertex(e.in_vertex))
   }
 }
 
+case class HasElement(edge: Edge) extends EdgeObj {
+  override type ED = HasElementDef.type
+  override val ed: ED = HasElementDef
+}
+
+object HasElementDef extends EdgeDef {
+  override val label: String = "has_element"
+  object Props extends PropertyDef {
+    val seq_num = Property[Int]("seq_num")
+  }
+}
+
 object FormGroup {
+  object Def extends FormElementDef {
+    val label: String = "FormGroup"
+  }
   type BuilderBase = FormElement.Builder[FormGroup]
-  val label: String = "FormGroup"
-  val rel_element = "has_element"
+//  val rel_element = "has_element"
   // Rel properties
-  val seq_num = "seq_num"
+//  val seq_num = "seq_num"
 
   class Builder(val graph: Graph, val name: String) extends FormElement.Builder[FormGroup] {
-    override protected val _label: String = label
-
+    override protected val ed: Def.type = Def
     protected def add_element(element: FormElement): this.type = {
-      val new_seq_num = vertex.edges(Direction.OUT, Seq(rel_element))
-        .map(e => e.value[Int](seq_num).getOrElse(-1)).toSeq.sorted.lastOption.getOrElse(-1) + 1
-      vertex.add_edge(rel_element, element.vertex, (seq_num -> new_seq_num))
+      val new_seq_num = vertex.edges(Direction.OUT, Seq(HasElementDef.label))
+        .map(e => HasElement(e))
+        .map(e => e.get(_.seq_num).getOrElse(-1)).toSeq.sorted.lastOption.getOrElse(-1) + 1
+      vertex.add_edge(HasElementDef.label, element.vertex, (HasElementDef.Props.seq_num.name -> new_seq_num))
       this
     }
 

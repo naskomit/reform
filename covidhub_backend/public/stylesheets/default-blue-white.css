@@ -1,9 +1,9 @@
 @charset "UTF-8";
 /* third-party plugins */
 /*! normalize.css v3.0.2 | MIT License | git.io/normalize */
-@import "dev-plugins/mcustomscrollbar/jquery.mCustomScrollbar.css";
-@import "dev-plugins/blueimp/blueimp-gallery.min.css";
-@import "dev-plugins/codemirror/codemirror.css";
+/*@import "dev-plugins/mcustomscrollbar/jquery.mCustomScrollbar.css";*/
+/*@import "dev-plugins/blueimp/blueimp-gallery.min.css";*/
+/*@import "dev-plugins/codemirror/codemirror.css";*/
 html {
   font-family: sans-serif;
   -ms-text-size-adjust: 100%;
@@ -14795,8 +14795,9 @@ Interactive Layer
   width: 100%;
   display: block;
   height: 55px;
-  background: url('../img/logo.png') top center no-repeat transparent;
-  text-indent: -99999px;
+  background: url('../images/SysMoLogo.png') center center no-repeat transparent;
+  background-size: auto 40px;
+  /*text-indent: -99999px;*/
   overflow: hidden;
   -webkit-transition: 200ms 200ms ease;
   -moz-transition: 200ms 200ms ease;

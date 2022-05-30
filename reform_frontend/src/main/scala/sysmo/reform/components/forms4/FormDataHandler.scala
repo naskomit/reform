@@ -4,8 +4,9 @@ import japgolly.scalajs.react.BackendScope
 import sysmo.reform.components.forms4.editors.{EditorAction, SetFieldValue}
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.data.{form4 => F}
-import sysmo.reform.shared.data.form4.{FieldEditor, GraphObject}
+import sysmo.reform.shared.data.form4.FieldEditor
 import sysmo.reform.shared.gremlin.tplight.Graph
+import sysmo.reform.shared.gremlin.tplight.gobject.GraphObject
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.util.log.Logging
 

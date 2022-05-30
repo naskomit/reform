@@ -1,6 +1,7 @@
 package sysmo.reform.shared.gremlin.memg
 
-import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, PropId, Property, Vertex}
+import sysmo.reform.shared.gremlin.tplight.Property
+import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, PropId, Vertex}
 
 import scala.collection.mutable
 
