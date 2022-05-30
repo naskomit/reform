@@ -74,10 +74,8 @@ object RefrigerationCyclePanel extends ApplicationPanel {
         )
       ).group("diagram_settings", _.descr("Diagram settings")
         .field(_.bool("create_process_diagram"))
-        .field(_.select("isolines").descr("Isolines").multiple())
-//        .field(_.bool("isotherms"))
-//        .field(_.bool("isochorees"))
-//        .field(_.bool("isentrops"))
+        .field(_.select("isolines").descr("Isolines").multiple()
+          .show(E.field(("create_process_diagram")) === true))
       ).group("solver", _.descr("Solver")
       ).group("result", _.descr("Results")
 
