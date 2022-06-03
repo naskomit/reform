@@ -17,13 +17,19 @@ case object Plots extends Page {
   val panel = P.ChartPanel
 }
 
-case object Analysis extends Page {
-  val name = "Analysis"
-  val label = Some("Analysis")
+case object BiomarkerAnalysis extends Page {
+  val name = "BiomarkerAnalysis"
+  val label = Some("Biomarker analysis")
+  val icon = "fa fa-pencil"
+  val panel = P.BiomarkerAnalysisPanel
+}
+
+case object RefrigerationCycle extends Page {
+  val name = "RefrigerationCycle"
+  val label = Some("Refrigeration cycle")
   val icon = "fa fa-pencil"
   val panel = P.RefrigerationCyclePanel
 }
-
 
 //case object SocioDemographicData extends Page {
 //  def name = "SocioDemographicData"

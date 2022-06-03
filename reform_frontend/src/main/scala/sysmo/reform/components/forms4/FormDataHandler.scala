@@ -35,7 +35,21 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
   def context(base: F.FormElement): F.HandlerContext =
     new F.HandlerContext(base, current_data)
 
+  def get_value(path: F.ElementPath): F.FieldValue[_] = current_data.get(path)
   def get_value(editor: FieldEditor): F.FieldValue[_] = current_data.get(editor.path)
+
+//  def get_array(array: F.GroupArray): Seq[F.ElementPath] = {
+//    val array_index = current_data.get(array.path).match {
+//      case F.MultiValue(v) => v.map {
+//        case LabeledValue(x, _) => x.asInstanceOf[String]
+//      }
+//      case _ => {
+//        logger.warn(s"Perhaps not array at ${array.path}")
+//        Seq()
+//      }
+//    }
+//    array_index.map(uid => current_data.get(array.path / uid)
+//  }
 
   protected var dispatcher: Option[Dispatcher] = None
 

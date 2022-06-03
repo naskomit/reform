@@ -1,69 +1,103 @@
 package sysmo.reform.shared.data.form4
 
 import sysmo.reform.shared.expr.Expression
+import sysmo.reform.shared.gremlin.tplight
 import sysmo.reform.shared.gremlin.tplight.gobject.{EdgeDef, EdgeObj, Property, PropertyDef, VertexDef}
 import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
 import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, GraphTraversalBuilder, GraphTraversalSource, Vertex}
 import sysmo.reform.shared.util.INamed
 import sysmo.reform.shared.{expr => E}
 
-case class ElementPath(segments: Seq[String]) {
+trait FieldId
+
+case class NamedFieldId(id: String) extends FieldId {
+  override def toString: String = id
+}
+
+case class ArrayFieldId(id: java.util.UUID) extends FieldId
+object ArrayFieldId {
+  import java.util.UUID
+  def random(): ArrayFieldId = ArrayFieldId(UUID.randomUUID())
+}
+
+case object Up extends FieldId
+case object Missing extends FieldId
+
+case class ElementPath(segments: Seq[FieldId]) {
+  def / (k: FieldId): ElementPath = k match {
+    case Up => if (segments.nonEmpty) ElementPath(segments.dropRight(1)) else this
+    case _ => ElementPath(segments :+ k)
+  }
   def / (k: String): ElementPath = {
     val key_segments: Seq[String] = k.split("/")
-    val new_segments: Seq[String] = key_segments.foldLeft(segments)((acc, segment) => segment match {
+    val new_segments: Seq[FieldId] = key_segments.foldLeft(segments)((acc, segment) => segment match {
       case ".." => if (acc.nonEmpty) acc.dropRight(1) else acc
-      case x => acc :+ x
+      case x => acc :+ NamedFieldId(x)
     })
     ElementPath(new_segments)
   }
   override def toString: String = segments.mkString("/")
 }
+
+object PathMatch {
+  def unapply(path: ElementPath): Option[Seq[String]] = {
+    Some(path.segments.map(_.toString))
+  }
+}
+
 object ElementPath {
   val Empty = ElementPath(Seq())
 }
 
-
-//trait ExressionNode extends GO.VertexObj {
-//  def eval[T]: T
-//}
-
-trait FormElementDef extends VertexDef {
-  trait Props extends PropertyDef {
-    val name = GO.Property[String]("name")
-    val descr = GO.Property[String]("descr")
-    val show_expr = GO.Property[E.Expression]("show_expr", Some(E.Expression(true)))
-  }
-  val props = new Props {}
+case class FormElementBackend[T <: FormElement.Def](
+  vertex: Vertex,
+  parent: Option[FormElement],
+  fid: FieldId,
+  ed: T
+) extends GO.VertexObj {
+  override type ED = T
 }
 
-trait FormElement extends GO.VertexObj {
-  override type ED <: FormElementDef
-  def name: String = get(_.name).get
-  def descr: String = get(_.descr).getOrElse(name)
-
-  // TODO Very non-optimal, but need repeat for more efficient
-  def parent: Option[FormElement] = g_this.in(HasElementDef.label).build.nextOption()
-    .map(v => FormElement.from_vertex(v))
+trait FormElement {
+//  type ED <: FormElement.Def
+  val backend: FormElementBackend[_ <: FormElement.Def]
+  def fid: FieldId = backend.get(_.fid).get
+  def name: String = fid match {
+    case NamedFieldId(id) => id
+  }
+  def descr: String = backend.get(_.descr).getOrElse(name)
 
   def path: ElementPath = {
-    parent match {
-      case Some(p) => p.path / name
-      case None => ElementPath(Seq(name))
+    backend.parent match {
+      case Some(p) => p.path / fid
+      case None => ElementPath(Seq(fid))
     }
   }
+
   def show(ctx: HandlerContext): E.Result[Boolean] = {
-    val show_expr: Expression = get(_.show_expr).get
+    val show_expr: Expression = backend.get(_.show_expr).get
     val res = E.as[Boolean](E.Expression.eval(show_expr, ctx))
     res
   }
+
 }
 
 object FormElement {
+  trait Def extends VertexDef {
+    trait Props extends PropertyDef {
+      //    val name = GO.Property[String]("name")
+      val fid = GO.Property[FieldId]("fid")
+      val descr = GO.Property[String]("descr")
+      val show_expr = GO.Property[E.Expression]("show_expr", Some(E.Expression(true)))
+    }
+    val props = new Props {}
+  }
+
   trait Builder[+T <: FormElement] {
-    protected val ed: FormElementDef
+    protected val ed: FormElement.Def
     protected val graph: Graph
-    protected val name: String
-    lazy val vertex: Vertex = graph.add_vertex(ed.label, ("name" -> name))
+    protected val fid: FieldId
+    lazy val vertex: Vertex = graph.add_vertex(ed.label, (ed.props.fid.name -> fid))
 
     def descr(v: String): this.type = {
       vertex.property(ed.props.descr.name, v)
@@ -76,13 +110,24 @@ object FormElement {
     def build: T
   }
 
-  def from_vertex(v: Vertex): FormElement = v.label match {
-    case StringEditor.Def.label => StringEditor(v)
-    case FloatEditor.Def.label => FloatEditor(v)
-    case IntegerEditor.Def.label => IntegerEditor(v)
-    case BooleanEditor.Def.label => BooleanEditor(v)
-    case SelectEditor.Def.label => SelectEditor(v)
-    case FormGroup.Def.label => FormGroup(v)
+  def create_backend[DT <: FormElement.Def](v: Vertex, fid: FieldId, parent: Option[FormElement], dt: DT): FormElementBackend[DT] = {
+    val fid1: FieldId = fid match {
+      case Missing => v.value[FieldId](dt.props.fid.name).get
+      case x => x
+    }
+    new FormElementBackend[DT](v, parent, fid1, dt)
+  }
+
+  def from_vertex(v: Vertex, fid: FieldId, parent: Option[FormElement]): FormElement = {
+    v.label match {
+      case StringEditor.Def.label => StringEditor(create_backend(v, fid, parent, StringEditor.Def))
+      case FloatEditor.Def.label => FloatEditor(create_backend(v, fid, parent, FloatEditor.Def))
+      case IntegerEditor.Def.label => IntegerEditor(create_backend(v, fid, parent, IntegerEditor.Def))
+      case BooleanEditor.Def.label => BooleanEditor(create_backend(v, fid, parent, BooleanEditor.Def))
+      case SelectEditor.Def.label => SelectEditor(create_backend(v, fid, parent, SelectEditor.Def))
+      case FormGroup.Def.label => FormGroup(create_backend(v, fid, parent, FormGroup.Def))
+      case GroupArray.Def.label => GroupArray(create_backend(v, fid, parent, GroupArray.Def))
+    }
   }
 }
 
@@ -92,95 +137,84 @@ trait FieldEditor extends FormElement {
 
 object FieldEditor {
   trait Builder[+T <: FieldEditor] extends FormElement.Builder[T]
-  type BuilderBase = Builder[FieldEditor]
-  class BuilderSource(graph: Graph) {
-    def char(name: String): StringEditor.Builder = new StringEditor.Builder(graph, name)
-    def float(name: String): FloatEditor.Builder = new FloatEditor.Builder(graph, name)
-    def bool(name: String): BooleanEditor.Builder = new BooleanEditor.Builder(graph, name)
-    def int(name: String): IntegerEditor.Builder = new IntegerEditor.Builder(graph, name)
-    def select(name: String): SelectEditor.Builder = new SelectEditor.Builder(graph, name)
+
+  class BuilderSource(graph: Graph, parent: Option[FormElement]) {
+    def char(name: String): StringEditor.Builder = new StringEditor.Builder(graph, parent, name)
+    def float(name: String): FloatEditor.Builder = new FloatEditor.Builder(graph, parent, name)
+    def bool(name: String): BooleanEditor.Builder = new BooleanEditor.Builder(graph, parent, name)
+    def int(name: String): IntegerEditor.Builder = new IntegerEditor.Builder(graph, parent, name)
+    def select(name: String): SelectEditor.Builder = new SelectEditor.Builder(graph, parent, name)
   }}
 
-case class StringEditor(val vertex: Vertex) extends FieldEditor {
-  override type ED = StringEditor.Def.type
-  override val ed: ED = StringEditor.Def
-}
+case class StringEditor(backend: FormElementBackend[StringEditor.Def.type]) extends FieldEditor
 
 object StringEditor {
-  object Def extends FormElementDef {
+  object Def extends FormElement.Def {
     val label = "StringEditor"
   }
-  class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[StringEditor] {
+  class Builder(val graph: Graph, parent: Option[FormElement], name: String) extends FieldEditor.Builder[StringEditor] {
+    val fid: FieldId = NamedFieldId(name)
     override protected val ed: Def.type = Def
-    override def build: StringEditor = {
-      StringEditor(vertex)
-    }
+    override def build: StringEditor =
+      StringEditor(FormElement.create_backend(vertex, Missing, parent, ed))
   }
 }
 
-case class FloatEditor(val vertex: Vertex) extends FieldEditor {
-  override type ED = FloatEditor.Def.type
-  override val ed: ED = FloatEditor.Def
-}
+case class FloatEditor(backend: FormElementBackend[FloatEditor.Def.type]) extends FieldEditor
 
 object FloatEditor {
-  object Def extends FormElementDef {
+  object Def extends FormElement.Def {
     val label: String = "FloatEditor"
   }
-  class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[FloatEditor] {
+  class Builder(val graph: Graph, parent: Option[FormElement], name: String) extends FieldEditor.Builder[FloatEditor] {
+    val fid: FieldId = NamedFieldId(name)
     override protected val ed: Def.type = Def
     override def build: FloatEditor = {
-      FloatEditor(vertex)
+      FloatEditor(FormElement.create_backend(vertex, Missing, parent, ed))
     }
   }
 }
 
-case class IntegerEditor(val vertex: Vertex) extends FieldEditor {
-  override type ED = IntegerEditor.Def.type
-  override val ed: ED = IntegerEditor.Def
-}
+case class IntegerEditor(backend: FormElementBackend[IntegerEditor.Def.type]) extends FieldEditor
 
 object IntegerEditor {
-  object Def extends FormElementDef {
+  object Def extends FormElement.Def {
     val label: String = "IntegerEditor"
   }
 
-  class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[IntegerEditor] {
+  class Builder(val graph: Graph, parent: Option[FormElement], name: String) extends FieldEditor.Builder[IntegerEditor] {
+    val fid: FieldId = NamedFieldId(name)
     override protected val ed: Def.type = Def
     override def build: IntegerEditor = {
-      IntegerEditor(vertex)
+      IntegerEditor(FormElement.create_backend(vertex, Missing, parent, ed))
     }
   }
 }
 
-case class BooleanEditor(val vertex: Vertex) extends FieldEditor {
-  override type ED = BooleanEditor.Def.type
-  override val ed: ED = BooleanEditor.Def
-}
+case class BooleanEditor(backend: FormElementBackend[BooleanEditor.Def.type]) extends FieldEditor
 
 object BooleanEditor {
-  object Def extends FormElementDef {
+  object Def extends FormElement.Def {
     val label: String = "BooleanEditor"
   }
 
-  class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[BooleanEditor] {
+  class Builder(val graph: Graph, parent: Option[FormElement], name: String) extends FieldEditor.Builder[BooleanEditor] {
+    val fid: FieldId = NamedFieldId(name)
     override protected val ed: Def.type = Def
     override def build: BooleanEditor = {
-      BooleanEditor(vertex)
+      BooleanEditor(FormElement.create_backend(vertex, Missing, parent, ed))
     }
   }
 }
 
-case class SelectEditor(val vertex: Vertex) extends FieldEditor {
-  override type ED = SelectEditor.Def.type
-  override val ed: ED = SelectEditor.Def
-  def multiple: Boolean = get(_.multiple).getOrElse(false)
-  def min: Option[Int] = get(_.min)
-  def max: Option[Int] = get(_.max)
+case class SelectEditor(backend: FormElementBackend[SelectEditor.Def.type]) extends FieldEditor {
+  def multiple: Boolean = backend.get(_.multiple).getOrElse(false)
+  def min: Option[Int] = backend.get(_.min)
+  def max: Option[Int] = backend.get(_.max)
 }
 
 object SelectEditor {
-  object Def extends FormElementDef {
+  object Def extends FormElement.Def {
     trait Props extends super.Props {
       val multiple = GO.Property[Boolean]("multiple", Some(false))
       val min = GO.Property[Int]("min")
@@ -190,7 +224,8 @@ object SelectEditor {
     val label: String = "SelectEditor"
   }
 
-  class Builder(val graph: Graph, val name: String) extends FieldEditor.Builder[SelectEditor] {
+  class Builder(val graph: Graph, parent: Option[FormElement], name: String) extends FieldEditor.Builder[SelectEditor] {
+    val fid: FieldId = NamedFieldId(name)
     override protected val ed: Def.type = Def
     def multiple(max: Option[Int] = None, min: Option[Int] = None): this.type = {
       vertex.property(Def.props.multiple.name, true)
@@ -205,20 +240,17 @@ object SelectEditor {
       this
     }
     override def build: SelectEditor = {
-      new SelectEditor(vertex)
+      new SelectEditor(FormElement.create_backend(vertex, Missing, parent, ed))
     }
   }
 
 }
 
-case class FormGroup(val vertex: Vertex) extends FormElement {
-  override type ED = FormGroup.Def.type
-  override val ed: ED = FormGroup.Def
-
+case class FormGroup(backend: FormElementBackend[FormGroup.Def.type]) extends FormElement {
   def elements: Seq[FormElement] = {
-    g_this.outE(HasElementDef.label).build
+    backend.g_this.outE(HasElementDef.label).build
       .toSeq.sortBy(e => HasElement(e).get(_.seq_num).getOrElse(0))
-      .map(e => FormElement.from_vertex(e.in_vertex))
+      .map(e => FormElement.from_vertex(e.in_vertex, Missing, Some(this)))
   }
 }
 
@@ -236,40 +268,96 @@ object HasElementDef extends EdgeDef {
 }
 
 object FormGroup {
-  object Def extends FormElementDef {
+  object Def extends FormElement.Def {
     val label: String = "FormGroup"
   }
-  type BuilderBase = FormElement.Builder[FormGroup]
-//  val rel_element = "has_element"
-  // Rel properties
-//  val seq_num = "seq_num"
 
-  class Builder(val graph: Graph, val name: String) extends FormElement.Builder[FormGroup] {
+  class Builder(val graph: Graph, parent: Option[FormElement], val name: String) extends FormElement.Builder[FormGroup] {
+    override protected val fid: FieldId = NamedFieldId(name)
     override protected val ed: Def.type = Def
     protected def add_element(element: FormElement): this.type = {
       val new_seq_num = vertex.edges(Direction.OUT, Seq(HasElementDef.label))
         .map(e => HasElement(e).get(_.seq_num).get).toSeq.sorted.lastOption.getOrElse(-1) + 1
-      vertex.add_edge(HasElementDef.label, element.vertex, (HasElementDef.props.seq_num.name -> new_seq_num))
+      vertex.add_edge(HasElementDef.label, element.backend.vertex, (HasElementDef.props.seq_num.name -> new_seq_num))
       this
     }
 
-    def group(name: String, f: Builder => BuilderBase): this.type = {
+    def group(name: String, f: Builder => Builder): this.type = {
       add_element(
-        f(new FormGroup.Builder(graph, name)).build
+        f(new FormGroup.Builder(graph, None, name)).build
       )
     }
 
-    def field(f: FieldEditor.BuilderSource => FieldEditor.BuilderBase): this.type = {
+    def field(f: FieldEditor.BuilderSource => FieldEditor.Builder[FieldEditor]): this.type = {
       add_element(
-        f(new FieldEditor.BuilderSource(graph)).build
+        f(new FieldEditor.BuilderSource(graph, None)).build
       )
+    }
+
+    def array(name: String, f: Builder => Builder): this.type = {
+      val group = f(new FormGroup.Builder(graph, None, name)).build
+      val array = new GroupArray.Builder(graph, None, name).build
+      array.backend.vertex.add_edge(HasPrototype.Def.label, group.backend.vertex)
+      add_element(array)
     }
 
     override def build: FormGroup = {
-      new FormGroup(vertex)
+      new FormGroup(FormElement.create_backend(vertex, Missing, parent, ed))
     }
   }
 
-  def builder(graph: Graph, name: String): Builder = new Builder(graph, name)
+  def builder(graph: Graph, name: String): Builder =
+    new Builder(graph, None, name)
+  def builder(graph: Graph, parent: Option[FormElement], name: String): Builder =
+    new Builder(graph, parent, name)
+}
 
+case class GroupArray(backend: FormElementBackend[GroupArray.Def.type]) extends FormElement {
+  def group: FormGroup = {
+    val group_vertex: Vertex = backend.g_this.out(HasPrototype.Def.label).build.nextOption().get
+    FormElement.from_vertex(group_vertex, Missing, Some(this)).asInstanceOf[FormGroup]
+  }
+  def element_instances(data: ValueMap): Seq[FormGroup] = {
+    val group_vertex: Vertex = backend.g_this.out(HasPrototype.Def.label).build.nextOption().get
+    FormElement.from_vertex(group_vertex, Missing, Some(this))
+//    val array_index = data.get(path).match {
+//    }
+    Seq()
+  }
+}
+
+case class HasPrototype(edge: Edge) extends EdgeObj {
+  override type ED = HasPrototype.Def.type
+  override val ed: ED = HasPrototype.Def
+}
+
+object HasPrototype {
+  object Def extends EdgeDef {
+    override val label: String = "has_prototype"
+    trait Props extends PropertyDef {
+    }
+    val props = new Props {}
+  }
+}
+
+object GroupArray {
+  object Def extends FormElement.Def {
+    val label: String = "GroupArray"
+    trait Props extends super.Props {
+    }
+    override val props = new Props {}
+  }
+
+  class Builder(val graph: Graph, parent: Option[FormElement], name: String) extends FormElement.Builder[GroupArray] {
+    override protected val fid: FieldId = NamedFieldId(name)
+    override protected val ed: Def.type = Def
+
+    override def build: GroupArray = {
+      new GroupArray(FormElement.create_backend(vertex, Missing, parent, ed))
+    }
+
+  }
+
+  def builder(graph: Graph, parent: Option[FormElement], name: String): Builder =
+    new Builder(graph, parent, name)
 }

@@ -2,7 +2,7 @@ package sysmo.coviddata
 
 
 import sysmo.reform.router.PageCollection
-import router.{Analysis, HomePage, Plots}
+import router.{BiomarkerAnalysis, HomePage, Plots, RefrigerationCycle}
 import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
@@ -44,7 +44,8 @@ object Application extends ReactApplication {
       )((bld, table) => bld.add(table))
       .build,
       Plots,
-      Analysis
+      BiomarkerAnalysis,
+      RefrigerationCycle
     )
   }
   override val layout = IntuitiveLayout

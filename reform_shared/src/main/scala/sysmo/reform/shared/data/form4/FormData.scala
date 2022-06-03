@@ -14,8 +14,8 @@ case class SomeValue[+V](v: LabeledValue[V]) extends FieldValue[V] {
 
   override def hashCode(): Int = v.hashCode()
 }
-
 case class MultiValue[+V](v: Seq[LabeledValue[V]]) extends FieldValue[V]
+case class LocalFieldIndex(ids: Seq[FieldId]) extends FieldValue[FieldId]
 
 object FieldValue {
 //  def apply(x: String): FieldValue[String] = SomeValue(LabeledValue(x))
@@ -68,6 +68,7 @@ class ValueMap(data: Map[ElementPath, FieldValue[_]]) {
         case AllValues => "ALL"
         case SomeValue(x) => x.make_label
         case MultiValue(x) => x.map(_.make_label).toString()
+        case LocalFieldIndex(ids) => ids.map("#" + _.toString)
       }
       s"${k.toString} -> $v_str"
     } .mkString("")
@@ -79,16 +80,15 @@ object ValueMap {
   class Builder(path: ElementPath) {
     protected var data: Map[ElementPath, FieldValue[_]] = Map()
 
-    def value(k: String, v: FieldValue[_]): this.type = {
-      data = data + ((path / k) -> v)
+    def merge(other: Builder): this.type = {
+      for ((k_sub, v) <- other.data) {
+        data = data + (k_sub -> v)
+      }
       this
     }
 
-    def record(k: String, sub_fn: Builder => Builder): this.type = {
-      val sub = sub_fn(new Builder(path / k))
-      for ((k_sub, v) <- sub.data) {
-        data = data + (k_sub -> v)
-      }
+    def value(k: String, v: FieldValue[_]): this.type = {
+      data = data + ((path / k) -> v)
       this
     }
 
@@ -97,6 +97,23 @@ object ValueMap {
     def value(k: String, v: Boolean): this.type = value(k, SomeValue(LabeledValue(v)))
     def value(k: String, v: String): this.type = value(k, SomeValue(LabeledValue(v)))
     def value(k: String, v: Seq[_]): this.type = value(k, MultiValue(v.map(LabeledValue(_))))
+
+    def record(k: String, sub_fn: Builder => Builder): this.type = {
+      val sub = sub_fn(new Builder(path / k))
+      merge(sub)
+    }
+
+    def array(k: String, sub_fns: Builder => Builder*): this.type = {
+      val index_path = path / k
+      val item_uids = sub_fns.map { sub_fn =>
+        val uid = ArrayFieldId.random()
+        val item_builder = sub_fn(new Builder(index_path / uid))
+        merge(item_builder)
+        uid
+      }
+      data = data + (index_path -> LocalFieldIndex(item_uids))
+      this
+    }
 
     def build: ValueMap = new ValueMap(data)
   }

@@ -1,47 +1,45 @@
 package sysmo.coviddata.panels
 
 import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
-import sysmo.reform.shared.gremlin.memg.MemGraph
-import sysmo.reform.shared.util.LabeledValue
+import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
 import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.expr.{Expression => E}
-import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-import sysmo.reform.components.layouts.{NamedContent, TabbedLayout}
-import japgolly.scalajs.react.vdom.html_<^._
-
+import sysmo.reform.shared.gremlin.memg.MemGraph
+import sysmo.reform.shared.util.LabeledValue
 import scala.concurrent.Future
 
 object RefrigerationCyclePanel extends ApplicationPanel {
-  import japgolly.scalajs.react._
 
   case class Props(form: F.FormGroup, data_handler: FormDataHandler)
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
       <.div(
-        TabbedLayout(Seq(
-          NamedContent("Tab 1", <.div("The whole of life is just like watching a film. Only it’s as though you always get in ten minutes after the big picture has started, and no-one will tell you the plot, so you have to work it out all yourself from the clues. —from Moving Pictures")),
-          NamedContent("Tab 2", <.div("Real stupidity beats artificial intelligence every time. —from Hogfather")),
-          NamedContent("Tab 3", <.div("It’s not worth doing something unless someone, somewhere, would much rather you weren’t doing it. —from the foreword to The Ultimate Encyclopedia of Fantasy, by David Pringle")),
-          NamedContent("Tab 4", <.div("There are times in life when people must know when not to let go. Balloons are designed to teach small children this.")),
-        )),
+//        TabbedLayout(Seq(
+//          NamedContent("Tab 1", <.div("The whole of life is just like watching a film. Only it’s as though you always get in ten minutes after the big picture has started, and no-one will tell you the plot, so you have to work it out all yourself from the clues. —from Moving Pictures")),
+//          NamedContent("Tab 2", <.div("Real stupidity beats artificial intelligence every time. —from Hogfather")),
+//          NamedContent("Tab 3", <.div("It’s not worth doing something unless someone, somewhere, would much rather you weren’t doing it. —from the foreword to The Ultimate Encyclopedia of Fantasy, by David Pringle")),
+//          NamedContent("Tab 4", <.div("There are times in life when people must know when not to let go. Balloons are designed to teach small children this.")),
+//        )),
         FormEditorComponent(p.form, p.data_handler)
       )
     }
   }
 
   val component =
-    ScalaComponent.builder[Props]("AnalysisPanel")
+    ScalaComponent.builder[Props]("RefrigerationCyclePanel")
       .initialState(State())
       .renderBackend[Backend]
-//      .componentDidMount(f => f.backend.init(f.props))
       .build
 
   val graph = MemGraph()
-  val refrigeration_form: F.FormGroup = {
+
+  val form: F.FormGroup = {
     import F.FieldValue.implicits._
     F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
       .field(_.char("aname").descr("Analysis Name"))
@@ -82,7 +80,7 @@ object RefrigerationCyclePanel extends ApplicationPanel {
       ).build
   }
 
-  val refrigeration_data_init: F.ValueMap = {
+  val data_init: F.ValueMap = {
     F.ValueMap.builder
       .record("refrigeration_cycle", _
         .value("aname", "Cycle 1")
@@ -106,8 +104,8 @@ object RefrigerationCyclePanel extends ApplicationPanel {
       .build
   }
 
-  object refrigeration_data_handler extends FormDataHandler(graph) {
-    override def initial_data: F.ValueMap = refrigeration_data_init
+  object data_handler extends FormDataHandler(graph) {
+    override def initial_data: F.ValueMap = data_init
     override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
       val path = element.path
       val thermodynamic_state_choices = Seq(
@@ -115,18 +113,23 @@ object RefrigerationCyclePanel extends ApplicationPanel {
         LabeledValue("T", Some("Temperature"))
       )
       logger.info(path.toString)
-      val choices = path.segments match {
-        case Seq(_, "cycle_definition", "cycle_params", "fluid") => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
-        case Seq(_, "cycle_definition", "cycle_params", "warm_by") => thermodynamic_state_choices
-        case Seq(_, "cycle_definition", "cycle_params", "cold_by") => thermodynamic_state_choices
-        case Seq(_, "cycle_definition", "condenser", "outlet_by") => thermodynamic_state_choices
-        case Seq(_, "cycle_definition", "evaporator", "outlet_by") => thermodynamic_state_choices
-        case Seq(_, "cycle_definition", "compressor", "model") => Seq(
+//      val m1 = new
+//      val ch = PathMatcher(
+//        ("", "cycle_definition", "cycle_params", "fluid") -> Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
+//      )
+      val choices = path match {
+        case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "fluid")) => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
+        case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "warm_by")) => thermodynamic_state_choices
+        case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "cold_by")) => thermodynamic_state_choices
+        case F.PathMatch(Seq(_, "cycle_definition", "condenser", "outlet_by")) => thermodynamic_state_choices
+        case F.PathMatch(Seq(_, "cycle_definition", "evaporator", "outlet_by")) => thermodynamic_state_choices
+        case F.PathMatch(Seq(_, "cycle_definition", "compressor", "model")) => Seq(
           LabeledValue("isentropic"),
           LabeledValue("isothermal"),
         )
-        case Seq(_, "diagram_settings", "isolines") => Seq(
+        case F.PathMatch(Seq(_, "diagram_settings", "isolines")) => Seq(
           LabeledValue("isotherms"),
+          LabeledValue("isobars"),
           LabeledValue("isochores"),
           LabeledValue("isentrops"),
         )
@@ -134,11 +137,9 @@ object RefrigerationCyclePanel extends ApplicationPanel {
       }
       Future(choices)
     }
-
   }
 
   def apply(app_config: ApplicationConfiguration): Unmounted = {
-
-    component(Props(refrigeration_form, refrigeration_data_handler))
+    component(Props(form, data_handler))
   }
 }

@@ -4,15 +4,20 @@ import japgolly.scalajs.react.extra.router.SetRouteVia.HistoryReplace
 import japgolly.scalajs.react.extra.router._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.layouts.ApplicationLayout
+import sysmo.reform.util.log.Logging
 
-class RouterConfiguration(pages: PageCollection, app_config: ApplicationConfiguration, layout: ApplicationLayout ) {
+class RouterConfiguration(pages: PageCollection, app_config: ApplicationConfiguration, layout: ApplicationLayout )
+  extends Logging {
   val config = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
     pages.collect.foldLeft(emptyRule)((acc, page) =>
       acc | staticRoute(page.url, page) ~> render(page.panel.apply(app_config))
     )
-    .notFound(_ => redirectToPage(pages.home)(HistoryReplace))
+    .notFound(x => {
+      logger.error(s"$x not found")
+      redirectToPage(pages.home)(HistoryReplace)
+    })
     .setTitle(p => s"${p.name} | SysMo").renderWith(create_layout)
   }
 

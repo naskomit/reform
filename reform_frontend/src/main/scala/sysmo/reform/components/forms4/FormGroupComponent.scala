@@ -17,6 +17,7 @@ object FormGroupComponent extends ReactComponent {
       elem match {
         case x: F.FieldEditor => render_field_editor(p, x)
         case x: F.FormGroup => FormGroupComponent(x, p.data_handler, options)
+        case x: F.GroupArray => GroupArrayComponent(x, p.data_handler, options)
       }
     }
 
@@ -45,6 +46,7 @@ object FormGroupComponent extends ReactComponent {
           val width = elem match {
             case e: F.FormGroup =>  L.FullWidth
             case e: F.FieldEditor => L.Medium
+            case e: F.GroupArray => L.FullWidth
           }
           L.ChildElement(vdom_element, width)
         })
