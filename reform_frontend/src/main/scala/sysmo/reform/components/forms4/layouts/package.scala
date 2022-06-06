@@ -16,4 +16,8 @@ package object layouts {
   trait FormGroupLayout {
     def apply(title: String, children: Seq[ChildElement], options: FormRenderingOptions): VdomNode
   }
+
+  trait ArrayGroupLayout {
+    def apply(title: String, children: Seq[ChildElement], options: FormRenderingOptions): VdomNode
+  }
 }

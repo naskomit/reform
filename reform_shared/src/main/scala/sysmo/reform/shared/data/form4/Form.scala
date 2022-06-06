@@ -61,7 +61,10 @@ case class FormElementBackend[T <: FormElement.Def](
 trait FormElement {
 //  type ED <: FormElement.Def
   val backend: FormElementBackend[_ <: FormElement.Def]
-  def fid: FieldId = backend.get(_.fid).get
+  def fid: FieldId = backend.fid match {
+    case Missing => backend.get(_.fid).get
+    case x => x
+  }
   def name: String = fid match {
     case NamedFieldId(id) => id
   }
@@ -295,7 +298,7 @@ object FormGroup {
     }
 
     def array(name: String, f: Builder => Builder): this.type = {
-      val group = f(new FormGroup.Builder(graph, None, name)).build
+      val group = f(new FormGroup.Builder(graph, None, name + "###")).build
       val array = new GroupArray.Builder(graph, None, name).build
       array.backend.vertex.add_edge(HasPrototype.Def.label, group.backend.vertex)
       add_element(array)
@@ -317,12 +320,15 @@ case class GroupArray(backend: FormElementBackend[GroupArray.Def.type]) extends 
     val group_vertex: Vertex = backend.g_this.out(HasPrototype.Def.label).build.nextOption().get
     FormElement.from_vertex(group_vertex, Missing, Some(this)).asInstanceOf[FormGroup]
   }
-  def element_instances(data: ValueMap): Seq[FormGroup] = {
+  def elements(data: ValueMap): Seq[FormGroup] = {
     val group_vertex: Vertex = backend.g_this.out(HasPrototype.Def.label).build.nextOption().get
-    FormElement.from_vertex(group_vertex, Missing, Some(this))
-//    val array_index = data.get(path).match {
-//    }
-    Seq()
+
+    val element_fids: Seq[FieldId] = data.get(path) match {
+      case LocalFieldIndex(ids) => ids
+    }
+    element_fids.map{id =>
+      FormElement.from_vertex(group_vertex, id, Some(this)).asInstanceOf[FormGroup]
+    }
   }
 }
 

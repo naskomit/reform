@@ -60,6 +60,13 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
     }
   }
 
+  def unbind($: BackendScopeType): Unit = {
+    dispatcher match {
+      case Some(_) => dispatcher = None
+      case None => logger.warn("FormDataHandler not bound to form component!")
+    }
+  }
+
   def dispatch(action: EditorAction): Unit = {
     dispatcher match {
       case None => logger.error("FormDataHandler not bound to form!")

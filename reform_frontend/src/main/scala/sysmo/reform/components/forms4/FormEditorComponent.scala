@@ -12,6 +12,7 @@ object FormEditorComponent extends ReactComponent {
   case class State(render_ind: Int)
   final class Backend($: BackendScope[Props, State]) {
     def bind(p: Props): Unit  = p.data_handler.bind($)
+    def unbind(p: Props): Unit  = p.data_handler.unbind($)
     def render (p: Props, s: State): VdomElement = {
 //      val element_renderer = new FormElementRenderer(p.data_handler)
       <.form(^.className:= "form", ^.id:= p.form.path.toString,
@@ -32,6 +33,11 @@ object FormEditorComponent extends ReactComponent {
       .componentDidMount(f => {
         Callback {
           f.backend.bind(f.props)
+        }
+      })
+      .componentWillUnmount(f => {
+        Callback {
+          f.backend.unbind(f.props)
         }
       })
       .build
