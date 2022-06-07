@@ -49,10 +49,10 @@ trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
     def on_value_change(p: Props)(event: ReactEventFromInput): Callback =
       $.modState(s => s.copy(local_value = event.target.value))
 
-    def on_focus =
+    def on_focus: Callback =
       $.modState(s => s.copy(focused = true))
 
-    def on_blur(p: Props, s: State) = {
+    def on_blur(p: Props, s: State): Callback = {
       val value: Option[VT] = parse(s.local_value)
       value match {
         case Some(x) => $.modState(s => s.copy(

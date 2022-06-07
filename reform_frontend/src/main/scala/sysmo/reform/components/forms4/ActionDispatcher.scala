@@ -52,8 +52,8 @@ trait ActionDispatcher[A] extends Logging {
 //    })
   }
 
-  def release(): Unit = {
+//  def release(): Unit = {
 //    subscription.cancel()
-  }
+//  }
 
 }

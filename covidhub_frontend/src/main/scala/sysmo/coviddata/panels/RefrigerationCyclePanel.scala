@@ -112,11 +112,6 @@ object RefrigerationCyclePanel extends ApplicationPanel {
         LabeledValue("p", Some("Pressure")),
         LabeledValue("T", Some("Temperature"))
       )
-      logger.info(path.toString)
-//      val m1 = new
-//      val ch = PathMatcher(
-//        ("", "cycle_definition", "cycle_params", "fluid") -> Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
-//      )
       val choices = path match {
         case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "fluid")) => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
         case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "warm_by")) => thermodynamic_state_choices

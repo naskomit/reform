@@ -1,7 +1,7 @@
 package sysmo.reform.components.forms4.editors
 
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
+import japgolly.scalajs.react.{BackendScope, ScalaComponent}
 import sysmo.reform.components.forms4.FormDataHandler
 import sysmo.reform.components.select.ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 import sysmo.reform.shared.data.{form4 => F}
@@ -20,11 +20,6 @@ object SelectEditorComponent extends AbstractEditor[String] {
   final class Backend($: BackendScope[Props, State]) {
 
     def render(p: Props, s: State): VdomElement = {
-//      val value = p.value match {
-//        case F.SomeValue(v) => Some(label_value(v, s))
-//        case _ => None
-//      }
-
       <.div(^.className := "form-group", ^.key := p.editor.name, ^.id := p.editor.path.toString,
         <.label(p.editor.descr),
         RSNC.builder
@@ -34,17 +29,6 @@ object SelectEditorComponent extends AbstractEditor[String] {
           .on_input_change(on_input_change(p, s))
           .on_menu_open(on_menu_open(p, s))
           .build
-//        if (p.editor.multiple)
-//          RSNC(
-//          )
-//        else
-//          RSNC(
-//            value, s.choices,
-//            is_loading = Some(s.is_loading),
-//            on_change = Some(on_change(p, s)),
-//            on_input_change = Some(on_input_change(p, s)),
-//            on_menu_open = Some(on_menu_open(p, s))
-//          )
       )
     }
 

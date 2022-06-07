@@ -48,10 +48,10 @@ object FormGroupComponent extends ReactComponent {
             case e: F.FieldEditor => L.Medium
             case e: F.GroupArray => L.FullWidth
           }
-          L.ChildElement(vdom_element, width)
+          L.GroupChildElement(vdom_element, width)
         })
       val layout = p.options.get(_.form_group_layout)
-      <.div(layout.apply(p.group.descr, children, p.options))
+      <.div(layout(p.group.descr, children, p.options))
     }
   }
 

@@ -28,6 +28,8 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
           logger.debug(current_data.toString)
           s.copy(render_ind = s.render_ind + 1)
         }).runNow()
+
+        case _ => logger.error(s"Unknow action ${action}")
       }
     }
   }

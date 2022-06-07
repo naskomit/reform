@@ -1,6 +1,8 @@
 package sysmo.reform.components.forms4
 
+import japgolly.scalajs.react.CtorType.ChildArg
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
+import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 
 package object layouts {
@@ -11,13 +13,13 @@ package object layouts {
   case object Long extends ElementWidth
   case object ExtraLong extends ElementWidth
   case object FullWidth extends ElementWidth
-  case class ChildElement(child: VdomNode, size: ElementWidth)
+  case class GroupChildElement(child: VdomNode, size: ElementWidth)
 
-  trait FormGroupLayout {
-    def apply(title: String, children: Seq[ChildElement], options: FormRenderingOptions): VdomNode
+  trait FormGroupLayout extends ReactComponent {
+    def apply(title: String, children: Seq[GroupChildElement], options: FormRenderingOptions): Unmounted
   }
 
   trait ArrayGroupLayout {
-    def apply(title: String, children: Seq[ChildElement], options: FormRenderingOptions): VdomNode
+    def apply(title: String, children: Seq[GroupChildElement], options: FormRenderingOptions): VdomNode
   }
 }

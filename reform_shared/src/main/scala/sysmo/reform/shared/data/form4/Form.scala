@@ -8,13 +8,19 @@ import sysmo.reform.shared.gremlin.tplight.{Direction, Edge, Graph, GraphTravers
 import sysmo.reform.shared.util.INamed
 import sysmo.reform.shared.{expr => E}
 
-trait FieldId
+trait FieldId {
+  def as_key: String = ""
+}
 
 case class NamedFieldId(id: String) extends FieldId {
   override def toString: String = id
+  override def as_key: String = id
 }
 
-case class ArrayFieldId(id: java.util.UUID) extends FieldId
+case class ArrayFieldId(id: java.util.UUID) extends FieldId {
+  override def as_key: String = id.toString
+}
+
 object ArrayFieldId {
   import java.util.UUID
   def random(): ArrayFieldId = ArrayFieldId(UUID.randomUUID())

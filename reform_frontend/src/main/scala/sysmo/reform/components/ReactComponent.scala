@@ -4,9 +4,6 @@ import japgolly.scalajs.react.callback.{Exports => cb_exports}
 import japgolly.scalajs.react.component.Scala
 import sysmo.reform.util.log.Logging
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.concurrent.{Future, Promise}
-
 trait ReactAction
 
 trait ReactComponent extends Logging with cb_exports {
@@ -27,35 +24,35 @@ trait ReactComponent extends Logging with cb_exports {
 ////    }
 //  }
 
-  trait IBackend {
-    def handle_action(props: Props, state: State)(action: ReactAction): AsyncCallback[Unit]
+//  trait IBackend {
+//    def handle_action(props: Props, state: State)(action: ReactAction): AsyncCallback[Unit]
+//
+//    def dispatch(props: Props, state: State)(action: ReactAction): AsyncCallback[Unit] = {
+//      handle_action(props, state)(action)
+//    }
+//
+//  }
 
-    def dispatch(props: Props, state: State)(action: ReactAction): AsyncCallback[Unit] = {
-      handle_action(props, state)(action)
-    }
-
-  }
 
 
-
-  protected def future_effect[A](fut: Future[A], on_success: A => AsyncCallback[Unit], on_error: Throwable => AsyncCallback[Unit]): AsyncCallback[Unit] = {
-    AsyncCallback.fromFuture(fut)
-      .flatMap(res => {
-        on_success(res)
-      }).handleError(err => {
-      logger.error(err.getMessage)
-      on_error(err)
-    })
-  }
-
-  protected def delay_future[A](fut: Future[A], interval: Int): Future[A] = {
-    import scala.scalajs.js.timers._
-    fut.flatMap(x => {
-      val prom = Promise[A]()
-      setTimeout(interval){
-        prom.success(x)
-      }
-      prom.future
-    })
-  }
+//  protected def future_effect[A](fut: Future[A], on_success: A => AsyncCallback[Unit], on_error: Throwable => AsyncCallback[Unit]): AsyncCallback[Unit] = {
+//    AsyncCallback.fromFuture(fut)
+//      .flatMap(res => {
+//        on_success(res)
+//      }).handleError(err => {
+//      logger.error(err.getMessage)
+//      on_error(err)
+//    })
+//  }
+//
+//  protected def delay_future[A](fut: Future[A], interval: Int): Future[A] = {
+//    import scala.scalajs.js.timers._
+//    fut.flatMap(x => {
+//      val prom = Promise[A]()
+//      setTimeout(interval){
+//        prom.success(x)
+//      }
+//      prom.future
+//    })
+//  }
 }

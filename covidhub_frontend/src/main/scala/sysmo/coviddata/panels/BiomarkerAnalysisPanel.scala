@@ -99,20 +99,26 @@ object BiomarkerAnalysisPanel extends ApplicationPanel {
         LabeledValue("transformed_value", Some("Transformed value")),
         LabeledValue("fold_change", Some("Fold change")),
       )
+
+      val biomarkers = Seq("APOE", "PCDH1",  "ALDH1A1", "ALDH2", "MAO-A", "MAO-B")
+        .map(LabeledValue(_))
+
       val transformation = Seq(
         LabeledValue("none", Some("None")),
         LabeledValue("log", Some("Log"))
       )
       val path = element.path
-      logger.info(path.toString)
+//      logger.info(path.toString)
       val choices = path match {
         case F.PathMatch(Seq(_, "general", "an_type")) => analysis_types
         case F.PathMatch(Seq(_, "dep_var", "bm_type")) => biomarker_types
         case F.PathMatch(Seq(_, "dep_var", "variable")) => biomarker_variable
+        case F.PathMatch(Seq(_, "dep_var", "biomarker")) => biomarkers
         case F.PathMatch(Seq(_, "dep_var", "transformation")) => transformation
-        case F.PathMatch(Seq(_, "indep_var", _,  "bm_type")) => biomarker_types
+        case F.PathMatch(Seq(_, "indep_var", _, "bm_type")) => biomarker_types
         case F.PathMatch(Seq(_, "indep_var", _, "variable")) => biomarker_variable
         case F.PathMatch(Seq(_, "indep_var", _, "transformation")) => transformation
+        case F.PathMatch(Seq(_, "indep_var", _, "biomarker")) => biomarkers
         case _ => Seq()
       }
       Future(choices)
