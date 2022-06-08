@@ -34,6 +34,7 @@ case class ElementPath(segments: Seq[FieldId]) {
     case Up => if (segments.nonEmpty) ElementPath(segments.dropRight(1)) else this
     case _ => ElementPath(segments :+ k)
   }
+
   def / (k: String): ElementPath = {
     val key_segments: Seq[String] = k.split("/")
     val new_segments: Seq[FieldId] = key_segments.foldLeft(segments)((acc, segment) => segment match {
@@ -42,6 +43,16 @@ case class ElementPath(segments: Seq[FieldId]) {
     })
     ElementPath(new_segments)
   }
+
+  def contains(other: ElementPath): Boolean = {
+    if (other.segments.isEmpty)
+      true
+    else if (segments.head != other.segments.head || segments.length < other.segments.length)
+      false
+    else ElementPath(segments.tail).contains(ElementPath(other.segments.tail))
+
+  }
+
   override def toString: String = segments.mkString("/")
 }
 

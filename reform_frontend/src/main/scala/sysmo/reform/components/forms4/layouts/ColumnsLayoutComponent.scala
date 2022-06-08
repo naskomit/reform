@@ -1,8 +1,7 @@
 package sysmo.reform.components.forms4.layouts
 
-import japgolly.scalajs.react.{CtorType, _}
-import japgolly.scalajs.react.component.Scala.Component
-import japgolly.scalajs.react.vdom.{TagMod, VdomElement, VdomNode}
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 
@@ -44,7 +43,6 @@ object ColumnsLayoutComponent extends FormGroupLayout {
     }
 
     def render(p: Props, children: PropsChildren) : VdomNode = {
-      logger.info(s"ColumnsLayout # children: ${children.count}" )
       for ((child, elem) <- children.toList.zip(p.child_elements)) {
         val elem_width = compute_width(elem)
         if (row_filled_width + elem_width > 1.0) {

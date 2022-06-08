@@ -3,6 +3,7 @@ package sysmo.reform.components.forms4
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.components.{Processing, ReactComponent}
 import sysmo.reform.shared.data.{form4 => F}
 
@@ -15,12 +16,25 @@ object FormEditorComponent extends ReactComponent {
     def unbind(p: Props): Unit  = p.data_handler.unbind($)
     def render (p: Props, s: State): VdomElement = {
 //      val element_renderer = new FormElementRenderer(p.data_handler)
-      <.form(^.className:= "form", ^.id:= p.form.path.toString,
+      <.div(^.className:= "form", ^.id:= p.form.path.toString,
         p.data_handler.handler_state match {
           case FormDataHandler.HandlerState.Ready => FormGroupComponent(p.form, p.data_handler, p.options)
           case FormDataHandler.HandlerState.Loading => Processing()
-        }
+        },
+        ButtonToolbar.builder
+          .button("Ok", Effects.submit())
+          .button("Cancel", Effects.cancel())
+          .build
       )
+    }
+
+    object Effects {
+      def submit(): AsyncCallback[Unit] = Callback {
+
+      }.asAsyncCallback
+      def cancel(): AsyncCallback[Unit] = Callback {
+
+      }.asAsyncCallback
     }
 
 

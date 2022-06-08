@@ -7,6 +7,7 @@ import sysmo.reform.shared.data.{Domain, OptionFilter, OptionProvider, Property,
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
+@deprecated("Use sysmo.reform.shared.form")
 sealed trait FieldValue
 case object NoValue extends FieldValue
 case object AllValues extends FieldValue

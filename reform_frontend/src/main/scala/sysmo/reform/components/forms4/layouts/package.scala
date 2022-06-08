@@ -14,12 +14,13 @@ package object layouts {
   case object ExtraLong extends ElementWidth
   case object FullWidth extends ElementWidth
   case class GroupChildElement(child: VdomNode, size: ElementWidth)
+  case class ArrayChildElement(child: VdomNode)
 
   trait FormGroupLayout extends ReactComponent {
     def apply(title: String, children: Seq[GroupChildElement], options: FormRenderingOptions): Unmounted
   }
 
-  trait ArrayGroupLayout {
-    def apply(title: String, children: Seq[GroupChildElement], options: FormRenderingOptions): VdomNode
+  trait ArrayGroupLayout extends ReactComponent {
+    def apply(title: String, children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted
   }
 }

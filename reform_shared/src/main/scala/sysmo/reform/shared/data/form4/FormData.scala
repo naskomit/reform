@@ -60,6 +60,9 @@ class ValueMap(data: Map[ElementPath, FieldValue[_]]) {
   def update(path: ElementPath, value: FieldValue[_]): ValueMap = {
     new ValueMap(data + (path -> value))
   }
+  def remove(path: ElementPath) = {
+    new ValueMap(data.removed(path))
+  }
   def toMap: Map[ElementPath, FieldValue[_]] = data
   override def toString: String = s"ValueMap(${data.map {
     case(k, v) => {

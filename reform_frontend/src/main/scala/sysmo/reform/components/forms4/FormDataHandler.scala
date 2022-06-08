@@ -1,10 +1,10 @@
 package sysmo.reform.components.forms4
 
 import japgolly.scalajs.react.BackendScope
-import sysmo.reform.components.forms4.editors.{EditorAction, SetFieldValue}
+import sysmo.reform.components.forms4.editors.{EditorAction, RemoveArrayElement, SetFieldValue}
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.data.{form4 => F}
-import sysmo.reform.shared.data.form4.FieldEditor
+import sysmo.reform.shared.data.form4.{FieldEditor, FieldValue, LocalFieldIndex}
 import sysmo.reform.shared.gremlin.tplight.Graph
 import sysmo.reform.shared.gremlin.tplight.gobject.GraphObject
 import sysmo.reform.shared.util.LabeledValue
@@ -27,6 +27,18 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
           current_data = current_data.update(path, value)
           logger.debug(current_data.toString)
           s.copy(render_ind = s.render_ind + 1)
+        }).runNow()
+
+        case RemoveArrayElement(path, id) => $.modState(s => {
+          val new_array_index: LocalFieldIndex = current_data.get(path) match {
+            case F.LocalFieldIndex(ids) => F.LocalFieldIndex(ids.filterNot(_ == id))
+          }
+          current_data = current_data
+            .update(path, new_array_index)
+            .remove(path / id)
+          logger.debug(current_data.toString)
+          s.copy(render_ind = s.render_ind + 1)
+
         }).runNow()
 
         case _ => logger.error(s"Unknow action ${action}")
