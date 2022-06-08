@@ -64,6 +64,7 @@ object PathMatch {
 
 object ElementPath {
   val Empty = ElementPath(Seq())
+  def str(v: String): ElementPath = Empty / v
 }
 
 case class FormElementBackend[T <: FormElement.Def](
@@ -346,6 +347,38 @@ case class GroupArray(backend: FormElementBackend[GroupArray.Def.type]) extends 
     element_fids.map{id =>
       FormElement.from_vertex(group_vertex, id, Some(this)).asInstanceOf[FormGroup]
     }
+  }
+
+  def index(data: ValueMap): LocalFieldIndex = data.get(path) match {
+    case x @ LocalFieldIndex(_) => x
+    case NoValue => LocalFieldIndex(Seq())
+  }
+
+  def insert_array_element(data: ValueMap, id: ArrayFieldId, before: Boolean): ValueMap = {
+    val new_uid = ArrayFieldId.random()
+    val new_array_index: LocalFieldIndex = data.get(path) match {
+      case LocalFieldIndex(ids) => {
+        val el_index = ids.zipWithIndex.find(_._1 == id).get._2
+        LocalFieldIndex(
+          if (before)
+            ids.take(el_index) ++ Seq(new_uid) ++ ids.drop(el_index)
+          else
+            ids.take(el_index + 1) ++ Seq(new_uid) ++ ids.drop(el_index + 1)
+        )
+      }
+    }
+    data.update(path, new_array_index)
+  }
+
+  def remove_element(data: ValueMap, id: ArrayFieldId): ValueMap = {
+    val new_array_index: LocalFieldIndex =
+      LocalFieldIndex(
+        index(data).ids.filterNot(_ == id)
+      )
+
+    data
+      .update(path, new_array_index)
+      .remove_all(data.subpaths(path / id))
   }
 }
 

@@ -54,14 +54,24 @@ object FieldValue {
 //  def fv: SomeValue[T] = SomeValue(LabeledValue(v))
 //}
 
-class ValueMap(data: Map[ElementPath, FieldValue[_]]) {
+class ValueMap(data: Map[ElementPath, FieldValue[_]]) extends IterableOnce[(ElementPath, FieldValue[_])] {
 //  def apply(path: ElementPath): FieldValue[_] = data(path)
+  override def iterator: Iterator[(ElementPath, FieldValue[_])] = data.iterator
+  override def knownSize: Int = data.size
+
   def get(path: ElementPath): FieldValue[_] = data.getOrElse(path, NoValue)
   def update(path: ElementPath, value: FieldValue[_]): ValueMap = {
     new ValueMap(data + (path -> value))
   }
-  def remove(path: ElementPath) = {
+  def remove(path: ElementPath): ValueMap = {
     new ValueMap(data.removed(path))
+  }
+  def remove_all(paths: Seq[ElementPath]): ValueMap = {
+    new ValueMap(data.removedAll(paths))
+  }
+
+  def subpaths(path: ElementPath): Seq[ElementPath] = {
+    data.keys.filter(path.contains).toSeq
   }
   def toMap: Map[ElementPath, FieldValue[_]] = data
   override def toString: String = s"ValueMap(${data.map {
@@ -76,6 +86,7 @@ class ValueMap(data: Map[ElementPath, FieldValue[_]]) {
       s"${k.toString} -> $v_str"
     } .mkString("")
   }})"
+
 }
 object ValueMap {
   def apply(items: Tuple2[ElementPath, FieldValue[_]]*): ValueMap = new ValueMap(items.toMap)

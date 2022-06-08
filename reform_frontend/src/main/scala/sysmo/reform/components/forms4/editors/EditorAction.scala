@@ -13,4 +13,6 @@ sealed trait UpdateValue extends EditorAction
 case class SetFieldValue(path: F.ElementPath, value : F.FieldValue[_]) extends UpdateValue
 
 sealed trait GroupArrayAction extends EditorAction
-case class RemoveArrayElement(path: F.ElementPath, id: F.ArrayFieldId) extends GroupArrayAction
+case class RemoveArrayElement(array: F.GroupArray, id: F.ArrayFieldId) extends GroupArrayAction
+case class InsertElementBefore(array: F.GroupArray, id: F.ArrayFieldId) extends GroupArrayAction
+case class InsertElementAfter(array: F.GroupArray, id: F.ArrayFieldId) extends GroupArrayAction

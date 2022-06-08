@@ -3,7 +3,7 @@ package sysmo.reform.components.forms4
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.editors.RemoveArrayElement
+import sysmo.reform.components.forms4.editors.{InsertElementAfter, InsertElementBefore, RemoveArrayElement}
 import sysmo.reform.components.forms4.layouts.ArrayChildElement
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
@@ -16,6 +16,8 @@ object ArrayItemComponent extends ReactComponent {
     def render (p: Props, s: State): VdomElement = {
       <.div(
         ButtonToolbar.builder
+          .button("Insert before", Effects.insert_before(p))
+          .button("Insert after", Effects.insert_after(p))
           .button("Remove", Effects.remove(p))
           .build,
 
@@ -30,8 +32,16 @@ object ArrayItemComponent extends ReactComponent {
         }
       }
 
+      def insert_before(p: Props): ButtonToolbar.CB = Callback {
+        p.data_handler.dispatch(InsertElementBefore(p.array, array_id(p)))
+      }.asAsyncCallback
+
+      def insert_after(p: Props): ButtonToolbar.CB = Callback {
+        p.data_handler.dispatch(InsertElementAfter(p.array, array_id(p)))
+      }.asAsyncCallback
+
       def remove(p: Props): ButtonToolbar.CB = Callback {
-        p.data_handler.dispatch(RemoveArrayElement(p.array.path, array_id(p)))
+        p.data_handler.dispatch(RemoveArrayElement(p.array, array_id(p)))
       }.asAsyncCallback
 
     }
