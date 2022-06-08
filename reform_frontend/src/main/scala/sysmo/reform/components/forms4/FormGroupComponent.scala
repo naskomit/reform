@@ -4,31 +4,30 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.forms4.{layouts => L}
-import sysmo.reform.shared.form4.{BooleanEditor, FieldEditor, FloatEditor, FormElement, FormGroup, GroupArray, IntegerEditor, SelectEditor, StringEditor}
-import sysmo.reform.shared.{form4 => F}
+import sysmo.reform.shared.{form => F}
 
 object FormGroupComponent extends ReactComponent {
   import japgolly.scalajs.react._
 
-  case class Props(group: FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
+  case class Props(group: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
-    def render_form_element(p: Props, elem: FormElement, options: FormRenderingOptions): VdomNode = {
+    def render_form_element(p: Props, elem: F.FormElement, options: FormRenderingOptions): VdomNode = {
       elem match {
-        case x: FieldEditor => render_field_editor(p, x)
-        case x: FormGroup => FormGroupComponent(x, p.data_handler, options)
-        case x: GroupArray => GroupArrayComponent(x, p.data_handler, options)
+        case x: F.FieldEditor => render_field_editor(p, x)
+        case x: F.FormGroup => FormGroupComponent(x, p.data_handler, options)
+        case x: F.GroupArray => GroupArrayComponent(x, p.data_handler, options)
       }
     }
 
-    def render_field_editor(p: Props, editor: FieldEditor): VdomNode = {
+    def render_field_editor(p: Props, editor: F.FieldEditor): VdomNode = {
       editor match {
-        case x: StringEditor => editors.StringEditorComponent(x, p.data_handler)
-        case x: BooleanEditor => editors.BooleanEditorComponent(x, p.data_handler)
-        case x: FloatEditor => editors.FloatEditorComponent(x, p.data_handler)
-        case x: IntegerEditor => editors.IntegerEditorComponent(x, p.data_handler)
-        case x: SelectEditor => editors.SelectEditorComponent(x, p.data_handler)
+        case x: F.StringEditor => editors.StringEditorComponent(x, p.data_handler)
+        case x: F.BooleanEditor => editors.BooleanEditorComponent(x, p.data_handler)
+        case x: F.FloatEditor => editors.FloatEditorComponent(x, p.data_handler)
+        case x: F.IntegerEditor => editors.IntegerEditorComponent(x, p.data_handler)
+        case x: F.SelectEditor => editors.SelectEditorComponent(x, p.data_handler)
       }
     }
 
@@ -45,9 +44,9 @@ object FormGroupComponent extends ReactComponent {
         .map(elem => {
           val vdom_element = render_form_element(p, elem, child_options)
           val width = elem match {
-            case e: FormGroup =>  L.FullWidth
-            case e: FieldEditor => L.Medium
-            case e: GroupArray => L.FullWidth
+            case e: F.FormGroup =>  L.FullWidth
+            case e: F.FieldEditor => L.Medium
+            case e: F.GroupArray => L.FullWidth
           }
           L.GroupChildElement(vdom_element, width)
         })
@@ -64,7 +63,7 @@ object FormGroupComponent extends ReactComponent {
     .build
 
   //
-  def apply(group: FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
+  def apply(group: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
     component(Props(group, data_handler, options))
   }
 }

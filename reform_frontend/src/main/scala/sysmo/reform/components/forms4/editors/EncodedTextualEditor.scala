@@ -3,13 +3,12 @@ package sysmo.reform.components.forms4.editors
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
 import sysmo.reform.components.forms4.FormDataHandler
-import sysmo.reform.shared.{form4, form4 => F}
-import sysmo.reform.shared.form4.{FieldEditor, SomeValue}
+import sysmo.reform.shared.{form => F}
 import sysmo.reform.shared.util.LabeledValue
 
 trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
   val display_name: String
-  type EditorType <: FieldEditor
+  type EditorType <: F.FieldEditor
   case class Props(editor: EditorType, data_handler: FormDataHandler) {
     def value: FieldValueType = data_handler.get_value(editor).asInstanceOf[FieldValueType]
   }
@@ -57,9 +56,9 @@ trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
       val value: Option[VT] = parse(s.local_value)
       value match {
         case Some(x) => $.modState(s => s.copy(
-          local_value = format(SomeValue(LabeledValue(x))), status = Valid, focused = false
+          local_value = format(F.SomeValue(LabeledValue(x))), status = Valid, focused = false
         )) >> Callback {
-          p.data_handler.dispatch(SetFieldValue(p.editor.path, form4.SomeValue(LabeledValue(x))))
+          p.data_handler.dispatch(SetFieldValue(p.editor.path, F.SomeValue(LabeledValue(x))))
         }
         case None => $.modState(s => s.copy(status = Error("Invalid value", s.local_value)))
       }

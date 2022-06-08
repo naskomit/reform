@@ -7,11 +7,10 @@ import sysmo.reform.components.forms4.editors.RemoveArrayElement
 import sysmo.reform.components.forms4.layouts.ArrayChildElement
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
-import sysmo.reform.shared.form4.{ArrayFieldId, FormGroup, GroupArray}
-import sysmo.reform.shared.{form4 => F}
+import sysmo.reform.shared.{form => F}
 
 object ArrayItemComponent extends ReactComponent {
-  case class Props(array: GroupArray, element: FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
+  case class Props(array: F.GroupArray, element: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
   case class State(i: Int)
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
@@ -25,9 +24,9 @@ object ArrayItemComponent extends ReactComponent {
     }
 
     object Effects {
-      def array_id(p: Props): ArrayFieldId = {
+      def array_id(p: Props): F.ArrayFieldId = {
         p.element.fid match {
-          case id @ ArrayFieldId(_) => id
+          case id @ F.ArrayFieldId(_) => id
         }
       }
 
@@ -53,7 +52,7 @@ object ArrayItemComponent extends ReactComponent {
 
 object GroupArrayComponent extends ReactComponent {
 
-  case class Props(array: GroupArray, data_handler: FormDataHandler, options: FormRenderingOptions)
+  case class Props(array: F.GroupArray, data_handler: FormDataHandler, options: FormRenderingOptions)
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -77,7 +76,7 @@ object GroupArrayComponent extends ReactComponent {
     .build
 
   //
-  def apply(array: GroupArray, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
+  def apply(array: F.GroupArray, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
     component(Props(array, data_handler, options))
   }
 }

@@ -5,12 +5,11 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.components.{Processing, ReactComponent}
-import sysmo.reform.shared.form4.FormGroup
-import sysmo.reform.shared.{form4 => F}
+import sysmo.reform.shared.{form => F}
 
 object FormEditorComponent extends ReactComponent {
   import japgolly.scalajs.react._
-  case class Props(form: FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
+  case class Props(form: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
   case class State(render_ind: Int)
   final class Backend($: BackendScope[Props, State]) {
     def bind(p: Props): Unit  = p.data_handler.bind($)
@@ -57,10 +56,10 @@ object FormEditorComponent extends ReactComponent {
       })
       .build
 
-  def apply(form: FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
+  def apply(form: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
     component(Props(form, data_handler, options))
   }
-  def apply(form: FormGroup, data_handler: FormDataHandler): Unmounted = {
+  def apply(form: F.FormGroup, data_handler: FormDataHandler): Unmounted = {
     apply(form, data_handler, FormRenderingOptions.default)
   }
 }

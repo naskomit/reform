@@ -2,9 +2,8 @@ package sysmo.reform.components.select
 
 import japgolly.scalajs.react.{Children, JsComponent}
 import org.scalajs.dom
-import sysmo.reform.shared.form4.{FieldValue, MultiValue, NoValue, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
-import sysmo.reform.shared.{form4 => F}
+import sysmo.reform.shared.{form => F}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -55,16 +54,16 @@ object ReactSelectFacades {
     class Builder {
       val props = (new js.Object).asInstanceOf[Props]
 
-      def value(v: FieldValue[_]): this.type = {
+      def value(v: F.FieldValue[_]): this.type = {
         props.value = v match {
-          case SomeValue(x) => {
+          case F.SomeValue(x) => {
             val dv = (new js.Object).asInstanceOf[Choice]
             dv.value = x.value
             dv.label = x.make_label
             dv
           }
 
-          case MultiValue(s) => {
+          case F.MultiValue(s) => {
             s.map { x =>
               val dv = (new js.Object).asInstanceOf[Choice]
               dv.value = x.value
@@ -73,7 +72,7 @@ object ReactSelectFacades {
             }.toJSArray
           }
 
-          case NoValue => null
+          case F.NoValue => null
 
 
         }
@@ -123,51 +122,6 @@ object ReactSelectFacades {
 
     def builder: Builder = new Builder
 
-//    def apply(value: Option[LabeledValue[_]], options : Seq[LabeledValue[_]],
-//              defaultValue : Option[LabeledValue[_]] = None,
-//              is_disabled: Option[Boolean] = None, is_loading: Option[Boolean] = None,
-//              is_clearable: Option[Boolean] = None, is_searchable: Option[Boolean] = None,
-//              on_change: Option[OnChange] = None, on_input_change: Option[OnInputChange] = None,
-//              on_menu_open: Option[OnMenuOpen] = None) = {
-//      val props = (new js.Object).asInstanceOf[Props]
-//
-//
-//      props.value = value match {
-//        case Some(p) => {
-//          val dv = (new js.Object).asInstanceOf[Choice]
-//          dv.value = p.value
-//          dv.label = p.make_label
-//          dv
-//        }
-//        case None => null
-//      }
-//
-//      props.defaultValue = defaultValue match {
-//        case Some(p) => {
-//          val dv = (new js.Object).asInstanceOf[Choice]
-//          dv.value = p.value
-//          dv.label = p.make_label
-//          dv
-//        }
-//        case None => js.undefined
-//      }
-//
-//      props.options = options.map { x => {
-//        val option = (new js.Object).asInstanceOf[Choice]
-//        option.value =  x.value
-//        option.label = x.make_label
-//        option
-//      }}.toJSArray
-//
-//      props.isDisabled = is_disabled.orUndefined
-//      props.isClearable = is_clearable.orUndefined
-//      props.isLoading = is_loading.orUndefined
-//      props.isSearchable = is_searchable.orUndefined
-//      props.onChange = on_change.orUndefined
-//      props.onInputChange = on_input_change.orUndefined
-//      props.onMenuOpen = on_menu_open.orUndefined
-//      component.withProps(props)()
-//    }
   }
 
 

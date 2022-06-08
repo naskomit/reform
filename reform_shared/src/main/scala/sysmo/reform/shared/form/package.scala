@@ -1,6 +1,6 @@
 package sysmo.reform.shared
 
-package object form4 {
+package object form {
   type CharValue = FieldValue[String]
   type IntValue = FieldValue[Int]
   type FloatValue = FieldValue[Double]

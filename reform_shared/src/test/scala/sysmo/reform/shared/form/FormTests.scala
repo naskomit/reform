@@ -2,7 +2,6 @@ package sysmo.reform.shared.form
 
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should._
-import sysmo.reform.shared.form4.ElementPath
 
 class FormTests extends AnyFunSpec with Matchers {
   describe("Element path tests") {

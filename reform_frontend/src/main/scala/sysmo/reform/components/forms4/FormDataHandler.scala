@@ -2,8 +2,8 @@ package sysmo.reform.components.forms4
 
 import japgolly.scalajs.react.BackendScope
 import sysmo.reform.components.forms4.editors.{EditorAction, RemoveArrayElement, SetFieldValue}
-import sysmo.reform.shared.{form4, expr => E, form4 => F}
-import sysmo.reform.shared.form4.{ElementPath, FieldEditor, FieldValue, FormElement, HandlerContext, LocalFieldIndex, ValueMap}
+import sysmo.reform.shared.{expr => E, form => F}
+import sysmo.reform.shared.form.{ElementPath, FieldEditor, FieldValue, FormElement, HandlerContext, LocalFieldIndex, ValueMap}
 import sysmo.reform.shared.gremlin.tplight.Graph
 import sysmo.reform.shared.gremlin.tplight.gobject.GraphObject
 import sysmo.reform.shared.util.LabeledValue
@@ -30,7 +30,7 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
 
         case RemoveArrayElement(path, id) => $.modState(s => {
           val new_array_index: LocalFieldIndex = current_data.get(path) match {
-            case LocalFieldIndex(ids) => form4.LocalFieldIndex(ids.filterNot(_ == id))
+            case LocalFieldIndex(ids) => F.LocalFieldIndex(ids.filterNot(_ == id))
           }
           current_data = current_data
             .update(path, new_array_index)
