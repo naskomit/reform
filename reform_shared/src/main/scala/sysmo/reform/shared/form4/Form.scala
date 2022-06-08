@@ -1,4 +1,4 @@
-package sysmo.reform.shared.data.form4
+package sysmo.reform.shared.form4
 
 import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.gremlin.tplight
@@ -45,9 +45,9 @@ case class ElementPath(segments: Seq[FieldId]) {
   }
 
   def contains(other: ElementPath): Boolean = {
-    if (other.segments.isEmpty)
+    if (segments.isEmpty)
       true
-    else if (segments.head != other.segments.head || segments.length < other.segments.length)
+    else if ((segments.length > other.segments.length) || (segments.head != other.segments.head))
       false
     else ElementPath(segments.tail).contains(ElementPath(other.segments.tail))
 

@@ -2,8 +2,9 @@ package sysmo.reform.components.select
 
 import japgolly.scalajs.react.{Children, JsComponent}
 import org.scalajs.dom
-import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.shared.form4.{FieldValue, MultiValue, NoValue, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
+import sysmo.reform.shared.{form4 => F}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -54,16 +55,16 @@ object ReactSelectFacades {
     class Builder {
       val props = (new js.Object).asInstanceOf[Props]
 
-      def value(v: F.FieldValue[_]): this.type = {
+      def value(v: FieldValue[_]): this.type = {
         props.value = v match {
-          case F.SomeValue(x) => {
+          case SomeValue(x) => {
             val dv = (new js.Object).asInstanceOf[Choice]
             dv.value = x.value
             dv.label = x.make_label
             dv
           }
 
-          case F.MultiValue(s) => {
+          case MultiValue(s) => {
             s.map { x =>
               val dv = (new js.Object).asInstanceOf[Choice]
               dv.value = x.value
@@ -72,7 +73,7 @@ object ReactSelectFacades {
             }.toJSArray
           }
 
-          case F.NoValue => null
+          case NoValue => null
 
 
         }

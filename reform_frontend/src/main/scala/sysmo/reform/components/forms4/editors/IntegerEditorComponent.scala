@@ -1,18 +1,19 @@
 package sysmo.reform.components.forms4.editors
 
 import sysmo.reform.components.forms4.FormDataHandler
-import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.shared.form4.{IntegerEditor, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
+import sysmo.reform.shared.{form4 => F}
 
 object IntegerEditorComponent extends EncodedTextualEditor[Int] {
   override val display_name: String = "IntegerEditor"
-  override type EditorType = F.IntegerEditor
+  override type EditorType = IntegerEditor
 
   override def parse(s: String): Option[Int] = s.toIntOption
 
   def format(value: FieldValueType): String = {
     value match {
-      case F.SomeValue(LabeledValue(v, _)) => v.toString
+      case SomeValue(LabeledValue(v, _)) => v.toString
       case _ => ""
     }
   }

@@ -2,9 +2,8 @@ package sysmo.reform.components.forms4
 
 import japgolly.scalajs.react.BackendScope
 import sysmo.reform.components.forms4.editors.{EditorAction, RemoveArrayElement, SetFieldValue}
-import sysmo.reform.shared.{expr => E}
-import sysmo.reform.shared.data.{form4 => F}
-import sysmo.reform.shared.data.form4.{FieldEditor, FieldValue, LocalFieldIndex}
+import sysmo.reform.shared.{form4, expr => E, form4 => F}
+import sysmo.reform.shared.form4.{ElementPath, FieldEditor, FieldValue, FormElement, HandlerContext, LocalFieldIndex, ValueMap}
 import sysmo.reform.shared.gremlin.tplight.Graph
 import sysmo.reform.shared.gremlin.tplight.gobject.GraphObject
 import sysmo.reform.shared.util.LabeledValue
@@ -14,11 +13,11 @@ import scala.concurrent.Future
 
 abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
   import FormDataHandler._
-  def initial_data: F.ValueMap
+  def initial_data: ValueMap
   override def graph: Graph = _graph
   var handler_state: HandlerState = HandlerState.Ready
 
-  var current_data: F.ValueMap = initial_data
+  var current_data: ValueMap = initial_data
   type BackendScopeType = BackendScope[FormEditorComponent.Props, FormEditorComponent.State]
   class Dispatcher($: BackendScopeType) extends EditorAction.Dispatcher {
     override def handle_action(action: EditorAction): Unit = {
@@ -31,7 +30,7 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
 
         case RemoveArrayElement(path, id) => $.modState(s => {
           val new_array_index: LocalFieldIndex = current_data.get(path) match {
-            case F.LocalFieldIndex(ids) => F.LocalFieldIndex(ids.filterNot(_ == id))
+            case LocalFieldIndex(ids) => form4.LocalFieldIndex(ids.filterNot(_ == id))
           }
           current_data = current_data
             .update(path, new_array_index)
@@ -46,11 +45,11 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
     }
   }
 
-  def context(base: F.FormElement): F.HandlerContext =
-    new F.HandlerContext(base, current_data)
+  def context(base: FormElement): HandlerContext =
+    new HandlerContext(base, current_data)
 
-  def get_value(path: F.ElementPath): F.FieldValue[_] = current_data.get(path)
-  def get_value(editor: FieldEditor): F.FieldValue[_] = current_data.get(editor.path)
+  def get_value(path: ElementPath): FieldValue[_] = current_data.get(path)
+  def get_value(editor: FieldEditor): FieldValue[_] = current_data.get(editor.path)
 
 //  def get_array(array: F.GroupArray): Seq[F.ElementPath] = {
 //    val array_index = current_data.get(array.path).match {
@@ -88,7 +87,7 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
     }
   }
 
-  def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]]
+  def get_choices(element: FormElement): Future[Seq[LabeledValue[_]]]
 }
 
 object FormDataHandler {

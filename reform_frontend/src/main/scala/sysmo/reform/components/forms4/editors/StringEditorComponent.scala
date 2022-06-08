@@ -1,18 +1,19 @@
 package sysmo.reform.components.forms4.editors
 
 import sysmo.reform.components.forms4.FormDataHandler
-import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.shared.form4.{SomeValue, StringEditor}
 import sysmo.reform.shared.util.LabeledValue
+import sysmo.reform.shared.{form4 => F}
 
 object StringEditorComponent extends EncodedTextualEditor[String] {
   override val display_name: String = "StringEditor"
-  override type EditorType = F.StringEditor
+  override type EditorType = StringEditor
 
   override def parse(s: String): Option[String] = Some(s)
 
   def format(value: FieldValueType): String = {
     value match {
-      case F.SomeValue(LabeledValue(v, _)) => v
+      case SomeValue(LabeledValue(v, _)) => v
       case _ => ""
     }
   }

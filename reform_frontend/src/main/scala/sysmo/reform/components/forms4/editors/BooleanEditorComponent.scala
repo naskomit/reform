@@ -3,18 +3,19 @@ package sysmo.reform.components.forms4.editors
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
 import sysmo.reform.components.forms4.FormDataHandler
-import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.shared.{form4, form4 => F}
+import sysmo.reform.shared.form4.{BooleanEditor, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
 
 object BooleanEditorComponent extends AbstractEditor[Boolean] {
-  case class Props(editor: F.BooleanEditor, data_handler: FormDataHandler) {
+  case class Props(editor: BooleanEditor, data_handler: FormDataHandler) {
     def value: FieldValueType = data_handler.get_value(editor).asInstanceOf[FieldValueType]
   }
   case class State()
 
   def format(v: FieldValueType): Boolean = {
     v match {
-      case F.SomeValue(LabeledValue(true, _)) => true
+      case SomeValue(LabeledValue(true, _)) => true
       case _ => false
     }
 
@@ -42,7 +43,7 @@ object BooleanEditorComponent extends AbstractEditor[Boolean] {
 
     def on_click(p: Props)(event: ReactEventFromInput): Callback = Callback {
       p.data_handler.dispatch(
-        SetFieldValue(p.editor.path, F.SomeValue(LabeledValue(!format(p.value))))
+        SetFieldValue(p.editor.path, form4.SomeValue(LabeledValue(!format(p.value))))
       )
     }
 
@@ -60,7 +61,7 @@ object BooleanEditorComponent extends AbstractEditor[Boolean] {
       .renderBackend[Backend]
       .build
 
-  def apply(editor: F.BooleanEditor, data_handler: FormDataHandler): Unmounted = {
+  def apply(editor: BooleanEditor, data_handler: FormDataHandler): Unmounted = {
     component(Props(editor, data_handler))
 
   }

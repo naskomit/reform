@@ -4,14 +4,15 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ScalaComponent}
 import sysmo.reform.components.forms4.FormDataHandler
 import sysmo.reform.components.select.ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
-import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.util.LabeledValue
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import sysmo.reform.shared.form4.{MultiValue, NoValue, SelectEditor, SomeValue}
+import sysmo.reform.shared.{form4 => F}
 
 import scala.scalajs.js
 
 object SelectEditorComponent extends AbstractEditor[String] {
-  case class Props(editor: F.SelectEditor, data_handler: FormDataHandler) {
+  case class Props(editor: SelectEditor, data_handler: FormDataHandler) {
     def value: FieldValueType = data_handler.get_value(editor).asInstanceOf[FieldValueType]
   }
 
@@ -52,11 +53,11 @@ object SelectEditorComponent extends AbstractEditor[String] {
           val original_choice: Seq[LabeledValue[_]] = many.map(x => find_choice(x.value, s.choices)).collect {
             case Some(x) => x
           }.toSeq
-          p.data_handler.dispatch(SetFieldValue(p.editor.path, F.MultiValue(original_choice)))
+          p.data_handler.dispatch(SetFieldValue(p.editor.path, MultiValue(original_choice)))
         }
         case one => {
           find_choice(one.asInstanceOf[RSNC.Choice].value, s.choices) match {
-            case Some(x) => p.data_handler.dispatch(SetFieldValue(p.editor.path, F.SomeValue(x)))
+            case Some(x) => p.data_handler.dispatch(SetFieldValue(p.editor.path, SomeValue(x)))
             case None =>
           }
         }
@@ -73,7 +74,7 @@ object SelectEditorComponent extends AbstractEditor[String] {
         case "deselect-option" => throw new IllegalArgumentException("deselect-option")
         case "remove-value" => update_selection(p, s)(selection)
         case "pop-value" => throw new IllegalArgumentException("pop-value")
-        case "clear" => p.data_handler.dispatch(SetFieldValue(p.editor.path, F.NoValue))
+        case "clear" => p.data_handler.dispatch(SetFieldValue(p.editor.path, NoValue))
         case "create-option" => throw new IllegalArgumentException("create-option")
       }
     }
@@ -100,7 +101,7 @@ object SelectEditorComponent extends AbstractEditor[String] {
 //            .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(editor: F.SelectEditor, data_handler: FormDataHandler): Unmounted = {
+  def apply(editor: SelectEditor, data_handler: FormDataHandler): Unmounted = {
     component(Props(editor, data_handler))
   }
 

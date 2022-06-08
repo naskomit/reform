@@ -1,4 +1,4 @@
-package sysmo.reform.shared.data.form4
+package sysmo.reform.shared.form4
 
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.{expr => E}

@@ -7,15 +7,17 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
-import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.expr.{Expression => E}
+import sysmo.reform.shared.{form4, form4 => F}
+import sysmo.reform.shared.form4.{FormElement, FormGroup, PathMatch, ValueMap}
 import sysmo.reform.shared.gremlin.memg.MemGraph
 import sysmo.reform.shared.util.LabeledValue
+
 import scala.concurrent.Future
 
 object BiomarkerAnalysisPanel extends ApplicationPanel {
 
-  case class Props(form: F.FormGroup, data_handler: FormDataHandler)
+  case class Props(form: FormGroup, data_handler: FormDataHandler)
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
@@ -39,9 +41,8 @@ object BiomarkerAnalysisPanel extends ApplicationPanel {
 
   val graph = MemGraph()
 
-  val form: F.FormGroup = {
-    import F.FieldValue.implicits._
-    F.FormGroup.builder(graph, "biomarker_analysis").descr("Biomarker Analysis")
+  val form: FormGroup = {
+    form4.FormGroup.builder(graph, "biomarker_analysis").descr("Biomarker Analysis")
       .group("general", _.descr("General")
         .field(_.select("an_type").descr("Analysis type"))
         .field(_.char("analysis_name").descr("Analysis Name"))
@@ -61,8 +62,8 @@ object BiomarkerAnalysisPanel extends ApplicationPanel {
       .build
   }
 
-  val init_data: F.ValueMap = {
-    F.ValueMap.builder
+  val init_data: ValueMap = {
+    form4.ValueMap.builder
       .record("biomarker_analysis", _
         .record("dep_var", _
           .value("bm_type", "qPCR")
@@ -80,8 +81,8 @@ object BiomarkerAnalysisPanel extends ApplicationPanel {
   println(init_data)
 
   object data_handler extends FormDataHandler(graph) {
-    override def initial_data: F.ValueMap = init_data
-    override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
+    override def initial_data: ValueMap = init_data
+    override def get_choices(element: FormElement): Future[Seq[LabeledValue[_]]] = {
       val analysis_types = Seq(
         LabeledValue("correlation", Some("Correlation analysis")),
         LabeledValue("DE", Some("Differential Expression analysis")),
@@ -110,15 +111,15 @@ object BiomarkerAnalysisPanel extends ApplicationPanel {
       val path = element.path
 //      logger.info(path.toString)
       val choices = path match {
-        case F.PathMatch(Seq(_, "general", "an_type")) => analysis_types
-        case F.PathMatch(Seq(_, "dep_var", "bm_type")) => biomarker_types
-        case F.PathMatch(Seq(_, "dep_var", "variable")) => biomarker_variable
-        case F.PathMatch(Seq(_, "dep_var", "biomarker")) => biomarkers
-        case F.PathMatch(Seq(_, "dep_var", "transformation")) => transformation
-        case F.PathMatch(Seq(_, "indep_var", _, "bm_type")) => biomarker_types
-        case F.PathMatch(Seq(_, "indep_var", _, "variable")) => biomarker_variable
-        case F.PathMatch(Seq(_, "indep_var", _, "transformation")) => transformation
-        case F.PathMatch(Seq(_, "indep_var", _, "biomarker")) => biomarkers
+        case PathMatch(Seq(_, "general", "an_type")) => analysis_types
+        case PathMatch(Seq(_, "dep_var", "bm_type")) => biomarker_types
+        case PathMatch(Seq(_, "dep_var", "variable")) => biomarker_variable
+        case PathMatch(Seq(_, "dep_var", "biomarker")) => biomarkers
+        case PathMatch(Seq(_, "dep_var", "transformation")) => transformation
+        case PathMatch(Seq(_, "indep_var", _, "bm_type")) => biomarker_types
+        case PathMatch(Seq(_, "indep_var", _, "variable")) => biomarker_variable
+        case PathMatch(Seq(_, "indep_var", _, "transformation")) => transformation
+        case PathMatch(Seq(_, "indep_var", _, "biomarker")) => biomarkers
         case _ => Seq()
       }
       Future(choices)

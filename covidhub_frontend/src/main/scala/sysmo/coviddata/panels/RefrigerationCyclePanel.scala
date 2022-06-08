@@ -7,15 +7,17 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
-import sysmo.reform.shared.data.{form4 => F}
 import sysmo.reform.shared.expr.{Expression => E}
+import sysmo.reform.shared.{form4, form4 => F}
+import sysmo.reform.shared.form4.{FormElement, FormGroup, PathMatch, ValueMap}
 import sysmo.reform.shared.gremlin.memg.MemGraph
 import sysmo.reform.shared.util.LabeledValue
+
 import scala.concurrent.Future
 
 object RefrigerationCyclePanel extends ApplicationPanel {
 
-  case class Props(form: F.FormGroup, data_handler: FormDataHandler)
+  case class Props(form: FormGroup, data_handler: FormDataHandler)
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
@@ -39,9 +41,8 @@ object RefrigerationCyclePanel extends ApplicationPanel {
 
   val graph = MemGraph()
 
-  val form: F.FormGroup = {
-    import F.FieldValue.implicits._
-    F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
+  val form: FormGroup = {
+    form4.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
       .field(_.char("aname").descr("Analysis Name"))
       .field(_.int("n_cycles").descr("Number of cycles"))
       .field(_.bool("save").descr("Save analysis"))
@@ -80,8 +81,8 @@ object RefrigerationCyclePanel extends ApplicationPanel {
       ).build
   }
 
-  val data_init: F.ValueMap = {
-    F.ValueMap.builder
+  val data_init: ValueMap = {
+    form4.ValueMap.builder
       .record("refrigeration_cycle", _
         .value("aname", "Cycle 1")
         .value("n_cycles", 10)
@@ -105,24 +106,24 @@ object RefrigerationCyclePanel extends ApplicationPanel {
   }
 
   object data_handler extends FormDataHandler(graph) {
-    override def initial_data: F.ValueMap = data_init
-    override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
+    override def initial_data: ValueMap = data_init
+    override def get_choices(element: FormElement): Future[Seq[LabeledValue[_]]] = {
       val path = element.path
       val thermodynamic_state_choices = Seq(
         LabeledValue("p", Some("Pressure")),
         LabeledValue("T", Some("Temperature"))
       )
       val choices = path match {
-        case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "fluid")) => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
-        case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "warm_by")) => thermodynamic_state_choices
-        case F.PathMatch(Seq(_, "cycle_definition", "cycle_params", "cold_by")) => thermodynamic_state_choices
-        case F.PathMatch(Seq(_, "cycle_definition", "condenser", "outlet_by")) => thermodynamic_state_choices
-        case F.PathMatch(Seq(_, "cycle_definition", "evaporator", "outlet_by")) => thermodynamic_state_choices
-        case F.PathMatch(Seq(_, "cycle_definition", "compressor", "model")) => Seq(
+        case PathMatch(Seq(_, "cycle_definition", "cycle_params", "fluid")) => Seq("para-Hydrogen", "orho-Hydrogen", "water", "R134a").map(x => LabeledValue(x))
+        case PathMatch(Seq(_, "cycle_definition", "cycle_params", "warm_by")) => thermodynamic_state_choices
+        case PathMatch(Seq(_, "cycle_definition", "cycle_params", "cold_by")) => thermodynamic_state_choices
+        case PathMatch(Seq(_, "cycle_definition", "condenser", "outlet_by")) => thermodynamic_state_choices
+        case PathMatch(Seq(_, "cycle_definition", "evaporator", "outlet_by")) => thermodynamic_state_choices
+        case PathMatch(Seq(_, "cycle_definition", "compressor", "model")) => Seq(
           LabeledValue("isentropic"),
           LabeledValue("isothermal"),
         )
-        case F.PathMatch(Seq(_, "diagram_settings", "isolines")) => Seq(
+        case PathMatch(Seq(_, "diagram_settings", "isolines")) => Seq(
           LabeledValue("isotherms"),
           LabeledValue("isobars"),
           LabeledValue("isochores"),

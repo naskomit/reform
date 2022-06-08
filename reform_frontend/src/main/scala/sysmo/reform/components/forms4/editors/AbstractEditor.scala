@@ -1,11 +1,12 @@
 package sysmo.reform.components.forms4.editors
 
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.shared.data.{form4 => F}
+import sysmo.reform.shared.form4.FieldValue
+import sysmo.reform.shared.{form4 => F}
 
 trait AbstractEditor[VT] extends ReactComponent {
   type ValueType = VT
-  type FieldValueType = F.FieldValue[VT]
+  type FieldValueType = FieldValue[VT]
 
   trait Status
   case object Valid extends Status

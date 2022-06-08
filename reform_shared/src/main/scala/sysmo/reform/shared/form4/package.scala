@@ -1,4 +1,4 @@
-package sysmo.reform.shared.data
+package sysmo.reform.shared
 
 package object form4 {
   type CharValue = FieldValue[String]
