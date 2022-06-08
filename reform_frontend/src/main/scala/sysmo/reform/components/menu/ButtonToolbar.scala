@@ -33,7 +33,7 @@ object ButtonToolbar extends ReactComponent {
 
   // : Scala.Component[Props, State, Backend, _]
   val component =
-    ScalaComponent.builder[Props]("Form1")
+    ScalaComponent.builder[Props]("ButtonToolbar")
     .initialState(State())
     .renderBackend[Backend]
     .build

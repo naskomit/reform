@@ -18,6 +18,7 @@ case class NamedFieldId(id: String) extends FieldId {
 }
 
 case class ArrayFieldId(id: java.util.UUID) extends FieldId {
+  override def toString: String = s"^${id}"
   override def as_key: String = id.toString
 }
 

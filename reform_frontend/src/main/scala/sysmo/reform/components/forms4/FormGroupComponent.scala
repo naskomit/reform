@@ -13,24 +13,6 @@ object FormGroupComponent extends ReactComponent {
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
-    def render_form_element(p: Props, elem: F.FormElement, options: FormRenderingOptions): VdomNode = {
-      elem match {
-        case x: F.FieldEditor => render_field_editor(p, x)
-        case x: F.FormGroup => FormGroupComponent(x, p.data_handler, options)
-        case x: F.GroupArray => GroupArrayComponent(x, p.data_handler, options)
-      }
-    }
-
-    def render_field_editor(p: Props, editor: F.FieldEditor): VdomNode = {
-      editor match {
-        case x: F.StringEditor => editors.StringEditorComponent(x, p.data_handler)
-        case x: F.BooleanEditor => editors.BooleanEditorComponent(x, p.data_handler)
-        case x: F.FloatEditor => editors.FloatEditorComponent(x, p.data_handler)
-        case x: F.IntegerEditor => editors.IntegerEditorComponent(x, p.data_handler)
-        case x: F.SelectEditor => editors.SelectEditorComponent(x, p.data_handler)
-      }
-    }
-
     def render (p: Props, s: State): VdomElement = {
       val child_options = p.options.update(_.depth := p.options.get(_.depth) + 1)
       val children = p.group.elements
@@ -41,15 +23,7 @@ object FormGroupComponent extends ReactComponent {
             true
           }
         })
-        .map(elem => {
-          val vdom_element = render_form_element(p, elem, child_options)
-          val width = elem match {
-            case e: F.FormGroup =>  L.FullWidth
-            case e: F.FieldEditor => L.Medium
-            case e: F.GroupArray => L.FullWidth
-          }
-          L.GroupChildElement(vdom_element, width)
-        })
+        .map(elem => L.GroupChildElement(elem, p.data_handler, child_options))
       val layout = p.options.get(_.form_group_layout)
       <.div(layout(p.group.descr, children, p.options))
     }

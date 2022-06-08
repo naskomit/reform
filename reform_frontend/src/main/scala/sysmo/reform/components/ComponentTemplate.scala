@@ -16,7 +16,7 @@ object ComponentTemplate extends ReactComponent {
 
   // : Scala.Component[Props, State, Backend, _]
   val component =
-    ScalaComponent.builder[Props]("Form1")
+    ScalaComponent.builder[Props]("TemplateComponent")
     .initialState(State())
     .renderBackend[Backend]
     .build

@@ -20,6 +20,7 @@ object SelectEditorComponent extends AbstractEditor[String] {
   final class Backend($: BackendScope[Props, State]) {
 
     def render(p: Props, s: State): VdomElement = {
+      logger.info(s"Rendering Select[${p.editor.path}]")
       <.div(^.className := "form-group", ^.key := p.editor.name, ^.id := p.editor.path.toString,
         <.label(p.editor.descr),
         RSNC.builder
