@@ -7,11 +7,10 @@ import sysmo.reform.components.forms4.options.FormRenderingOptions
 
 object RowLayoutComponent extends ArrayGroupLayout {
   case class Props(title: String, child_elements: Seq[ArrayChildElement], options: FormRenderingOptions)
-  type State = Unit
-  type Backend = Unit
+  case class State(expanded: Boolean)
 
-  class Builder {
-    def render(p: Props, children: PropsChildren) : VdomNode = {
+  class Backend($: BackendScope[Props, State]) {
+    def render(p: Props, s: State) : VdomNode = {
       val header_fn = (p.options.get(_.depth) + 1) match {
         case 1 => <.h1
         case 2 => <.h2
@@ -19,27 +18,42 @@ object RowLayoutComponent extends ArrayGroupLayout {
         case 4 => <.h4
       }
 
-      val rows = children.toList.map(child => {
+      val chevron = <.i(
+        ^.classSet1("fa", "fa-chevron-down" -> s.expanded, "fa-chevron-right" -> !s.expanded),
+        ^.fontSize := "0.6em",
+        ^.verticalAlign := "20%",
+        ^.onClick --> toggle_expanded
+      )
+
+      val rows = p.child_elements.map(child => {
         <.div(^.className:= "row",
           <.div(^.className:= "col-md-12",
-            child
+            child.child
           )
         )
       })
 
       <.div(^.className:="wrapper wrapper-white",
-        header_fn(p.title),
-        rows.toTagMod
+        header_fn(chevron, " ", p.title),
+        if (s.expanded)
+          rows.toTagMod
+        else
+          <.div()
       )
     }
+
+    def toggle_expanded: Callback = $.modState(s => s.copy(expanded = !s.expanded))
+
   }
 
   val component = ScalaComponent.builder[Props]("RowLayoutComponent")
-    .render_PC((p, c) => (new Builder).render(p, c))
+    .initialState(State(true))
+    .renderBackend[Backend]
+    //    .render_PCS((p, c, s) => (new Backend).render(p, c, s))
     .build
 
   override def apply(title: String, children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted = {
-    component(Props(title, children, options))(children.map(x => x.child): _*)
+    component(Props(title, children, options))
   }
 
 }
