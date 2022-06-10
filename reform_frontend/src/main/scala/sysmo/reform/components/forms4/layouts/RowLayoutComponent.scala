@@ -4,6 +4,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
 import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms4.{transitions => Tr}
 
 object RowLayoutComponent extends ArrayGroupLayout {
   case class Props(title: String, child_elements: Seq[ArrayChildElement], options: FormRenderingOptions)
@@ -35,10 +36,7 @@ object RowLayoutComponent extends ArrayGroupLayout {
 
       <.div(^.className:="wrapper wrapper-white",
         header_fn(chevron, " ", p.title),
-        if (s.expanded)
-          rows.toTagMod
-        else
-          <.div()
+        Tr.collapsible(s.expanded, rows)
       )
     }
 

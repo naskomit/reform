@@ -122,7 +122,8 @@ lazy val reform_frontend = project
       "ag-grid-community" -> "26.2.0",
       "react-select" ->  "5.2.2",
       "plotly.js" -> "1.47.4",
-      "mermaid" -> "8.14.0"
+      "mermaid" -> "8.14.0",
+      "react-transition-group" -> "4.4.2",
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)

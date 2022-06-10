@@ -72,7 +72,6 @@ object GroupArrayComponent extends ReactComponent {
         .map(item => ArrayItemComponent.component.withKey(item.fid.toString)(
           ArrayItemComponent.Props(p.array, item, p.data_handler, p.options)
         )).map(item => ArrayChildElement(item))
-
       layout(p.array.group.descr, children, p.options)
     }
   }

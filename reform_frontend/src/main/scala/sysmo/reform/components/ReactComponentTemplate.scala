@@ -2,7 +2,7 @@ package sysmo.reform.components
 
 import japgolly.scalajs.react.vdom.html_<^._
 
-object ComponentTemplate extends ReactComponent {
+object ReactComponentTemplate extends ReactComponent {
   import japgolly.scalajs.react._
 
   case class Props()
@@ -16,7 +16,7 @@ object ComponentTemplate extends ReactComponent {
 
   // : Scala.Component[Props, State, Backend, _]
   val component =
-    ScalaComponent.builder[Props]("TemplateComponent")
+    ScalaComponent.builder[Props]("ReactComponentTemplate")
     .initialState(State())
     .renderBackend[Backend]
     .build

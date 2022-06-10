@@ -3,8 +3,8 @@ package sysmo.reform.components.forms4.layouts
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.components.forms4.FormDataHandler
 import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms4.{transitions => Tr}
 
 import scala.collection.mutable
 
@@ -69,9 +69,6 @@ object ColumnsLayoutComponent extends FormGroupLayout {
 
 
     def render(p: Props, s: State) : VdomNode = {
-
-      logger.info(s"Rendering GroupLayout[...]")
-
       val header_fn = (p.options.get(_.depth) + 1) match {
         case 1 => <.h1
         case 2 => <.h2
@@ -85,13 +82,11 @@ object ColumnsLayoutComponent extends FormGroupLayout {
         ^.onClick --> toggle_expanded
       )
 
+      val content = (new Builder).build_content(p)
 
       <.div(^.className:= "wrapper wrapper-white",
         header_fn(chevron, " ", p.title),
-        if (s.expanded)
-          (new Builder).build_content(p).toTagMod
-        else
-          <.div()
+        Tr.collapsible(s.expanded, content)
       )
     }
 

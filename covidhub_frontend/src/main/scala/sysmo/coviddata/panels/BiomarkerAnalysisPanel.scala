@@ -65,9 +65,7 @@ object BiomarkerAnalysisPanel extends ApplicationPanel {
     F.ValueMap.builder
       .record("biomarker_analysis", _
         .record("dep_var", _
-          .value("bm_type", "qPCR")
-          .value("variable", "raw_value")
-          .value("biomarker", Seq("APOE", "PCDH1"))
+          .value("bm_type", "qPCR").value("variable", "raw_value").value("biomarker", Seq("APOE", "PCDH1"))
         )
         .array("indep_var",
           _.value("bm_type", "qPCR").value("variable", "raw_value").value("biomarker", Seq("APOE", "PCDH1")),

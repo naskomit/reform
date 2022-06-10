@@ -1,7 +1,6 @@
 package sysmo.reform.components.select
 
 import japgolly.scalajs.react.{Children, JsComponent}
-import org.scalajs.dom
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.{form => F}
 
