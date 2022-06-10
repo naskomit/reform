@@ -3,11 +3,12 @@ package sysmo.reform.components.forms4.editors
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
 import sysmo.reform.components.forms4.FormDataHandler
+import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.shared.{form => F}
 import sysmo.reform.shared.util.LabeledValue
 
 object BooleanEditorComponent extends AbstractEditor[Boolean] {
-  case class Props(editor: F.BooleanEditor, data_handler: FormDataHandler) {
+  case class Props(editor: F.BooleanEditor, data_handler: FormDataHandler, options: FormRenderingOptions) {
     def value: FieldValueType = data_handler.get_value(editor).asInstanceOf[FieldValueType]
   }
   case class State()
@@ -60,8 +61,8 @@ object BooleanEditorComponent extends AbstractEditor[Boolean] {
       .renderBackend[Backend]
       .build
 
-  def apply(editor: F.BooleanEditor, data_handler: FormDataHandler): Unmounted = {
-    component(Props(editor, data_handler))
+  def apply(editor: F.BooleanEditor, data_handler: FormDataHandler)(options: FormRenderingOptions): Unmounted = {
+    component(Props(editor, data_handler, options))
 
   }
 

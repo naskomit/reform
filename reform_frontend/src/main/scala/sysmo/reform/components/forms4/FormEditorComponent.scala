@@ -15,10 +15,9 @@ object FormEditorComponent extends ReactComponent {
     def bind(p: Props): Unit  = p.data_handler.bind($)
     def unbind(p: Props): Unit  = p.data_handler.unbind($)
     def render (p: Props, s: State): VdomElement = {
-//      val element_renderer = new FormElementRenderer(p.data_handler)
       <.div(^.className:= "form", ^.id:= p.form.path.toString,
         p.data_handler.handler_state match {
-          case FormDataHandler.HandlerState.Ready => FormGroupComponent(p.form, p.data_handler, p.options)
+          case FormDataHandler.HandlerState.Ready => FormGroupComponent(p.form, p.data_handler)(p.options)
           case FormDataHandler.HandlerState.Loading => Processing()
         },
         ButtonToolbar.builder

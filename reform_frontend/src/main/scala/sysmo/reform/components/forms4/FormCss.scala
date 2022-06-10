@@ -4,6 +4,16 @@ import sysmo.reform.css.CssSettings._
 
 object FormCss extends StyleSheet.Inline {
   import dsl._
+  /** Global styles */
+  style("container .wrapper")(
+    border(1.px, solid, Color("#DDD"))
+  )
+
+  style("container .wrapper-dark")(
+    background:= "#EEF1F7"
+  )
+
+  /** Collapsible styles */
 
   val `vert-collapse-enter` = style(
     opacity(0),
@@ -28,4 +38,5 @@ object FormCss extends StyleSheet.Inline {
     maxHeight(0.px),
     overflow.hidden,
   )
+
 }

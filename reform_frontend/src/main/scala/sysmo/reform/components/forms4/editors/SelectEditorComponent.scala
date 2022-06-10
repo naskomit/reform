@@ -6,12 +6,13 @@ import sysmo.reform.components.forms4.FormDataHandler
 import sysmo.reform.components.select.ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 import sysmo.reform.shared.util.LabeledValue
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.shared.{form => F}
 
 import scala.scalajs.js
 
 object SelectEditorComponent extends AbstractEditor[String] {
-  case class Props(editor: F.SelectEditor, data_handler: FormDataHandler) {
+  case class Props(editor: F.SelectEditor, data_handler: FormDataHandler, options: FormRenderingOptions) {
     def value: FieldValueType = data_handler.get_value(editor).asInstanceOf[FieldValueType]
   }
 
@@ -100,8 +101,8 @@ object SelectEditorComponent extends AbstractEditor[String] {
 //            .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(editor: F.SelectEditor, data_handler: FormDataHandler): Unmounted = {
-    component(Props(editor, data_handler))
+  def apply(editor: F.SelectEditor, data_handler: FormDataHandler)(options: FormRenderingOptions): Unmounted = {
+    component(Props(editor, data_handler, options))
   }
 
 }

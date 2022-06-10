@@ -1,6 +1,7 @@
 package sysmo.reform.components.forms4.editors
 
 import sysmo.reform.components.forms4.FormDataHandler
+import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.{form => F}
 
@@ -37,8 +38,8 @@ object FloatEditorComponent extends EncodedTextualEditor[Double] {
   //  implicit val props_reuse = Reusability.by((_ : Props).value)
   //  implicit val state_reuse = Reusability.derive[State]
 
-  def apply(editor: EditorType, data_handler: FormDataHandler): Unmounted = {
-    component(Props(editor, data_handler))
+  def apply(editor: EditorType, data_handler: FormDataHandler)(options: FormRenderingOptions): Unmounted = {
+    component(Props(editor, data_handler, options))
 
   }
 

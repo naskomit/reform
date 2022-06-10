@@ -3,13 +3,13 @@ package sysmo.reform.components.forms4
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.editors.{InsertElementAfter, InsertElementBefore, RemoveArrayElement}
+import sysmo.reform.components.forms4.editors.{AbstractFormComponent, InsertElementAfter, InsertElementBefore, RemoveArrayElement}
 import sysmo.reform.components.forms4.layouts.ArrayChildElement
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.shared.{form => F}
 
-object ArrayItemComponent extends ReactComponent {
+object ArrayItemComponent extends AbstractFormComponent {
   case class Props(array: F.GroupArray, element: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
   case class State(i: Int)
   final class Backend($: BackendScope[Props, State]) {
@@ -21,7 +21,7 @@ object ArrayItemComponent extends ReactComponent {
           .button("Remove", Effects.remove(p))
           .build,
 
-        FormGroupComponent(p.element, p.data_handler, p.options)
+        FormGroupComponent(p.element, p.data_handler)(p.options)
       )
     }
 
@@ -85,7 +85,7 @@ object GroupArrayComponent extends ReactComponent {
     .build
 
   //
-  def apply(array: F.GroupArray, data_handler: FormDataHandler, options: FormRenderingOptions): Unmounted = {
+  def apply(array: F.GroupArray, data_handler: FormDataHandler)(options: FormRenderingOptions): Unmounted = {
     component(Props(array, data_handler, options))
   }
 }

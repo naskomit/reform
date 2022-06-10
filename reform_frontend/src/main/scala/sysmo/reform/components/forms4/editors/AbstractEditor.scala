@@ -3,7 +3,7 @@ package sysmo.reform.components.forms4.editors
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.shared.{form => F}
 
-trait AbstractEditor[VT] extends ReactComponent {
+trait AbstractEditor[VT] extends AbstractFormComponent {
   type ValueType = VT
   type FieldValueType = F.FieldValue[VT]
 

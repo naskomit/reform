@@ -3,13 +3,14 @@ package sysmo.reform.components.forms4.editors
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ReactEventFromInput, ScalaComponent}
 import sysmo.reform.components.forms4.FormDataHandler
+import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.shared.{form => F}
 import sysmo.reform.shared.util.LabeledValue
 
 trait EncodedTextualEditor[VT] extends AbstractEditor[VT] {
   val display_name: String
   type EditorType <: F.FieldEditor
-  case class Props(editor: EditorType, data_handler: FormDataHandler) {
+  case class Props(editor: EditorType, data_handler: FormDataHandler, options: FormRenderingOptions) {
     def value: FieldValueType = data_handler.get_value(editor).asInstanceOf[FieldValueType]
   }
   case class State(local_value: String, status: Status, focused: Boolean)

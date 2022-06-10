@@ -29,6 +29,11 @@ object RefrigerationCyclePanel extends ApplicationPanel {
 //          NamedContent("Tab 4", <.div("There are times in life when people must know when not to let go. Balloons are designed to teach small children this.")),
 //        )),
         FormEditorComponent(p.form, p.data_handler)
+//        <.div(^.className:= "wrapper", "Blah Blah Blah"),
+//        <.div(^.className:= "wrapper wrapper-white",
+//          "Blah Blah Blah",
+//          <.div(^.className:= "wrapper wrapper-dark", "Blah Blah Blah")
+//        ),
       )
     }
   }
@@ -44,9 +49,11 @@ object RefrigerationCyclePanel extends ApplicationPanel {
 
   val form: F.FormGroup = {
     F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
-      .field(_.char("aname").descr("Analysis Name"))
-      .field(_.int("n_cycles").descr("Number of cycles"))
-      .field(_.bool("save").descr("Save analysis"))
+      .group("general", _.descr("General")
+        .field(_.char("aname").descr("Analysis Name"))
+        .field(_.int("n_cycles").descr("Number of cycles"))
+        .field(_.bool("save").descr("Save analysis"))
+      )
       .group("cycle_definition", _.descr("Cycle definition")
         .group("cycle_params", _.descr("Cycle Parameters")
           .field(_.select("fluid").descr("Working fluid"))
