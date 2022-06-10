@@ -89,6 +89,8 @@ trait FormElement {
   }
   def descr: String = backend.get(_.descr).getOrElse(name)
 
+  def parent: Option[FormElement] = this.backend.parent
+
   def path: ElementPath = {
     backend.parent match {
       case Some(p) => p.path / fid

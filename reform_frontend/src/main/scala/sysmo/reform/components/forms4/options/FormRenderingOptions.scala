@@ -4,7 +4,7 @@ import sysmo.reform.components.forms4.layouts.{ColumnsLayoutComponent, FormGroup
 import sysmo.reform.shared.util.{Property, PropertyHolder}
 
 object FormRenderingProps {
-  val background = Property[Boolean]("background", false)
+  val background_white = Property[Boolean]("background", true)
   val depth = Property[Int]("level", 0)
   val form_group_layout = Property[FormGroupLayout](
     name = "form_group_layout", ColumnsLayoutComponent

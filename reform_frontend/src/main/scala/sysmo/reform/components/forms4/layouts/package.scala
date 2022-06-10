@@ -18,7 +18,7 @@ package object layouts {
   case class ArrayChildElement(child: VdomNode)
 
   trait FormGroupLayout extends ReactComponent {
-    def apply(title: String, children: Seq[GroupChildElement], options: FormRenderingOptions): Unmounted
+    def apply(title: Option[String], children: Seq[GroupChildElement], options: FormRenderingOptions): Unmounted
     def render_child(child: GroupChildElement): VdomNode = {
       val data_handler = child.data_handler
       child.child match {

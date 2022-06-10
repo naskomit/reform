@@ -1,9 +1,9 @@
 package sysmo.reform.components
 
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
 
 object ReactComponentTemplate extends ReactComponent {
-  import japgolly.scalajs.react._
 
   case class Props()
   case class State()

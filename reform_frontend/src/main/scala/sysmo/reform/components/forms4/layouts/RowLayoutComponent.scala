@@ -12,20 +12,6 @@ object RowLayoutComponent extends ArrayGroupLayout {
 
   class Backend($: BackendScope[Props, State]) {
     def render(p: Props, s: State) : VdomNode = {
-      val header_fn = (p.options.get(_.depth) + 1) match {
-        case 1 => <.h1
-        case 2 => <.h2
-        case 3 => <.h3
-        case 4 => <.h4
-      }
-
-      val chevron = <.i(
-        ^.classSet1("fa", "fa-chevron-down" -> s.expanded, "fa-chevron-right" -> !s.expanded),
-        ^.fontSize := "0.6em",
-        ^.verticalAlign := "20%",
-        ^.onClick --> toggle_expanded
-      )
-
       val rows = p.child_elements.map(child => {
         <.div(^.className:= "row",
           <.div(^.className:= "col-md-12",
@@ -35,8 +21,7 @@ object RowLayoutComponent extends ArrayGroupLayout {
       })
 
       <.div(^.className:="wrapper wrapper-white",
-        header_fn(chevron, " ", p.title),
-        Tr.collapsible(s.expanded, rows)
+        CollapsibleSection(Some(p.title), p.options.get(_.depth) + 1, rows)
       )
     }
 

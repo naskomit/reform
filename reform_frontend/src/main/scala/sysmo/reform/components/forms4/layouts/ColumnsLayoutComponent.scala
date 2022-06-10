@@ -9,7 +9,7 @@ import sysmo.reform.components.forms4.{transitions => Tr}
 import scala.collection.mutable
 
 object ColumnsLayoutComponent extends FormGroupLayout {
-  case class Props(title: String, child_elements: Seq[GroupChildElement], options: FormRenderingOptions)
+  case class Props(title: Option[String], child_elements: Seq[GroupChildElement], options: FormRenderingOptions)
   case class State(expanded: Boolean)
 
   class Builder {
@@ -69,28 +69,17 @@ object ColumnsLayoutComponent extends FormGroupLayout {
 
 
     def render(p: Props, s: State) : VdomNode = {
-      val header_fn = (p.options.get(_.depth) + 1) match {
-        case 1 => <.h1
-        case 2 => <.h2
-        case 3 => <.h3
-        case 4 => <.h4
-      }
-      val chevron = <.i(
-        ^.classSet1("fa", "fa-chevron-down" -> s.expanded, "fa-chevron-right" -> !s.expanded),
-        ^.fontSize := "0.6em",
-        ^.verticalAlign := "20%",
-        ^.onClick --> toggle_expanded
-      )
 
       val content = (new Builder).build_content(p)
 
       <.div(^.className:= "wrapper wrapper-white",
-        header_fn(chevron, " ", p.title),
-        Tr.collapsible(s.expanded, content)
+        CollapsibleSection(
+          p.title, p.options.get(_.depth) + 1, content
+        )
       )
     }
 
-    def toggle_expanded: Callback = $.modState(s => s.copy(expanded = !s.expanded))
+
 
   }
 
@@ -100,7 +89,7 @@ object ColumnsLayoutComponent extends FormGroupLayout {
 //    .render_PCS((p, c, s) => (new Backend).render(p, c, s))
     .build
 
-  override def apply(title: String, children: Seq[GroupChildElement], options: FormRenderingOptions): Unmounted =
+  override def apply(title: Option[String], children: Seq[GroupChildElement], options: FormRenderingOptions): Unmounted =
     component(Props(title, children, options))
 
 }

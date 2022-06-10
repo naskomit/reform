@@ -2,7 +2,7 @@ package sysmo.reform.components.forms4
 
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms4.options.{FormRenderingOptions, FormRenderingRules}
 import sysmo.reform.components.forms4.{layouts => L}
 import sysmo.reform.shared.{form => F}
 
@@ -25,7 +25,11 @@ object FormGroupComponent extends ReactComponent {
         })
         .map(elem => L.GroupChildElement(elem, p.data_handler, child_options))
       val layout = p.options.get(_.form_group_layout)
-      <.div(layout(p.group.descr, children, p.options))
+      val title = FormRenderingRules.show_title.apply_or_default(p.group) match {
+        case false => None
+        case true => Some(p.group.descr)
+      }
+      <.div(layout(title, children, p.options))
     }
   }
 
