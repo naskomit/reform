@@ -9,13 +9,13 @@ import sysmo.reform.components.forms4.{transitions => Tr}
 import scala.collection.mutable
 
 object ColumnsLayoutComponent extends FormGroupLayout {
-  case class Props(title: Option[String], child_elements: Seq[GroupChildNode], options: FormRenderingOptions)
+  case class Props(child_elements: Seq[GroupChildNode], options: FormRenderingOptions)
   case class State(expanded: Boolean)
 
   class Builder(options: FormRenderingOptions) {
     private val row_nodes: mutable.ArrayBuffer[VdomNode] = mutable.ArrayBuffer()
     private var row_filled_width = 0.0
-    private var row_white: Boolean = !options.get(_.background_white)
+    private var row_white: Boolean = options.get(_.background_white)
     private val grid: mutable.ArrayBuffer[VdomElement] = mutable.ArrayBuffer()
     private var row_index = 0
     private var elem_index = 0
@@ -41,22 +41,37 @@ object ColumnsLayoutComponent extends FormGroupLayout {
       elem_index = 0
       row_filled_width = 0.0
       row_nodes.clear()
-      row_white = !row_white
     }
+
 
     def build_content(child_elements: Seq[GroupChildNode]): Seq[VdomElement] = {
       for (elem <- child_elements) {
         val elem_width = compute_width(elem)
-        if (row_filled_width + elem_width > 1.0) {
+
+
+        val element_node = if (elem.size_hint == FullWidth || elem.title.nonEmpty) {
           build_row()
+          row_white = !row_white
+          val child_options = elem.options.update(_.background_white:= row_white)
+
+          <.div(^.classSet1("wrapper",
+              "wrapper-white" -> row_white,
+              "wrapper-dark" -> !row_white,
+            ),
+            CollapsibleSection(
+              elem.title, elem.options.get(_.depth) + 1, Seq(elem.node(child_options))
+            )
+        )
+        } else {
+          if (row_filled_width + elem_width > 1.0)
+            build_row()
+
+          <.div(
+            ^.className:= f"col-md-${Math.round(elem_width * 12)} $elem_index",
+            ^.key:= elem_index, elem.node(elem.options)
+          )
         }
 
-        val options = elem.options.update(_.background_white:= row_white)
-
-        val element_node = <.div(
-          ^.className:= f"col-md-${Math.round(elem_width * 12)} $elem_index",
-          ^.key:= elem_index, elem.node(options)
-        )
         row_nodes += element_node
         row_filled_width += elem_width
         elem_index += 1
@@ -74,15 +89,8 @@ object ColumnsLayoutComponent extends FormGroupLayout {
 
     def render(p: Props, s: State) : VdomNode = {
 
-      val content = (new Builder(p.options)).build_content(p.child_elements)
-
-      <.div(^.classSet1("wrapper",
-        "wrapper-white" -> p.options.get(_.background_white),
-          "wrapper-dark" -> !p.options.get(_.background_white)
-        ),
-        CollapsibleSection(
-          p.title, p.options.get(_.depth) + 1, content
-        )
+      <.div(
+        (new Builder(p.options)).build_content(p.child_elements).toTagMod
       )
     }
 
@@ -96,8 +104,8 @@ object ColumnsLayoutComponent extends FormGroupLayout {
 //    .render_PCS((p, c, s) => (new Backend).render(p, c, s))
     .build
 
-  override def apply(title: Option[String], children: Seq[GroupChildNode], options: FormRenderingOptions): Unmounted =
-    component(Props(title, children, options))
+  override def apply(children: Seq[GroupChildNode], options: FormRenderingOptions): Unmounted =
+    component(Props(children, options))
 
 }
 

@@ -3,7 +3,7 @@ package sysmo.reform.components.forms4
 import japgolly.scalajs.react.component.Js
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.forms4.editors.AbstractFormComponent
-import sysmo.reform.components.forms4.layouts.GroupChildNode
+import sysmo.reform.components.forms4.layouts.{ColumnsLayoutComponent, GroupChildNode, TabbedLayoutComponent}
 import sysmo.reform.components.forms4.options.{FormRenderingOptions, FormRenderingRules}
 import sysmo.reform.components.forms4.{layouts => L}
 import sysmo.reform.shared.{form => F}
@@ -22,7 +22,11 @@ object FormGroupComponent extends AbstractFormComponent {
         case x: F.FormGroup => FormGroupComponent(x, p.data_handler)
         case x: F.GroupArray => GroupArrayComponent(x, p.data_handler)
       }
-      GroupChildNode(element_fn, size_hint(element), child_options)
+      val title = element match {
+        case x: F.FieldEditor => None
+        case x => Some(x.descr)
+      }
+      GroupChildNode(element_fn, title, size_hint(element), child_options)
     }
 
     def render_field_editor(editor: F.FieldEditor, data_handler: FormDataHandler, child_options: FormRenderingOptions): FormRenderingOptions => VdomElement = {
@@ -52,12 +56,14 @@ object FormGroupComponent extends AbstractFormComponent {
           }
         })
         .map(elem => render_child(elem, p, child_options))
-      val layout = p.options.get(_.form_group_layout)
-      val title = FormRenderingRules.show_title.apply_or_default(p.group) match {
-        case false => None
-        case true => Some(p.group.descr)
+
+      val layout = p.group.layout match {
+        case Some("linear") => ColumnsLayoutComponent
+        case Some("tabbed") => TabbedLayoutComponent
+        case None => p.options.get(_.form_group_layout)
       }
-      <.div(layout(title, children, p.options))
+
+      <.div(layout(children, p.options))
     }
   }
 

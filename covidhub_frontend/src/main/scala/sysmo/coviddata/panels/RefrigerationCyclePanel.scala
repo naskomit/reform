@@ -48,7 +48,7 @@ object RefrigerationCyclePanel extends ApplicationPanel {
 
 
   val form: F.FormGroup = {
-    F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle")
+    F.FormGroup.builder(graph, "refrigeration_cycle").descr("Refrigeration cycle").layout("tabbed")
       .group("general", _.descr("General")
         .field(_.char("aname").descr("Analysis Name"))
         .field(_.int("n_cycles").descr("Number of cycles"))

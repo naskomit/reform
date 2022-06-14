@@ -14,12 +14,11 @@ package object layouts {
   case object Long extends SizeHint
   case object ExtraLong extends SizeHint
   case object FullWidth extends SizeHint
-  case class GroupChildElement(child: F.FormElement, data_handler: FormDataHandler, options: FormRenderingOptions)
-  case class GroupChildNode(node: FormRenderingOptions => VdomElement, size_hint: SizeHint, options: FormRenderingOptions)
+  case class GroupChildNode(node: FormRenderingOptions => VdomElement, title: Option[String], size_hint: SizeHint, options: FormRenderingOptions)
   case class ArrayChildElement(child: VdomNode)
 
   trait FormGroupLayout extends ReactComponent {
-    def apply(title: Option[String], children: Seq[GroupChildNode], options: FormRenderingOptions): Unmounted
+    def apply(children: Seq[GroupChildNode], options: FormRenderingOptions): Unmounted
   }
 
   trait ArrayGroupLayout extends ReactComponent {

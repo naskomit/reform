@@ -276,6 +276,8 @@ case class FormGroup(backend: FormElementBackend[FormGroup.Def.type]) extends Fo
       .toSeq.sortBy(e => HasElement(e).get(_.seq_num).getOrElse(0))
       .map(e => FormElement.from_vertex(e.in_vertex, Missing, Some(this)))
   }
+
+  def layout: Option[String] = backend.get(_.layout)
 }
 
 case class HasElement(edge: Edge) extends EdgeObj {
@@ -294,6 +296,10 @@ object HasElementDef extends EdgeDef {
 object FormGroup {
   object Def extends FormElement.Def {
     val label: String = "FormGroup"
+    trait Props extends super.Props {
+      val layout = GO.Property[String]("layout", Some("linear"))
+    }
+    override val props = new Props {}
   }
 
   class Builder(val graph: Graph, parent: Option[FormElement], val name: String) extends FormElement.Builder[FormGroup] {
@@ -303,6 +309,11 @@ object FormGroup {
       val new_seq_num = vertex.edges(Direction.OUT, Seq(HasElementDef.label))
         .map(e => HasElement(e).get(_.seq_num).get).toSeq.sorted.lastOption.getOrElse(-1) + 1
       vertex.add_edge(HasElementDef.label, element.backend.vertex, (HasElementDef.props.seq_num.name -> new_seq_num))
+      this
+    }
+
+    def layout(v: String): this.type = {
+      vertex.property(Def.props.layout.name, v)
       this
     }
 
