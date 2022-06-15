@@ -45,8 +45,9 @@ trait ElementObj extends GraphObject {
   }
 
   def update(u: PropertiesUpdate): Unit = {
-    u.key_values.foreach{ case SetPropertyValue(p, v) =>
-      element.property(p.name, v)
+    u.key_values.foreach{
+      case SetPropertyValue(p, Some(v)) => element.property(p.name, v)
+      case SetPropertyValue(p, None) => element.property(p.name).remove()
     }
   }
 }

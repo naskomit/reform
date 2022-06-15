@@ -332,6 +332,7 @@ object FormGroup {
     def array(name: String, f: Builder => Builder): this.type = {
       val group = f(new FormGroup.Builder(graph, None, name + "###")).build
       val array = new GroupArray.Builder(graph, None, name).build
+      group.backend.get(_.descr).foreach(descr => array.backend.update(_.descr := descr))
       array.backend.vertex.add_edge(HasPrototype.Def.label, group.backend.vertex)
       add_element(array)
     }
