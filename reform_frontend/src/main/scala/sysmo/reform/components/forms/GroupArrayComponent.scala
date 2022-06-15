@@ -1,11 +1,11 @@
-package sysmo.reform.components.forms4
+package sysmo.reform.components.forms
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.{editors => Edit}
-import sysmo.reform.components.forms4.layouts.ArrayChildElement
-import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms.{editors => Edit}
+import sysmo.reform.components.forms.layouts.ArrayChildElement
+import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.shared.{form => F}
 

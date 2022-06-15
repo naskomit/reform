@@ -1,9 +1,9 @@
-package sysmo.reform.components.forms4.layouts
+package sysmo.reform.components.forms.layouts
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
-import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.components.layouts.{NamedContent, TabbedLayout}
 
 object TabbedLayoutComponent extends FormGroupLayout {

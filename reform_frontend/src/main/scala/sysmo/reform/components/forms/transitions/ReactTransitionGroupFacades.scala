@@ -1,4 +1,4 @@
-package sysmo.reform.components.forms4.transitions
+package sysmo.reform.components.forms.transitions
 
 import japgolly.scalajs.react.component.Js.{RawMounted, UnmountedWithRawType}
 import japgolly.scalajs.react.vdom.VdomNode
@@ -6,10 +6,6 @@ import japgolly.scalajs.react.vdom.VdomNode
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import japgolly.scalajs.react.{Children, JsComponent}
-import sysmo.reform.components.forms4.transitions.ReactTransitionGroupFacades.CSSTransition
-
-import js.JSConverters._
-import scala.scalajs.js.|
 
 object ReactTransitionGroupFacades {
   object CSSTransition {

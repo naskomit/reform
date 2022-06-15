@@ -1,4 +1,4 @@
-package sysmo.reform.components.forms4.options
+package sysmo.reform.components.forms.options
 
 import sysmo.reform.shared.{form => F}
 

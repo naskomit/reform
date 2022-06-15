@@ -6,7 +6,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
-import sysmo.reform.components.forms4.{FormDataHandler, FormEditorComponent}
+import sysmo.reform.components.forms.{FormDataHandler, FormEditorComponent}
 import sysmo.reform.shared.gremlin.memg.MemGraph
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.{form => F}

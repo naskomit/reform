@@ -6,7 +6,7 @@ import japgolly.scalajs.react.extra.router.{BaseUrl, Router}
 import sysmo.reform.components.layouts.ApplicationLayout
 import sysmo.reform.router.{PageCollection, RouterConfiguration}
 import sysmo.reform.util.log.Logging
-import components.forms4.FormCss
+import components.forms.FormCss
 import scalacss.ScalaCssReact._
 import css.CssSettings._
 

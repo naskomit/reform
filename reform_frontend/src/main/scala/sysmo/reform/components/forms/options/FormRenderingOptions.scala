@@ -1,6 +1,6 @@
-package sysmo.reform.components.forms4.options
+package sysmo.reform.components.forms.options
 
-import sysmo.reform.components.forms4.layouts.{ColumnsLayoutComponent, FormGroupLayout, ArrayGroupLayout,RowLayoutComponent}
+import sysmo.reform.components.forms.layouts.{ColumnsLayoutComponent, FormGroupLayout, ArrayGroupLayout,RowLayoutComponent}
 import sysmo.reform.shared.util.{Property, PropertyHolder}
 
 object FormRenderingProps {

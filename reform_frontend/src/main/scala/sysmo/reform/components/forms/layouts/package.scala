@@ -1,9 +1,9 @@
-package sysmo.reform.components.forms4
+package sysmo.reform.components.forms
 
 import japgolly.scalajs.react.CtorType.ChildArg
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.shared.{form => F}
 
 package object layouts {

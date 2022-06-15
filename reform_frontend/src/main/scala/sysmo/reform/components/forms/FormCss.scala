@@ -1,4 +1,4 @@
-package sysmo.reform.components.forms4
+package sysmo.reform.components.forms
 
 import sysmo.reform.css.CssSettings._
 

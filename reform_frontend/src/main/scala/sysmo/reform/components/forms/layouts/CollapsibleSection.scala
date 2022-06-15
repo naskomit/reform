@@ -1,9 +1,9 @@
-package sysmo.reform.components.forms4.layouts
+package sysmo.reform.components.forms.layouts
 
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.{transitions => Tr}
+import sysmo.reform.components.forms.{transitions => Tr}
 
 object CollapsibleSection extends ReactComponent {
 

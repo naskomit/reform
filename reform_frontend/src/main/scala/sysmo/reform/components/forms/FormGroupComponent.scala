@@ -1,11 +1,11 @@
-package sysmo.reform.components.forms4
+package sysmo.reform.components.forms
 
 import japgolly.scalajs.react.component.Js
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.components.forms4.editors.AbstractFormComponent
-import sysmo.reform.components.forms4.layouts.{ColumnsLayoutComponent, GroupChildNode, TabbedLayoutComponent}
-import sysmo.reform.components.forms4.options.{FormRenderingOptions, FormRenderingRules}
-import sysmo.reform.components.forms4.{layouts => L}
+import sysmo.reform.components.forms.editors.AbstractFormComponent
+import sysmo.reform.components.forms.layouts.{ColumnsLayoutComponent, GroupChildNode, TabbedLayoutComponent}
+import sysmo.reform.components.forms.options.{FormRenderingOptions, FormRenderingRules}
+import sysmo.reform.components.forms.{layouts => L}
 import sysmo.reform.shared.{form => F}
 
 object FormGroupComponent extends AbstractFormComponent {

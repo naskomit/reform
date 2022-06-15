@@ -1,4 +1,4 @@
-package sysmo.reform.components.forms4.editors
+package sysmo.reform.components.forms.editors
 
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.shared.{form => F}

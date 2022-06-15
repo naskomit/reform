@@ -1,8 +1,8 @@
-package sysmo.reform.components.forms4.editors
+package sysmo.reform.components.forms.editors
 
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.FormDataHandler
-import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms.FormDataHandler
+import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.shared.{form => F}
 
 trait AbstractFormComponent extends ReactComponent {

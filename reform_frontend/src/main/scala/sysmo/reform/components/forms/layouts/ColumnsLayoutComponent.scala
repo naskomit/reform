@@ -1,10 +1,10 @@
-package sysmo.reform.components.forms4.layouts
+package sysmo.reform.components.forms.layouts
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.components.forms4.options.FormRenderingOptions
-import sysmo.reform.components.forms4.{transitions => Tr}
+import sysmo.reform.components.forms.options.FormRenderingOptions
+import sysmo.reform.components.forms.{transitions => Tr}
 
 import scala.collection.mutable
 

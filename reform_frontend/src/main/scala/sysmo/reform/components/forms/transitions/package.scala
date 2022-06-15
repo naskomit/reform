@@ -1,8 +1,8 @@
-package sysmo.reform.components.forms4
+package sysmo.reform.components.forms
 
 import japgolly.scalajs.react.component.Js.{RawMounted, UnmountedWithRawType}
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.components.forms4.transitions.ReactTransitionGroup.CSSTransition
+import sysmo.reform.components.forms.transitions.ReactTransitionGroup.CSSTransition
 
 
 package object transitions {

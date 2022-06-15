@@ -1,7 +1,7 @@
-package sysmo.reform.components.forms4
+package sysmo.reform.components.forms
 
 import japgolly.scalajs.react.BackendScope
-import sysmo.reform.components.forms4.{editors => Edit}
+import sysmo.reform.components.forms.{editors => Edit}
 import sysmo.reform.shared.{expr => E, form => F}
 import sysmo.reform.shared.form.{ElementPath, FieldEditor, FieldValue, FormElement, HandlerContext, LocalFieldIndex, ValueMap}
 import sysmo.reform.shared.gremlin.tplight.Graph

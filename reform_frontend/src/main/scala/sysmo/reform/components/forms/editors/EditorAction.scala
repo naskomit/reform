@@ -1,7 +1,7 @@
-package sysmo.reform.components.forms4.editors
+package sysmo.reform.components.forms.editors
 
 import sysmo.reform.components.ReactAction
-import sysmo.reform.components.forms4.ActionDispatcher
+import sysmo.reform.components.forms.ActionDispatcher
 import sysmo.reform.shared.{form => F}
 
 sealed trait EditorAction extends ReactAction

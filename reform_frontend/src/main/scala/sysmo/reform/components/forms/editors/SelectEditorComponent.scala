@@ -1,12 +1,12 @@
-package sysmo.reform.components.forms4.editors
+package sysmo.reform.components.forms.editors
 
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, ScalaComponent}
-import sysmo.reform.components.forms4.FormDataHandler
+import sysmo.reform.components.forms.FormDataHandler
 import sysmo.reform.components.select.ReactSelectFacades.{ReactSelectNativeComponent => RSNC}
 import sysmo.reform.shared.util.LabeledValue
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-import sysmo.reform.components.forms4.options.FormRenderingOptions
+import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.shared.{form => F}
 
 import scala.scalajs.js
