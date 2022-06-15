@@ -1,7 +1,7 @@
 package sysmo.coviddata
 
 
-import sysmo.reform.router.PageCollection
+import sysmo.reform.router.{PageCollection, SimplePage}
 import router.{BiomarkerAnalysis, HomePage, Plots, RefrigerationCycle}
 import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
@@ -11,6 +11,7 @@ import sysmo.reform.shared.data.{TableService, graph => G, table => sdt}
 import sysmo.coviddata.shared.data.{CovidDatabaseSchema => CDS}
 import sysmo.reform.components.panels.TableGroupPanel
 import sysmo.reform.shared.data.table.Schema
+import sysmo.coviddata.{panels => P}
 
 object AppConfig extends ApplicationConfiguration {
   def make_table_entry(c: G.VertexClass): sdt.Schema = {
@@ -33,6 +34,7 @@ object AppConfig extends ApplicationConfiguration {
 
 
 object Application extends ReactApplication {
+
   override val react_node = "mainApp"
   override def app_config: ApplicationConfiguration = AppConfig
   override def pages = {
@@ -45,7 +47,8 @@ object Application extends ReactApplication {
       .build,
       Plots,
       BiomarkerAnalysis,
-      RefrigerationCycle
+      RefrigerationCycle,
+      SimplePage("RecursiveFormPanel", Some("Recursive Form Panel"), "fa fa-pencil",  P.RecursiveFormPanel)
     )
   }
   override val layout = IntuitiveLayout
@@ -56,5 +59,13 @@ object Application extends ReactApplication {
   }
 
 //  MermaidFacades.show()
+  /**
+   *
+   * case object RecursiveFormPanel extends Page {
+  val name = "RecursiveFormPanel"
+  val label = Some("Recursive Form Panel")
+  val icon = "fa fa-pencil"
+  val panel = P.RecursiveFormPanel
+}*/
 
 }

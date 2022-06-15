@@ -16,3 +16,4 @@ sealed trait GroupArrayAction extends EditorAction
 case class RemoveArrayElement(array: F.GroupArray, id: F.ArrayFieldId) extends GroupArrayAction
 case class InsertElementBefore(array: F.GroupArray, id: F.ArrayFieldId) extends GroupArrayAction
 case class InsertElementAfter(array: F.GroupArray, id: F.ArrayFieldId) extends GroupArrayAction
+case class AppendElement(array: F.GroupArray) extends GroupArrayAction

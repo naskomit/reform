@@ -323,6 +323,10 @@ object FormGroup {
       )
     }
 
+    def group(name: String, elem: FormElement): this.type = {
+      add_element(elem)
+    }
+
     def field(f: FieldEditor.BuilderSource => FieldEditor.Builder[FieldEditor]): this.type = {
       add_element(
         f(new FieldEditor.BuilderSource(graph, None)).build
@@ -358,6 +362,7 @@ case class GroupArray(backend: FormElementBackend[GroupArray.Def.type]) extends 
 
     val element_fids: Seq[FieldId] = data.get(path) match {
       case LocalFieldIndex(ids) => ids
+      case NoValue => Seq()
     }
     element_fids.map{id =>
       FormElement.from_vertex(group_vertex, id, Some(this)).asInstanceOf[FormGroup]
@@ -371,17 +376,33 @@ case class GroupArray(backend: FormElementBackend[GroupArray.Def.type]) extends 
 
   def insert_array_element(data: ValueMap, id: ArrayFieldId, before: Boolean): ValueMap = {
     val new_uid = ArrayFieldId.random()
-    val new_array_index: LocalFieldIndex = data.get(path) match {
-      case LocalFieldIndex(ids) => {
-        val el_index = ids.zipWithIndex.find(_._1 == id).get._2
-        LocalFieldIndex(
-          if (before)
-            ids.take(el_index) ++ Seq(new_uid) ++ ids.drop(el_index)
-          else
-            ids.take(el_index + 1) ++ Seq(new_uid) ++ ids.drop(el_index + 1)
-        )
-      }
+    val array_index = data.get(path) match {
+      case LocalFieldIndex(ids) => ids
+      case NoValue => Seq()
     }
+    val el_index = array_index.zipWithIndex.find(_._1 == id).get._2
+
+    val new_array_index: LocalFieldIndex =
+      LocalFieldIndex(
+        if (before)
+          array_index.take(el_index) ++ Seq(new_uid) ++ array_index.drop(el_index)
+        else
+          array_index.take(el_index + 1) ++ Seq(new_uid) ++ array_index.drop(el_index + 1)
+      )
+
+
+    data.update(path, new_array_index)
+  }
+
+  def append_element(data: ValueMap): ValueMap = {
+    val new_uid = ArrayFieldId.random()
+    val array_index: Seq[FieldId] = data.get(path) match {
+      case LocalFieldIndex(ids) => ids
+      case NoValue => Seq()
+    }
+
+    val new_array_index: LocalFieldIndex =
+      LocalFieldIndex(array_index ++ Seq(new_uid))
     data.update(path, new_array_index)
   }
 

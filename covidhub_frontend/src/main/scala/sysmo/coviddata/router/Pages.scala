@@ -1,6 +1,7 @@
 package sysmo.coviddata.router
 
 import sysmo.coviddata.{panels => P}
+import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.router.Page
 
 case object HomePage extends Page {

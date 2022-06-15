@@ -15,6 +15,8 @@ trait Page extends PageBase {
   val panel: ApplicationPanel
 }
 
+case class SimplePage(name: String, label: Option[String], icon: String, panel: ApplicationPanel) extends Page
+
 trait Category extends PageBase {
   def children: Seq[PageBase]
 }

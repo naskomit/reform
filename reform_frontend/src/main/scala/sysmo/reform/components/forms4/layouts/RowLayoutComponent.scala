@@ -7,7 +7,7 @@ import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.forms4.{transitions => Tr}
 
 object RowLayoutComponent extends ArrayGroupLayout {
-  case class Props(title: String, child_elements: Seq[ArrayChildElement], options: FormRenderingOptions)
+  case class Props(child_elements: Seq[ArrayChildElement], options: FormRenderingOptions)
   case class State(expanded: Boolean)
 
   class Backend($: BackendScope[Props, State]) {
@@ -21,7 +21,7 @@ object RowLayoutComponent extends ArrayGroupLayout {
       })
 
       <.div(^.className:="wrapper wrapper-white",
-        CollapsibleSection(Some(p.title), p.options.get(_.depth) + 1, rows)
+        CollapsibleSection(None, p.options.get(_.depth) + 1, rows)
       )
     }
 
@@ -35,8 +35,8 @@ object RowLayoutComponent extends ArrayGroupLayout {
     //    .render_PCS((p, c, s) => (new Backend).render(p, c, s))
     .build
 
-  override def apply(title: String, children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted = {
-    component(Props(title, children, options))
+  override def apply(children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted = {
+    component(Props(children, options))
   }
 
 }

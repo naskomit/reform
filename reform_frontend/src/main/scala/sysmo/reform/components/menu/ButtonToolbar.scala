@@ -20,7 +20,7 @@ object ButtonToolbar extends ReactComponent {
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      <.div(^.className:= "wrapper", ^.style:= js.Dictionary("background" -> "#DDD"),
+      <.div(^.className:= "wrapper", ^.background:= "#EEE",
         p.controls.map {
           case Button(name, cb) => <.button(^.key:= name,
             ^.cls := "btn btn-primary", ^.style:= js.Dictionary("marginLeft" -> p.margin, "marginRight" -> p.margin)

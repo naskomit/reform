@@ -1,7 +1,7 @@
 package sysmo.reform.components.forms4
 
 import japgolly.scalajs.react.BackendScope
-import sysmo.reform.components.forms4.editors.{EditorAction, InsertElementAfter, InsertElementBefore, RemoveArrayElement, SetFieldValue}
+import sysmo.reform.components.forms4.{editors => Edit}
 import sysmo.reform.shared.{expr => E, form => F}
 import sysmo.reform.shared.form.{ElementPath, FieldEditor, FieldValue, FormElement, HandlerContext, LocalFieldIndex, ValueMap}
 import sysmo.reform.shared.gremlin.tplight.Graph
@@ -19,31 +19,36 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
 
   var current_data: ValueMap = initial_data
   type BackendScopeType = BackendScope[FormEditorComponent.Props, FormEditorComponent.State]
-  class Dispatcher($: BackendScopeType) extends EditorAction.Dispatcher {
-    override def handle_action(action: EditorAction): Unit = {
+  class Dispatcher($: BackendScopeType) extends Edit.EditorAction.Dispatcher {
+    override def handle_action(action: Edit.EditorAction): Unit = {
       action match {
-        case SetFieldValue(path, value) => $.modState(s => {
+        case Edit.SetFieldValue(path, value) => $.modState(s => {
           current_data = current_data.update(path, value)
           logger.debug(current_data.toString)
           s.copy(render_ind = s.render_ind + 1)
         }).runNow()
 
-        case RemoveArrayElement(array, id) => $.modState(s => {
+        case Edit.RemoveArrayElement(array, id) => $.modState(s => {
           current_data = array.remove_element(current_data, id)
           logger.debug(current_data.toString)
           s.copy(render_ind = s.render_ind + 1)
 
         }).runNow()
 
-        case InsertElementBefore(array, id) => $.modState(s => {
+        case Edit.InsertElementBefore(array, id) => $.modState(s => {
           current_data = array.insert_array_element(current_data, id, before = true)
           s.copy(render_ind = s.render_ind + 1)
         }).runNow()
 
-        case InsertElementAfter(array, id) => $.modState(s => {
+        case Edit.InsertElementAfter(array, id) => $.modState(s => {
           current_data = array.insert_array_element(current_data, id, before = false)
           s.copy(render_ind = s.render_ind + 1)
         }).runNow()
+
+        case Edit.AppendElement(array) => $.modState(s => {
+          current_data = array.append_element(current_data)
+          s.copy(render_ind = s.render_ind + 1)
+        }).runNow
 
         case _ => logger.error(s"Unknow action ${action}")
       }
@@ -85,7 +90,7 @@ abstract class FormDataHandler(_graph: Graph) extends GraphObject with Logging {
     }
   }
 
-  def dispatch(action: EditorAction): Unit = {
+  def dispatch(action: Edit.EditorAction): Unit = {
     dispatcher match {
       case None => logger.error("FormDataHandler not bound to form!")
       case Some(dsp) => dsp.dispatch(action)

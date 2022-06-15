@@ -3,13 +3,13 @@ package sysmo.reform.components.forms4
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
-import sysmo.reform.components.forms4.editors.{AbstractFormComponent, InsertElementAfter, InsertElementBefore, RemoveArrayElement}
+import sysmo.reform.components.forms4.{editors => Edit}
 import sysmo.reform.components.forms4.layouts.ArrayChildElement
 import sysmo.reform.components.forms4.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.shared.{form => F}
 
-object ArrayItemComponent extends AbstractFormComponent {
+object ArrayItemComponent extends Edit.AbstractFormComponent {
   case class Props(array: F.GroupArray, element: F.FormGroup, data_handler: FormDataHandler, options: FormRenderingOptions)
   case class State(i: Int)
   final class Backend($: BackendScope[Props, State]) {
@@ -33,15 +33,15 @@ object ArrayItemComponent extends AbstractFormComponent {
       }
 
       def insert_before(p: Props): ButtonToolbar.CB = Callback {
-        p.data_handler.dispatch(InsertElementBefore(p.array, array_id(p)))
+        p.data_handler.dispatch(Edit.InsertElementBefore(p.array, array_id(p)))
       }.asAsyncCallback
 
       def insert_after(p: Props): ButtonToolbar.CB = Callback {
-        p.data_handler.dispatch(InsertElementAfter(p.array, array_id(p)))
+        p.data_handler.dispatch(Edit.InsertElementAfter(p.array, array_id(p)))
       }.asAsyncCallback
 
       def remove(p: Props): ButtonToolbar.CB = Callback {
-        p.data_handler.dispatch(RemoveArrayElement(p.array, array_id(p)))
+        p.data_handler.dispatch(Edit.RemoveArrayElement(p.array, array_id(p)))
       }.asAsyncCallback
 
     }
@@ -68,11 +68,20 @@ object GroupArrayComponent extends ReactComponent {
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
       val layout = p.options.get(_.group_array_layout)
-      val children = p.array.elements(p.data_handler.current_data)
+      val children: Seq[ArrayChildElement] = p.array.elements(p.data_handler.current_data)
         .map(item => ArrayItemComponent.component.withKey(item.fid.toString)(
           ArrayItemComponent.Props(p.array, item, p.data_handler, p.options)
         )).map(item => ArrayChildElement(item))
-      layout(p.array.group.descr, children, p.options)
+      val menu = ButtonToolbar.builder
+        .button("Append", Effects.append(p))
+        .build
+      layout(Seq(ArrayChildElement(menu)) ++ children, p.options)
+    }
+
+    object Effects {
+      def append(p: Props): ButtonToolbar.CB = Callback {
+        p.data_handler.dispatch(Edit.AppendElement(p.array))
+      }.asAsyncCallback
     }
   }
 

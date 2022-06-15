@@ -22,6 +22,6 @@ package object layouts {
   }
 
   trait ArrayGroupLayout extends ReactComponent {
-    def apply(title: String, children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted
+    def apply(children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted
   }
 }
