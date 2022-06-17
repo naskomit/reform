@@ -57,6 +57,13 @@ trait Element {
   def values[V]: Iterator[V] = {
     keys.map(k => value[V](k).get).iterator
   }
+
+  def copy_props(dest: Element): Unit = {
+    properties.foreach((p: Property[_]) => p.value match {
+      case Some(x) => dest.property(p.key, x)
+      case None =>
+    })
+  }
 }
 
 trait Vertex extends Element {
@@ -102,4 +109,23 @@ trait Graph {
   def traversal(): GraphTraversalSource = new GraphTraversalSource(this, Bytecode())
   def vertices(vertex_ids: Any*): Iterator[Vertex]
   def edges(edge_ids: Any*): Iterator[Edge]
+  def copy: Graph
+  def print_all(pfn: String => Unit = println): Unit = {
+    vertices().foreach(v => {
+      val prop_str = v.properties
+        .filter((p: Property[_]) => p.value.isDefined)
+        .map((p: Property[_]) => s"${p.key}: ${p.value.get}")
+        .mkString(", ")
+      pfn(s"V[${v.id}: ${v.label}]{$prop_str}")
+    })
+
+    edges().foreach(e => {
+      val prop_str = e.properties
+        .filter((p: Property[_]) => p.value.isDefined)
+        .map((p: Property[_]) => s"${p.key}: ${p.value.get}")
+        .mkString(", ")
+      pfn(s"V[${e.out_vertex.id}->[${e.id}: ${e.label}]->${e.in_vertex.id}]{$prop_str}")
+    })
+
+  }
 }

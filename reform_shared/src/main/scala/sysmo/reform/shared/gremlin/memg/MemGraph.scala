@@ -53,6 +53,23 @@ class MemGraph(element_helper: ElementHelper) extends Graph {
     }
 
   }
+
+  override def copy: MemGraph = {
+    val result: MemGraph = MemGraph()
+    val mapping = mutable.HashMap[Vertex, Vertex]()
+    vertices().foreach(v => {
+      val new_vertex = result.add_vertex(v.label)
+      v.copy_props(new_vertex)
+      mapping += (v -> new_vertex)
+    })
+    edges().foreach(e => {
+      val new_edge = mapping(e.out_vertex)
+        .add_edge(e.label, mapping(e.in_vertex))
+      e.copy_props(new_edge)
+    })
+
+    result
+  }
 }
 
 object MemGraph {

@@ -11,8 +11,9 @@ case class SetPropertyValue[T](p: Property[T], v: Option[T])
 
 case class Property[T](name: String, default: Option[T] = None) {
   def set(v: T): SetPropertyValue[T] = SetPropertyValue(this, Some(v))
-  def :=(v: T): SetPropertyValue[T] = SetPropertyValue(this, Some(v))
   def clear: SetPropertyValue[T] = SetPropertyValue(this, None)
+  def :=(v: T): SetPropertyValue[T] = SetPropertyValue(this, Some(v))
+  def :?=(v: Option[T]): SetPropertyValue[T] = SetPropertyValue(this, v)
 }
 
 case class PropertiesUpdate(key_values: Seq[SetPropertyValue[_]])
@@ -21,15 +22,13 @@ trait PropertyDef
 
 trait ElementDef {
   val label: String
-  type Props <: PropertyDef
-  val props: Props
-
+  val props: PropertyDef
 }
 
 trait ElementObj extends GraphObject {
   type ED <: ElementDef
   val ed: ED
-  type Props = ed.Props
+  type Props = ed.props.type
   def element: Element
   def get[T](f: Props => Property[T]): Option[T] = {
     val p = f(ed.props)
@@ -57,7 +56,7 @@ trait VertexDef extends ElementDef {
 }
 
 trait VertexObj extends ElementObj {
-  override type ED <: VertexDef
+  type ED <: VertexDef
   val vertex: Vertex
   override def element: Element = vertex
   def graph: Graph = vertex.graph
@@ -69,7 +68,7 @@ trait EdgeDef extends ElementDef {
 }
 
 trait EdgeObj extends ElementObj {
-  override type ED <: EdgeDef
+  type ED <: EdgeDef
   val edge: Edge
   override def element: Element = edge
   def graph: Graph = edge.graph
