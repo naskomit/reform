@@ -2,7 +2,7 @@ package sysmo.coviddata
 
 
 import sysmo.reform.router.{PageCollection, SimplePage}
-import router.{BiomarkerAnalysis, HomePage, Plots, RefrigerationCycle}
+import router.{HomePage, Plots}
 import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
@@ -46,8 +46,8 @@ object Application extends ReactApplication {
       )((bld, table) => bld.add(table))
       .build,
       Plots,
-      BiomarkerAnalysis,
-      RefrigerationCycle,
+//      SimplePage("RefrigerationCycle", Some("Refrigeration cycle"), "fa fa-pencil", P.RefrigerationCyclePanel),
+//      SimplePage("BiomarkerAnalysis", Some("Biomarker analysis"), "fa fa-pencil", P.BiomarkerAnalysisPanel),
       SimplePage("RecursiveFormPanel", Some("Recursive Form Panel"), "fa fa-pencil",  P.RecursiveFormPanel)
     )
   }
@@ -57,15 +57,4 @@ object Application extends ReactApplication {
     sdt.enable_global_manager(true)
     super.init_react(e)
   }
-
-//  MermaidFacades.show()
-  /**
-   *
-   * case object RecursiveFormPanel extends Page {
-  val name = "RecursiveFormPanel"
-  val label = Some("Recursive Form Panel")
-  val icon = "fa fa-pencil"
-  val panel = P.RecursiveFormPanel
-}*/
-
 }

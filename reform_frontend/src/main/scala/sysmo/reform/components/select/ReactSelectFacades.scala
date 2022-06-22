@@ -1,6 +1,7 @@
 package sysmo.reform.components.select
 
 import japgolly.scalajs.react.{Children, JsComponent}
+import sysmo.reform.shared.form.{runtime => FR}
 import sysmo.reform.shared.util.LabeledValue
 import sysmo.reform.shared.{form => F}
 
@@ -53,16 +54,16 @@ object ReactSelectFacades {
     class Builder {
       val props = (new js.Object).asInstanceOf[Props]
 
-      def value(v: F.FieldValue[_]): this.type = {
+      def value(v: FR.FieldValue[_]): this.type = {
         props.value = v match {
-          case F.SomeValue(x) => {
+          case FR.SomeValue(x) => {
             val dv = (new js.Object).asInstanceOf[Choice]
             dv.value = x.value
             dv.label = x.make_label
             dv
           }
 
-          case F.MultiValue(s) => {
+          case FR.MultiValue(s) => {
             s.map { x =>
               val dv = (new js.Object).asInstanceOf[Choice]
               dv.value = x.value
@@ -71,7 +72,7 @@ object ReactSelectFacades {
             }.toJSArray
           }
 
-          case F.NoValue => null
+          case FR.NoValue => null
 
 
         }

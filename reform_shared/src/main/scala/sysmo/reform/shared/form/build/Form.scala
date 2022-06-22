@@ -1,13 +1,21 @@
-package sysmo.reform.shared.form
+package sysmo.reform.shared.form.build
 
-import sysmo.reform.shared.gremlin.{tplight => TP}
 import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
+import sysmo.reform.shared.gremlin.{tplight => TP}
 
 
-abstract class FormElement[T <: GO.VertexDef](val ed: T) extends GO.VertexObj {
-  type ED = T
+trait FormElement extends GO.VertexObj {
+  def symbol: String
 }
 
+object FormElement {
+  def from_vertex(v: TP.Vertex): Option[FormElement] = v.label match {
+    case FieldGroup.Def.label => Some(new FieldGroup(v))
+    case GroupUnion.Def.label => Some(new GroupUnion(v))
+    case GroupArray.Def.label => Some(new GroupArray(v))
+    case _ => AtomicField.from_vertex(v)
+  }
+}
 
 trait FormElementCompanion[U] {
   /** The form element type to which this is companion */
@@ -32,8 +40,11 @@ trait FormElementCompanion[U] {
   type Builder <: IBuilder
 }
 
-abstract class FormRelation[T <: GO.EdgeDef](val ed: T) extends GO.EdgeObj {
-  type ED = T
+trait AbstractGroup extends FormElement
+
+
+trait FormRelation extends GO.EdgeObj {
+
 }
 
 trait FormRelationCompanion[U] {
@@ -42,7 +53,6 @@ trait FormRelationCompanion[U] {
   trait IBuilder {
     protected val graph: TP.Graph
     val edge: TP.Edge
-//    lazy val vertex: TP.Vertex = graph.add_vertex(Def.label)
     def set_prop(pf: Def.props.type => GO.Property[_], value: Any): this.type = {
       edge.property(pf(Def.props).name, value)
       this

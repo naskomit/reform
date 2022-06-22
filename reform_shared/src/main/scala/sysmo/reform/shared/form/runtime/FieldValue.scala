@@ -1,7 +1,7 @@
-package sysmo.reform.shared.form
+package sysmo.reform.shared.form.runtime
 
-import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.util.LabeledValue
+import sysmo.reform.shared.{expr => E}
 
 sealed trait FieldValue[+V]
 case object NoValue extends FieldValue[Nothing]

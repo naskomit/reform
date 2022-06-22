@@ -2,6 +2,7 @@ package sysmo.reform.shared.form
 
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should._
+import sysmo.reform.shared.form.runtime.{NoValue, SomeValue}
 import sysmo.reform.shared.util.LabeledValue
 
 
