@@ -8,6 +8,8 @@ case class GroupArray(vertex: TP.Vertex) extends FormElement {
   def prototype: FormElement = vertex.edges(TP.Direction.OUT, Seq(HasPrototype.Def.label))
     .find(e => e.label == HasPrototype.Def.label)
     .map(e => FormElement.from_vertex(e.in_vertex).get).get
+  def prototype_rel: HasPrototype = vertex.edges(TP.Direction.OUT, Seq(HasPrototype.Def.label))
+    .find(e => e.label == HasPrototype.Def.label).map(e => HasPrototype(e)).get
   override def symbol: String = "---"
 }
 

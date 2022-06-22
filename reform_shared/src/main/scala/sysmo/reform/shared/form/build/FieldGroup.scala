@@ -11,10 +11,16 @@ case class FieldGroup(vertex: TP.Vertex) extends AbstractGroup {
 //    (HasElement(e).get(_.name).get, field)
 //  }.toMap
   def symbol: String = get(_.symbol).get
+
   def field(name: String): Option[FormElement] =
     vertex.edges(TP.Direction.OUT, Seq(HasElement.Def.label)).find{ e =>
     HasElement(e).get(_.name).contains(name)
   }.flatMap(e => FormElement.from_vertex(e.in_vertex))
+
+  def field_rel(name: String): Option[HasElement] =
+    vertex.edges(TP.Direction.OUT, Seq(HasElement.Def.label)).find{ e =>
+      HasElement(e).get(_.name).contains(name)
+    }.map(e => HasElement(e))
 
 }
 
@@ -86,6 +92,7 @@ object FieldGroup extends FormElementCompanion[FieldGroup] {
 case class HasElement(edge: TP.Edge) extends FormRelation {
   override type ED = HasElement.Def.type
   override val ed = HasElement.Def
+  def child_field: FormElement = FormElement.from_vertex(edge.in_vertex).get
 }
 
 object HasElement extends FormRelationCompanion[HasElement] {
@@ -118,6 +125,7 @@ object HasElement extends FormRelationCompanion[HasElement] {
 case class HasPrototype(edge: TP.Edge) extends FormRelation {
   override type ED = HasPrototype.Def.type
   override val ed = HasPrototype.Def
+  def prototype: FormElement = FormElement.from_vertex(edge.in_vertex).get
 }
 
 object HasPrototype extends FormRelationCompanion[HasPrototype] {

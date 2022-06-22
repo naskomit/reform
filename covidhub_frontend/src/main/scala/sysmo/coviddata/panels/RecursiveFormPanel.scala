@@ -11,6 +11,8 @@ import sysmo.reform.components.ApplicationPanel
 import sysmo.reform.shared.gremlin.memg.MemGraph
 import sysmo.reform.components.forms.FormEditorComponent
 import sysmo.reform.shared.form.build.GroupUnion
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
 
 object RecursiveFormPanel extends ApplicationPanel {
 

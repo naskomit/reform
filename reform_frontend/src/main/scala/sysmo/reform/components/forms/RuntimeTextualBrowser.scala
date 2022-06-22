@@ -72,7 +72,7 @@ object RuntimeTextualBrowser extends ReactComponent {
   object ArrayBrowser {
     case class Props(array: FR.Array, runtime: FR.FormRuntime)
     def render(p: Props): VdomElement = {
-      <.div(^.id:= s"rtb_${p.array.id.id}",
+      <.div(
         <.h3(p.array.id.id, ": Array[", p.array.prototype.prototype.symbol, "]"),
         p.array.children.map(c =>
           <.div(^.marginLeft:=20.px , "- ", RefViewer(c, p.runtime))
@@ -91,7 +91,7 @@ object RuntimeTextualBrowser extends ReactComponent {
     case class Props(group: FR.Group, runtime: FR.FormRuntime)
     def render(p: Props): VdomElement = {
       <.div(
-        <.h3(^.id:= s"rtb_${p.group.id.id}", p.group.id.id, ": Group[", p.group.prototype.symbol, "]"),
+        <.h3(p.group.id.id, ": Group[", p.group.prototype.symbol, "]"),
         p.group.children.map(c =>
           <.div(^.marginLeft:=20.px , "- ", c._1, ": ", RefViewer(c._2, p.runtime))
         ).toTagMod)
