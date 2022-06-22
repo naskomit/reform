@@ -6,13 +6,14 @@ import sysmo.reform.shared.util.LabeledValue
 
 import scala.collection.mutable
 
-sealed trait RuntimeObject {
+sealed trait RuntimeObject extends Product with Serializable {
   val id: ObjectId
   val prototype: FB.FormElement
+  val parent: Option[RuntimeObject]
   var runtime : FormRuntime = null
 }
 
-case class AtomicValue(prototype: FB.AtomicField, value: FieldValue[_], id: ObjectId) extends RuntimeObject
+case class AtomicValue(prototype: FB.AtomicField, value: FieldValue[_], id: ObjectId, parent: Option[RuntimeObject]) extends RuntimeObject
 
 trait WithNamedChildren[K, V] extends RuntimeObject {
   val children: mutable.Map[K, V] = new mutable.HashMap()
@@ -33,11 +34,11 @@ object ObjectId {
   val start = ObjectId(0)
 }
 
-class Group(val prototype: FB.FieldGroup, val id: ObjectId) extends RuntimeObject
+case class Group(prototype: FB.FieldGroup, id: ObjectId, parent: Option[RuntimeObject]) extends RuntimeObject
   with WithNamedChildren[String, ObjectId] {
 }
 
-class Array(val prototype: FB.GroupArray, val id: ObjectId) extends RuntimeObject
+case class Array(prototype: FB.GroupArray, id: ObjectId, parent: Option[RuntimeObject]) extends RuntimeObject
   with WithOrderedChildren[ObjectId]
 
 /** The main runtime class */
@@ -65,26 +66,26 @@ object FormRuntime {
 
 object instantiation {
   trait InstanceBuilder {
-    def build(rt: FormRuntime, prototype_bound: Option[FB.FormElement]): RuntimeObject
+    def build(prototype_bound: Option[FB.FormElement], parent: Option[RuntimeObject], rt: FormRuntime): RuntimeObject
   }
 
   case class AtomicBuilder(v: Any) extends InstanceBuilder {
-    override def build(rt: FormRuntime, prototype_bound: Option[FB.FormElement]): RuntimeObject = {
+    override def build(prototype_bound: Option[FB.FormElement], parent: Option[RuntimeObject], rt: FormRuntime): RuntimeObject = {
       prototype_bound match {
         case Some(p: FB.AtomicField) =>
-          rt.create_object(id => new AtomicValue(p, SomeValue(LabeledValue(v)), id))
+          rt.create_object(id => AtomicValue(p, SomeValue(LabeledValue(v)), id, parent))
         case _ => throw new IllegalArgumentException("Prototype for AtomicValue should be of type AtomicField")
       }
     }
   }
 
   case class ArrayBuilder(children: Seq[InstanceBuilder]) extends InstanceBuilder {
-    override def build(rt: FormRuntime, prototype_bound: Option[FB.FormElement]): RuntimeObject = {
+    override def build(prototype_bound: Option[FB.FormElement], parent: Option[RuntimeObject], rt: FormRuntime): RuntimeObject = {
       prototype_bound match {
         case Some(p: FB.GroupArray) =>
-          val array = rt.create_object(id => new Array(p, id))
+          val array = rt.create_object(id => Array(p, id, parent))
           children.foreach{bld =>
-            val child_instance = bld.build(rt, Some(p.prototype))
+            val child_instance = bld.build(Some(p.prototype), Some(array), rt)
             array.children.append(child_instance.id)
           }
           array
@@ -95,7 +96,7 @@ object instantiation {
   }
 
   case class GroupBuilder(prototype: FB.FieldGroup, children: Seq[(String, InstanceBuilder)]) extends InstanceBuilder {
-    override def build(rt: FormRuntime, prototype_bound: Option[FB.FormElement]): RuntimeObject = {
+    override def build(prototype_bound: Option[FB.FormElement], parent: Option[RuntimeObject], rt: FormRuntime): RuntimeObject = {
       prototype_bound match {
         case Some(pb: FB.FieldGroup) => {
           if (prototype != pb) {
@@ -111,12 +112,12 @@ object instantiation {
         case None =>
       }
 
-      val group = rt.create_object(id => new Group(prototype, id))
+      val group = rt.create_object(id => Group(prototype, id, parent))
       children.foreach {
         case (name, builder) => {
           val child_instance = prototype.field(name) match {
             case Some(p) => {
-              builder.build(rt, Some(p))
+              builder.build(Some(p), Some(group), rt)
             }
             case None => throw new IllegalArgumentException(s"No such field $name in group ${prototype.symbol}")
           }
@@ -137,6 +138,6 @@ object instantiation {
 
 
   implicit class FormRuntimeInst(rt: FormRuntime) {
-    def instantiate(x: InstanceBuilder): RuntimeObject = x.build(rt, None)
+    def instantiate(x: InstanceBuilder): RuntimeObject = x.build(None, None, rt)
   }
 }
