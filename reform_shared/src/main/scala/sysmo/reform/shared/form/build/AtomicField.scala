@@ -4,6 +4,7 @@ import sysmo.reform.shared.gremlin.{tplight => TP}
 import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
 
 trait AtomicField extends FormElement {
+  type ValueType
   override def symbol: String = "---"
 }
 
@@ -15,6 +16,7 @@ object AtomicField {
 }
 
 class StringField(val vertex: TP.Vertex) extends AtomicField {
+  override type ValueType = String
   override type ED = StringField.Def.type
   override val ed = StringField.Def
 }
@@ -27,7 +29,6 @@ object StringField extends FormElementCompanion[StringField] {
     }
   }
   class Builder(val graph: TP.Graph) extends IBuilder {
-
     def build: StringField = new StringField(vertex)
   }
   implicit val _cmp: FormElementCompanion[StringField] = this
@@ -35,6 +36,7 @@ object StringField extends FormElementCompanion[StringField] {
 }
 
 class BooleanField(val vertex: TP.Vertex) extends AtomicField {
+  override type ValueType = Boolean
   override type ED = BooleanField.Def.type
   override val ed = BooleanField.Def
 }
@@ -55,6 +57,7 @@ object BooleanField extends FormElementCompanion[BooleanField] {
 }
 
 class IntegerField(val vertex: TP.Vertex) extends AtomicField {
+  override type ValueType = Int
   override type ED = IntegerField.Def.type
   override val ed = IntegerField.Def
 }
@@ -74,6 +77,7 @@ object IntegerField extends FormElementCompanion[IntegerField] {
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 class FloatField(val vertex: TP.Vertex) extends AtomicField {
+  override type ValueType = Double
   override type ED = FloatField.Def.type
   override val ed = FloatField.Def
 }
@@ -93,6 +97,7 @@ object FloatField extends FormElementCompanion[FloatField] {
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 class SelectField(val vertex: TP.Vertex) extends AtomicField {
+  override type ValueType = Any
   override type ED = SelectField.Def.type
   override val ed = SelectField.Def
   def multiple: Boolean = get(_.multiple).getOrElse(false)

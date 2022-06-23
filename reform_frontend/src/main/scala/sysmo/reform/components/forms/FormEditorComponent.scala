@@ -4,7 +4,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 import sysmo.reform.components.graph.GraphTextualBrowser
-//import sysmo.reform.components.forms.options.FormRenderingOptions
+import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.components.{Processing, ReactComponent}
 import sysmo.reform.shared.form.{runtime => FR}
@@ -15,23 +15,22 @@ object FormEditorComponent extends ReactComponent {
   case object TypeBrowser extends EditorMode
   case object RuntimeBrowser extends EditorMode
 
-  case class Props(runtime: FR.FormRuntime) // , options: FormRenderingOptions
+  case class Props(group: FR.Group, options: FormRenderingOptions)
   case class State(render_ind: Int, mode: EditorMode, width: Double, height: Double)
+
   final class Backend($: BackendScope[Props, State]) {
-//    def bind(p: Props): Unit  = p.data_handler.bind($)
-//    def unbind(p: Props): Unit  = p.data_handler.unbind($)
     def render (p: Props, s: State): VdomElement = {
       <.div(^.className:= "form",
         <.div(^.height:= (s.height - 200).px, ^.overflow:="auto",
           s.mode match {
             case Editor => {
-              <.div()
+              FormGroupComponent(p.group, p.options)
             }
             case TypeBrowser => {
-              GraphTextualBrowser(p.runtime.type_graph)
+              GraphTextualBrowser(p.group.runtime.type_graph)
             }
             case RuntimeBrowser => {
-              RuntimeTextualBrowser(p.runtime)
+              RuntimeTextualBrowser(p.group.runtime)
             }
           },
         ),
@@ -63,20 +62,22 @@ object FormEditorComponent extends ReactComponent {
       .renderBackend[Backend]
       .componentDidMount(f => {
         Callback {
-//          f.backend.bind(f.props)
+          f.props.group.runtime.bind {() =>
+            f.modState(s => s.copy(render_ind = s.render_ind + 1)).runNow()
+          }
         }
       })
       .componentWillUnmount(f => {
         Callback {
-//          f.backend.unbind(f.props)
+          f.props.group.runtime.unbind()
         }
       })
       .build
 
-  def apply(runtime: FR.FormRuntime): Unmounted = {
-    component(Props(runtime))
+  def apply(group: FR.Group, options: FormRenderingOptions): Unmounted = {
+    component(Props(group, options))
   }
-//  def apply(runtime: FR.FormRuntime): Unmounted = {
-//    apply(form, data_handler, FormRenderingOptions.default)
-//  }
+  def apply(group: FR.Group): Unmounted = {
+    apply(group, FormRenderingOptions.default)
+  }
 }

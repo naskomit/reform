@@ -16,11 +16,11 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 object RecursiveFormPanel extends ApplicationPanel {
 
-  case class Props(runtime: FR.FormRuntime) // form: F.FieldGroup, data_handler: FormDataHandler
+  case class Props(group: FR.Group) // form: F.FieldGroup, data_handler: FormDataHandler
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      FormEditorComponent(p.runtime)
+      FormEditorComponent(p.group)
     }
   }
 
@@ -55,11 +55,13 @@ object RecursiveFormPanel extends ApplicationPanel {
     .group(_("t2").descr("Task 2"), TaskBuilder)
     .array(_("other_tasks").descr("Other tasks"), TaskBuilder)
     .array(_("other_items").descr("Other items"), TaskItemBuilder)
+    .layout("tabbed")
     .build
 
   val TaskManagement = FB.FieldGroup.builder(build_graph, "TaskManagement")
     .group(_("tasks").descr("Tasks"), TaskGroupBuilder)
     .array(_("people").descr("People"), PersonBuilder)
+    .layout("tabbed")
     .build
 
 //  import FR.Group.FieldDef._
@@ -95,36 +97,8 @@ object RecursiveFormPanel extends ApplicationPanel {
     )
   )
 
-
-//      _.field("people", )
-//      "people" -> _.group(Person)("name" -> (_("John Doe")))
-
-//      (
-//        _.group(Person)("name" -> "John Doe", "position" -> "CEO"),
-//        _.group(Person)("name" -> "Old Sam", "position" -> "Developer"),
-//        _.group(Person)("name" -> "Young Sam", "position" -> "Intern")
-//      ),
-//      "tasks" -> _.group(TaskGroup,
-//
-//      )
-//  )
-
-//  object data_handler extends FormDataHandler(graph) {
-//    override def initial_data: F.ValueMap = init_data
-//    override def get_choices(element: F.FormElement): Future[Seq[LabeledValue[_]]] = {
-//      val choices = element.path match {
-//        case _ => Seq()
-//      }
-//      Future(choices)
-//    }
-//  }
-//  println("==== Original")
-//  build_graph.print_all(println)
-//  println("==== Copy")
-//  graph.copy.print_all(println)
-
   def apply(app_config: ApplicationConfiguration): Unmounted = {
-    component(Props(runtime)) // form, data_handler
+    component(Props(task_management.asInstanceOf[FR.Group])) // form, data_handler
   }
 }
 

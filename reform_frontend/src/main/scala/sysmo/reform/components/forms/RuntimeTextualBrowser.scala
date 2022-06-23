@@ -3,6 +3,7 @@ package sysmo.reform.components.forms
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
+import sysmo.reform.shared.form.{build => FB}
 import sysmo.reform.shared.form.{runtime => FR}
 import japgolly.scalajs.react._
 import sysmo.reform.shared.form.runtime.{AllValues, MultiValue, NoValue, SomeValue}
