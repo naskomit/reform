@@ -4,7 +4,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms.editors.AbstractFormComponent
-import sysmo.reform.components.forms.{editors => Edit}
 import sysmo.reform.components.forms.layouts.ArrayChildElement
 import sysmo.reform.components.forms.options.FormRenderingOptions
 import sysmo.reform.components.menu.ButtonToolbar
@@ -12,16 +11,19 @@ import sysmo.reform.shared.form.{build => FB}
 import sysmo.reform.shared.form.{runtime => FR}
 
 object ArrayItemComponent extends ReactComponent {
-  case class Props(array: FR.Array, element: FR.Group, options: FormRenderingOptions)
+  case class Props(array: FR.Array, element: FR.Group, index: Int, options: FormRenderingOptions)
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
       <.div(
-        ButtonToolbar.builder
-          .button("Insert before", Effects.insert_before(p))
-          .button("Insert after", Effects.insert_after(p))
-          .button("Remove", Effects.remove(p))
-          .build,
+        <.h3(s"#${p.index} ",
+          ButtonToolbar.builder
+            .dropdown(<.i(^.className:="fa fa-edit fa-x3"))
+            .button("Insert before", Effects.insert_before(p))
+            .button("Insert after", Effects.insert_after(p))
+            .button("Remove", Effects.remove(p))
+            .build.component,
+        ),
 
         FormGroupComponent(p.element, p.options)
       )
@@ -51,8 +53,8 @@ object ArrayItemComponent extends ReactComponent {
       .renderBackend[Backend]
       .build
 
-  def apply(array: FR.Array, element: FR.Group, options: FormRenderingOptions): Unmounted = {
-    component(Props(array, element, options))
+  def apply(array: FR.Array, element: FR.Group, index: Int, options: FormRenderingOptions): Unmounted = {
+    component(Props(array, element, index, options))
   }
 }
 
@@ -63,13 +65,15 @@ object GroupArrayComponent extends AbstractFormComponent[FR.Array, FB.GroupArray
     def render (p: Props, s: State): VdomElement = {
       val layout = p.options.get(_.group_array_layout)
       val children = p.obj.element_iterator
-        .map(item => ArrayItemComponent.component.withKey(item.id.toString)(
-          ArrayItemComponent.Props(p.obj, item, p.options)
+        .zipWithIndex
+        .map(item => ArrayItemComponent.component.withKey(item._1.id.toString)(
+          ArrayItemComponent.Props(p.obj, item._1, item._2, p.options)
         )).map(item => ArrayChildElement(item))
       val menu = ButtonToolbar.builder
+        .dropdown(<.i(^.className:="fa fa-edit fa-x3"))
         .button("Append", Effects.append(p))
         .build
-      layout(Seq(ArrayChildElement(menu)) ++ children, p.options)
+      layout(children.toSeq, Some(menu), p.options)
     }
 
     object Effects {

@@ -48,7 +48,8 @@ object Application extends ReactApplication {
       Plots,
 //      SimplePage("RefrigerationCycle", Some("Refrigeration cycle"), "fa fa-pencil", P.RefrigerationCyclePanel),
 //      SimplePage("BiomarkerAnalysis", Some("Biomarker analysis"), "fa fa-pencil", P.BiomarkerAnalysisPanel),
-      SimplePage("RecursiveFormPanel", Some("Recursive Form Panel"), "fa fa-pencil",  P.RecursiveFormPanel)
+      SimplePage("RecursiveFormPanel", Some("Recursive Form Panel"), "fa fa-pencil",  P.RecursiveFormPanel),
+      SimplePage("CompanyPanel", Some("Company Panel"), "fa fa-pencil",  P.CompanyPanel)
     )
   }
   override val layout = IntuitiveLayout

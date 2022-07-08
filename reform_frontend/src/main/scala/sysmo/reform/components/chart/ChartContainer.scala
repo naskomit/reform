@@ -88,12 +88,12 @@ class ChartContainer[U <: ChartSettings : ClassTag] extends ReactComponent {
           s.mode match {
             case ActiveChart => ButtonToolbar.builder
                 .button("Settings", Effects.activate_mode(ActiveSettings))
-                .build
+                .build.component
 
             case ActiveSettings => ButtonToolbar.builder
                 .button("Ok", Effects.ok_settings(p))
                 .button("Cancel", Effects.activate_mode(ActiveChart))
-                .build
+                .build.component
 
             case Loading => <.div()
           }

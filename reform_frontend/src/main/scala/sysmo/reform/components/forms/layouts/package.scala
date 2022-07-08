@@ -1,9 +1,12 @@
 package sysmo.reform.components.forms
 
+import japgolly.scalajs.react.CtorType
 import japgolly.scalajs.react.CtorType.ChildArg
+import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.{VdomElement, VdomNode}
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms.options.FormRenderingOptions
+import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.shared.{form => F}
 
 package object layouts {
@@ -22,6 +25,9 @@ package object layouts {
   }
 
   trait ArrayGroupLayout extends ReactComponent {
-    def apply(children: Seq[ArrayChildElement], options: FormRenderingOptions): Unmounted
+    case class Props(child_elements: Seq[ArrayChildElement], menu: Option[ButtonToolbar.Props], options: FormRenderingOptions)
+    val component: Component[Props, State, Backend, CtorType.Props]
+    def apply(children: Seq[ArrayChildElement], menu: Option[ButtonToolbar.Props], options: FormRenderingOptions): Unmounted =
+      component(Props(children, menu, options))
   }
 }

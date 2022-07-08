@@ -29,7 +29,8 @@ object RuntimeTextualBrowser extends ReactComponent {
       .render_P(render)
       .build
 
-    def apply(value: FR.AtomicValue) = component(Props(value))
+    def apply(value: FR.AtomicValue) =
+      component(Props(value))
   }
 
   /** Viewer for ref objects */
@@ -47,6 +48,7 @@ object RuntimeTextualBrowser extends ReactComponent {
               referenced match {
                 case v: FR.Group => GroupBrowser(v, p.runtime)
                 case v: FR.Array => ArrayBrowser(v, p.runtime)
+                case v: FR.Reference => RefBrowser(v, p.runtime)
               }
             } else {
               <.span("#", p.ref.id)
@@ -74,7 +76,7 @@ object RuntimeTextualBrowser extends ReactComponent {
     case class Props(array: FR.Array, runtime: FR.FormRuntime)
     def render(p: Props): VdomElement = {
       <.div(
-        <.h3(p.array.id.id, ": Array[", p.array.prototype.prototype.symbol, "]"),
+        <.h3(p.array.id.id, ": Array[", p.array.prototype.prototype.symbol, "]", s"(${p.array.children.size})"),
         p.array.children.map(c =>
           <.div(^.marginLeft:=20.px , "- ", RefViewer(c, p.runtime))
         ).toTagMod)
@@ -84,10 +86,12 @@ object RuntimeTextualBrowser extends ReactComponent {
       .render_P(render)
       .build
 
-    def apply(array: FR.Array, runtime: FR.FormRuntime) = component(Props(array, runtime))
+    def apply(array: FR.Array, runtime: FR.FormRuntime) =
+      component(Props(array, runtime))
   }
 
-  /** Viewer for arrays */
+
+  /** Viewer for groups */
   object GroupBrowser {
     case class Props(group: FR.Group, runtime: FR.FormRuntime)
     def render(p: Props): VdomElement = {
@@ -102,9 +106,30 @@ object RuntimeTextualBrowser extends ReactComponent {
       .render_P(render)
       .build
 
-    def apply(group: FR.Group, runtime: FR.FormRuntime) = component(Props(group, runtime))
+    def apply(group: FR.Group, runtime: FR.FormRuntime) =
+      component(Props(group, runtime))
   }
 
+
+  /** Viewer for references */
+  object RefBrowser {
+    case class Props(ref: FR.Reference, runtime: FR.FormRuntime)
+    def render(p: Props): VdomElement = {
+      <.div(
+        <.h3(p.ref.id.id, ": Ref[", p.ref.prototype.prototype.symbol, "]", s"(${p.ref.element_iterator.size})"),
+        p.ref.element_iterator.map(e =>
+          <.div(^.marginLeft:=20.px , "- ", RefViewer(e.id, p.runtime))
+        ).toTagMod
+      )
+    }
+
+    val component = ScalaComponent.builder[Props]("ArrayBrowser")
+      .render_P(render)
+      .build
+
+    def apply(ref: FR.Reference, runtime: FR.FormRuntime) =
+      component(Props(ref, runtime))
+  }
 
   final class Backend($: BackendScope[Props, State]) {
     def render_objects(runtime: FR.FormRuntime): VdomElement = {

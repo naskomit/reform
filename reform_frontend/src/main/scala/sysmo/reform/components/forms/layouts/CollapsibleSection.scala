@@ -12,6 +12,7 @@ object CollapsibleSection extends ReactComponent {
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
+
       val title_node = p.title.map { title =>
         val header_fn = (p.depth + 1) match {
           case 1 => <.h1

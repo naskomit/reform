@@ -3,6 +3,7 @@ package sysmo.reform.shared.form.build
 import sysmo.reform.shared.form.build.FieldGroup._cmp
 import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
 import sysmo.reform.shared.gremlin.{tplight => TP}
+import sysmo.reform.shared.{expr => E}
 
 case class FieldGroup(vertex: TP.Vertex) extends AbstractGroup {
   override type ED = FieldGroup.Def.type
@@ -61,6 +62,23 @@ object FieldGroup extends FormElementCompanion[FieldGroup] {
       this
     }
 
+    def ref(f_rel: HasElement.Builder => HasElement.Builder,
+            f_ref: Reference.BuilderSource => Reference.Builder): this.type = {
+      val ref_builder = f_ref(new Reference.BuilderSource(graph))
+      f_rel(new HasElement.Builder(graph, vertex, ref_builder.vertex))
+      new HasPrototype.Builder(graph, ref_builder.vertex, ref_builder.prototype.vertex)
+      this
+    }
+
+//    def ref_array(f_rel: HasElement.Builder => HasElement.Builder,
+//            prototype: FieldGroup.Builder): this.type = {
+//      val ref_builder = (new Reference.Builder(graph, prototype))
+//      ref_builder.multiple(true)
+//      f_rel(new HasElement.Builder(graph, vertex, ref_builder.vertex))
+//      new HasPrototype.Builder(graph, ref_builder.vertex, ref_builder.prototype.vertex)
+//      this
+//    }
+
     def array(f_rel: HasElement.Builder => HasElement.Builder,
               child_builder: FieldGroup.Builder): this.type = {
       val array_builder = GroupArray.builder(graph)
@@ -92,10 +110,10 @@ object FieldGroup extends FormElementCompanion[FieldGroup] {
 
   class FieldBuilderSource(graph: TP.Graph) {
     def char: StringField.Builder = new StringField.Builder(graph)
-    //    def float(name: String): FloatEditor.Builder = new FloatEditor.Builder(graph, parent, name)
-    //    def bool(name: String): BooleanEditor.Builder = new BooleanEditor.Builder(graph, parent, name)
-    //    def int(name: String): IntegerEditor.Builder = new IntegerEditor.Builder(graph, parent, name)
-    //    def select(name: String): SelectEditor.Builder = new SelectEditor.Builder(graph, parent, name)
+    def float: FloatField.Builder = new FloatField.Builder(graph)
+    def bool: BooleanField.Builder = new BooleanField.Builder(graph)
+    def int: IntegerField.Builder = new IntegerField.Builder(graph)
+    def select: SelectField.Builder = new SelectField.Builder(graph)
   }
 
   implicit val _cmp: FormElementCompanion[FieldGroup] = this
@@ -122,7 +140,10 @@ object HasElement extends FormRelationCompanion[HasElement] {
   }
 
   class Builder(val graph: TP.Graph, from: TP.Vertex, to: TP.Vertex) extends IBuilder {
+    private val new_seq_num = from.edges(TP.Direction.OUT, Seq(Def.label))
+      .map(e => HasElement(e).get(_.seq_num).get).toSeq.sorted.lastOption.getOrElse(-1) + 1
     val edge: TP.Edge = from.add_edge(Def.label, to)
+    HasElement(edge).update(_.seq_num := new_seq_num)
 
     def apply(v: String): this.type = {
       set_prop(_.name, v)

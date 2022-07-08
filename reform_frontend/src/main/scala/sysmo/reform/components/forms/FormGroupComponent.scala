@@ -21,6 +21,7 @@ object FormGroupComponent extends AbstractFormComponent[FR.Group, FB.FieldGroup]
 //      }
       val element_fn: Partial = element match {
         case x: FR.AtomicValue => render_field_editor(x)
+        case x: FR.Reference => editors.ReferenceEditorComponent.partial(x)
         case x: FR.Group => FormGroupComponent.partial(x)
         case x: FR.Array => GroupArrayComponent.partial(x)
       }
@@ -38,9 +39,14 @@ object FormGroupComponent extends AbstractFormComponent[FR.Group, FB.FieldGroup]
       }
     }
 
+//    def render_reference(reference: FR.Reference): Partial = {
+//
+//    }
+
     def size_hint(elem: FR.RuntimeObject): L.SizeHint = elem match {
-      case _: FR.Group =>  L.FullWidth
       case _: FR.AtomicValue => L.Medium
+      case _: FR.Reference => L.Medium
+      case _: FR.Group =>  L.FullWidth
       case _: FR.Array => L.FullWidth
     }
 
@@ -55,7 +61,7 @@ object FormGroupComponent extends AbstractFormComponent[FR.Group, FB.FieldGroup]
 //            true
 //          }
 //        })
-        .map(elem => render_child(elem._2, Some(elem._1), child_options))
+        .map(elem => render_child(elem.target, Some(elem.relation.descr), child_options))
         .toSeq
 
       val layout = (p.obj.prototype.layout) match {
@@ -63,7 +69,6 @@ object FormGroupComponent extends AbstractFormComponent[FR.Group, FB.FieldGroup]
         case Some("tabbed") => TabbedLayoutComponent
         case None => p.options.get(_.form_group_layout)
       }
-
       <.div(layout(children, p.options))
     }
   }

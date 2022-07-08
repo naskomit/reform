@@ -14270,7 +14270,7 @@ Interactive Layer
   -ms-transition: width 200ms cubic-bezier(0.99, 0, 0.5, 0.99);
   -o-transition: width 200ms cubic-bezier(0.99, 0, 0.5, 0.99);
   transition: width 200ms cubic-bezier(0.99, 0, 0.5, 0.99);
-  padding-bottom: 40px;
+  /*padding-bottom: 40px;*/
 }
 .dev-page .dev-page-container .dev-page-content {
   position: relative;
@@ -14286,7 +14286,7 @@ Interactive Layer
   -ms-transition: padding 200ms cubic-bezier(0.99, 0, 0.5, 0.99);
   -o-transition: padding 200ms cubic-bezier(0.99, 0, 0.5, 0.99);
   transition: padding 200ms cubic-bezier(0.99, 0, 0.5, 0.99);
-  padding-bottom: 40px;
+  /*padding-bottom: 40px;*/
 }
 .dev-page .dev-page-container .dev-page-content .container {
   position: relative;

@@ -42,7 +42,6 @@ object BooleanEditorComponent extends AbstractEditor[FB.BooleanField] {
         FR.SetFieldValue(p.obj.id, FR.SomeValue(LabeledValue(!format(p.value))))
       )
     }
-
   }
 
 

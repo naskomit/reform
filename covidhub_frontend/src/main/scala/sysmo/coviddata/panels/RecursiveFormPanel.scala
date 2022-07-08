@@ -15,7 +15,6 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 
 object RecursiveFormPanel extends ApplicationPanel {
-
   case class Props(group: FR.Group) // form: F.FieldGroup, data_handler: FormDataHandler
   case class State()
   final class Backend($: BackendScope[Props, State]) {
@@ -36,7 +35,7 @@ object RecursiveFormPanel extends ApplicationPanel {
   val TaskBuilder = FB.FieldGroup.builder(build_graph, "Task")
   val TaskGroupBuilder = FB.FieldGroup.builder(build_graph, "TaskGroup")
   val PersonBuilder = FB.FieldGroup.builder(build_graph, "Person")
-  val TaskItemBuilder = TaskBuilder.union("TaskItem", _ | TaskGroupBuilder | PersonBuilder)
+  val TaskItemBuilder = TaskBuilder.union("TaskItem", _ | TaskGroupBuilder)
 
   val Person = PersonBuilder
     .field(_("name").descr("Name"), _.char)
@@ -55,12 +54,12 @@ object RecursiveFormPanel extends ApplicationPanel {
     .group(_("t2").descr("Task 2"), TaskBuilder)
     .array(_("other_tasks").descr("Other tasks"), TaskBuilder)
     .array(_("other_items").descr("Other items"), TaskItemBuilder)
-    .layout("tabbed")
+//    .layout("tabbed")
     .build
 
   val TaskManagement = FB.FieldGroup.builder(build_graph, "TaskManagement")
-    .group(_("tasks").descr("Tasks"), TaskGroupBuilder)
     .array(_("people").descr("People"), PersonBuilder)
+    .group(_("tasks").descr("Tasks"), TaskGroupBuilder)
     .layout("tabbed")
     .build
 

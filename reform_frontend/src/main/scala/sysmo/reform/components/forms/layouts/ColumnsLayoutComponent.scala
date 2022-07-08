@@ -47,9 +47,7 @@ object ColumnsLayoutComponent extends FormGroupLayout {
     def build_content(child_elements: Seq[GroupChildNode]): Seq[VdomElement] = {
       for (elem <- child_elements) {
         val elem_width = compute_width(elem)
-
-
-        val element_node = if (elem.size_hint == FullWidth || elem.title.nonEmpty) {
+        val dom_element = if (elem.size_hint == FullWidth) {
           build_row()
           row_white = !row_white
           val child_options = elem.options.update(_.background_white:= row_white)
@@ -61,18 +59,22 @@ object ColumnsLayoutComponent extends FormGroupLayout {
             CollapsibleSection(
               elem.title, elem.options.get(_.depth) + 1, Seq(elem.node(child_options))
             )
-        )
+          )
         } else {
           if (row_filled_width + elem_width > 1.0)
             build_row()
 
           <.div(
             ^.className:= f"col-md-${Math.round(elem_width * 12)} $elem_index",
-            ^.key:= elem_index, elem.node(elem.options)
+            ^.key:= elem_index,
+            <.div(^.className := "form-group",
+              <.label(elem.title),
+              elem.node(elem.options)
+            )
           )
         }
 
-        row_nodes += element_node
+        row_nodes += dom_element
         row_filled_width += elem_width
         elem_index += 1
       }

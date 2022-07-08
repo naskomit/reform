@@ -8,9 +8,36 @@ trait AtomicField extends FormElement {
   override def symbol: String = "---"
 }
 
+
+trait AtomicFieldCompanion[U] extends FormElementCompanion[U] {
+  trait IDef extends super.IDef {
+    trait Props extends super.Props {
+      val unique = GO.Property[Boolean]("unique", Some(false))
+      val optional = GO.Property[Boolean]("unique", Some(false))
+    }
+    val props: Props
+  }
+  val Def: IDef
+
+  trait IBuilder extends super.IBuilder {
+    def optional(flag: Boolean = true): this.type = {
+      set_prop(_.optional, flag)
+      this
+    }
+    def unique(flag: Boolean = true): this.type = {
+      set_prop(_.unique, flag)
+      this
+    }
+  }
+}
+
 object AtomicField {
   def from_vertex(v: TP.Vertex): Option[AtomicField] = v.label match {
     case StringField.Def.label => Some(new StringField(v))
+    case BooleanField.Def.label => Some(new BooleanField(v))
+    case IntegerField.Def.label => Some(new IntegerField(v))
+    case FloatField.Def.label => Some(new FloatField(v))
+    case SelectField.Def.label => Some(new SelectField(v))
     case _ => None
   }
 }
@@ -21,7 +48,7 @@ class StringField(val vertex: TP.Vertex) extends AtomicField {
   override val ed = StringField.Def
 }
 
-object StringField extends FormElementCompanion[StringField] {
+object StringField extends AtomicFieldCompanion[StringField] {
   object Def extends IDef {
     val label = "StringField"
 
@@ -31,7 +58,7 @@ object StringField extends FormElementCompanion[StringField] {
   class Builder(val graph: TP.Graph) extends IBuilder {
     def build: StringField = new StringField(vertex)
   }
-  implicit val _cmp: FormElementCompanion[StringField] = this
+//  implicit val _cmp: FormElementCompanion[StringField] = this
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 
@@ -41,7 +68,7 @@ class BooleanField(val vertex: TP.Vertex) extends AtomicField {
   override val ed = BooleanField.Def
 }
 
-object BooleanField extends FormElementCompanion[BooleanField] {
+object BooleanField extends AtomicFieldCompanion[BooleanField] {
   object Def extends IDef {
     val label = "BooleanField"
 
@@ -52,7 +79,7 @@ object BooleanField extends FormElementCompanion[BooleanField] {
 
     def build: BooleanField = new BooleanField(vertex)
   }
-  implicit val _cmp: FormElementCompanion[BooleanField] = this
+//  implicit val _cmp: FormElementCompanion[BooleanField] = this
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 
@@ -62,7 +89,7 @@ class IntegerField(val vertex: TP.Vertex) extends AtomicField {
   override val ed = IntegerField.Def
 }
 
-object IntegerField extends FormElementCompanion[IntegerField] {
+object IntegerField extends AtomicFieldCompanion[IntegerField] {
   object Def extends IDef {
     val label = "IntegerField"
 
@@ -73,7 +100,7 @@ object IntegerField extends FormElementCompanion[IntegerField] {
 
     def build: IntegerField = new IntegerField(vertex)
   }
-  implicit val _cmp: FormElementCompanion[IntegerField] = this
+//  implicit val _cmp: FormElementCompanion[IntegerField] = this
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 class FloatField(val vertex: TP.Vertex) extends AtomicField {
@@ -82,7 +109,7 @@ class FloatField(val vertex: TP.Vertex) extends AtomicField {
   override val ed = FloatField.Def
 }
 
-object FloatField extends FormElementCompanion[FloatField] {
+object FloatField extends AtomicFieldCompanion[FloatField] {
   object Def extends IDef {
     val label = "FloatField"
 
@@ -93,7 +120,7 @@ object FloatField extends FormElementCompanion[FloatField] {
 
     def build: FloatField = new FloatField(vertex)
   }
-  implicit val _cmp: FormElementCompanion[FloatField] = this
+//  implicit val _cmp: FormElementCompanion[FloatField] = this
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 class SelectField(val vertex: TP.Vertex) extends AtomicField {
@@ -105,7 +132,7 @@ class SelectField(val vertex: TP.Vertex) extends AtomicField {
   def max: Option[Int] = get(_.max)
 }
 
-object SelectField extends FormElementCompanion[SelectField] {
+object SelectField extends AtomicFieldCompanion[SelectField] {
   object Def extends IDef {
     val label = "SelectField"
 
@@ -119,7 +146,7 @@ object SelectField extends FormElementCompanion[SelectField] {
 
     def build: SelectField = new SelectField(vertex)
   }
-  implicit val _cmp: FormElementCompanion[SelectField] = this
+//  implicit val _cmp: FormElementCompanion[SelectField] = this
   def builder(graph: TP.Graph): Builder = new Builder(graph)
 }
 

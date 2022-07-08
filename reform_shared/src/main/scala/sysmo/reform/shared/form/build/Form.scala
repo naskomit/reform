@@ -13,6 +13,7 @@ object FormElement {
     case FieldGroup.Def.label => Some(new FieldGroup(v))
     case GroupUnion.Def.label => Some(new GroupUnion(v))
     case GroupArray.Def.label => Some(new GroupArray(v))
+    case Reference.Def.label => Some(new Reference(v))
     case _ => AtomicField.from_vertex(v)
   }
 }

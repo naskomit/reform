@@ -4,13 +4,14 @@ import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.router.{Page, PageBase, PageCollection}
 import scala.jdk.CollectionConverters._
+import japgolly.scalajs.react._
+import org.scalajs.dom
+
 
 object IntuitiveLayout extends ApplicationLayout {
-  import japgolly.scalajs.react._
   case class State
   (
     menu_expanded: Boolean = true,
-    //item_expanded: Map[String, Boolean],
     active_item: String = "Root"
   )
   case class Props(router: RouterCtl[Page], resolution: Resolution[Page], pages: PageCollection, elem_height: Int = 50)
@@ -79,10 +80,12 @@ object IntuitiveLayout extends ApplicationLayout {
     def render (p: Props, s: State): VdomElement = {
 //      println("Rendered")
 //      println(s)
+      val height = dom.window.innerHeight - 100
       <.div(
         <.div(^.className:=(if (s.menu_expanded) "dev-page dev-page-loaded" else "dev-page dev-page-loaded dev-page-sidebar-collapsed"),
           header(p),
-          <.div(^.className:="dev-page-container", sidebar(p, s), content(p.resolution))),
+          <.div(^.className:="dev-page-container", ^.height:= height.px, ^.marginBottom:= 0.px,
+            sidebar(p, s), content(p.resolution))),
         footer()
       )
     }

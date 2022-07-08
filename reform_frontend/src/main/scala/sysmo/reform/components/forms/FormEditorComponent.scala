@@ -16,12 +16,14 @@ object FormEditorComponent extends ReactComponent {
   case object RuntimeBrowser extends EditorMode
 
   case class Props(group: FR.Group, options: FormRenderingOptions)
+
   case class State(render_ind: Int, mode: EditorMode, width: Double, height: Double)
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      <.div(^.className:= "form",
+      <.div(
         <.div(^.height:= (s.height - 200).px, ^.overflow:="auto",
+          <.div(^.cls:= "page-title", <.h1(p.group.prototype.symbol)),
           s.mode match {
             case Editor => {
               FormGroupComponent(p.group, p.options)
@@ -32,7 +34,7 @@ object FormEditorComponent extends ReactComponent {
             case RuntimeBrowser => {
               RuntimeTextualBrowser(p.group.runtime)
             }
-          },
+          }
         ),
         ButtonToolbar.builder
           .button("Ok", Effects.submit())
@@ -40,7 +42,8 @@ object FormEditorComponent extends ReactComponent {
           .button("Editor", ($.modState(s => s.copy(mode = Editor))).asAsyncCallback)
           .button("Type browser", ($.modState(s => s.copy(mode = TypeBrowser))).asAsyncCallback)
           .button("Runtime browser", ($.modState(s => s.copy(mode = RuntimeBrowser))).asAsyncCallback)
-          .build
+          .build.component
+
       )
     }
 

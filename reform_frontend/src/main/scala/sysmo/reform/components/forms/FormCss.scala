@@ -5,12 +5,16 @@ import sysmo.reform.css.CssSettings._
 object FormCss extends StyleSheet.Inline {
   import dsl._
   /** Global styles */
-  style("container .wrapper")(
-    border(1.px, solid, Color("#DDD"))
+//  style("container .wrapper")(
+//    border(1.px, solid, Color("#DDD"))
+//  )
+
+  style("container .wrapper-neutral")(
+    background:= "#EEF1F7"
   )
 
   style("container .wrapper-dark")(
-    background:= "#EEF1F7"
+    background:= "#DDE3EF"
   )
 
   /** Collapsible styles */

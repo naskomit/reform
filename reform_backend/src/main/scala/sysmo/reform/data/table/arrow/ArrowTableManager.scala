@@ -23,7 +23,7 @@ class ArrowTableManager extends sdt.TableManager with Logging{
 
   override def close(): Unit = {
     if (allocated.nonEmpty) {
-      logger.warn(f"${allocated.size} elements left allocated. De-allocating!")
+      logger.warn(s"${allocated.size} elements left allocated. De-allocating!")
       for (el <- allocated) {
         allocated.remove(el)
         el.close()
