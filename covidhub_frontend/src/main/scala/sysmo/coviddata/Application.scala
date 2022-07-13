@@ -6,12 +6,14 @@ import router.{HomePage, Plots}
 import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
+import sysmo.coviddata.panels.FormPanel
 import sysmo.reform.services.ServerTableDataSource
 import sysmo.reform.shared.data.{TableService, graph => G, table => sdt}
 import sysmo.coviddata.shared.data.{CovidDatabaseSchema => CDS}
 import sysmo.reform.components.panels.TableGroupPanel
 import sysmo.reform.shared.data.table.Schema
 import sysmo.coviddata.{panels => P}
+import sysmo.reform.shared.form.{examples => Ex}
 
 object AppConfig extends ApplicationConfiguration {
   def make_table_entry(c: G.VertexClass): sdt.Schema = {
@@ -48,9 +50,18 @@ object Application extends ReactApplication {
       Plots,
 //      SimplePage("RefrigerationCycle", Some("Refrigeration cycle"), "fa fa-pencil", P.RefrigerationCyclePanel),
 //      SimplePage("BiomarkerAnalysis", Some("Biomarker analysis"), "fa fa-pencil", P.BiomarkerAnalysisPanel),
-      SimplePage("TaskManagementPanel", Some("Task Management Panel"), "fa fa-list-check",  P.TaskManagementPanel),
-      SimplePage("CompanyPanel", Some("Company Panel"), "fa fa-building",  P.CompanyPanel),
-      SimplePage("ReactionKineticsPanel", Some("Reaction Kinetics"), "fa fa-building",  P.ReactionKineticsPanel)
+      SimplePage("TaskManagementPanel",
+        Some("Task Management Panel"), "fa fa-list-check",
+        new FormPanel{lazy val fmb = Ex.TaskManagement.builder}
+      ),
+      SimplePage(
+        "CompanyPanel", Some("Company Panel"), "fa fa-building",
+        new FormPanel{lazy val fmb = Ex.Company.builder}
+      ),
+      SimplePage(
+        "ReactionKineticsPanel", Some("Reaction Kinetics"), "fa fa-building",
+        new FormPanel{lazy val fmb = Ex.ReactionKinetics.builder}
+      )
     )
   }
   override val layout = IntuitiveLayout
