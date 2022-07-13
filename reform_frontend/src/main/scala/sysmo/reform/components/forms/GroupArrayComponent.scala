@@ -15,31 +15,42 @@ object ArrayItemComponent extends ReactComponent {
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      <.div(
-        <.h3(s"#${p.index} ",
-          ButtonToolbar.builder
-            .dropdown(<.i(^.className:="fa fa-edit fa-x3"))
-            .button("Insert before", Effects.insert_before(p))
-            .button("Insert after", Effects.insert_after(p))
-            .button("Remove", Effects.remove(p))
-            .build.component,
-        ),
+      val menu_builder = ButtonToolbar.builder
+        .dropdown(<.i(^.className:="fa fa-edit fa-x3"))
 
+      p.array.prototype.prototype match {
+        case group: FB.FieldGroup => {
+          menu_builder.button("Insert before", Effects.insert_before(p))
+          menu_builder.button("Insert after", Effects.insert_after(p))
+        }
+        case union: FB.GroupUnion => {
+          union.subtypes.foreach{(group: FB.FieldGroup) =>
+            menu_builder.button(s"Insert ${group.symbol} before", Effects.insert_before(p, Some(group.symbol)))
+            menu_builder.button(s"Insert ${group.symbol} after", Effects.insert_before(p, Some(group.symbol)))
+          }
+        }
+      }
+
+      val menu_component = menu_builder.button("Remove", Effects.remove(p))
+        .build.component
+
+      <.div(
+        <.h3(s"#${p.index} ", menu_component),
         FormGroupComponent(p.element, p.options)
       )
     }
 
     object Effects {
-      def insert_before(p: Props): ButtonToolbar.CB = Callback {
-        p.array.runtime.dispatch(FR.InsertElementBefore(p.array, p.element.id))
+      def insert_before(p: Props, concrete_type: Option[String] = None): ButtonToolbar.CB = Callback {
+        p.array.runtime.dispatch(FR.InsertElementBefore(p.array.id, p.element.id, concrete_type))
       }.asAsyncCallback
 
-      def insert_after(p: Props): ButtonToolbar.CB = Callback {
-        p.array.runtime.dispatch(FR.InsertElementAfter(p.array, p.element.id))
+      def insert_after(p: Props, concrete_type: Option[String] = None): ButtonToolbar.CB = Callback {
+        p.array.runtime.dispatch(FR.InsertElementAfter(p.array.id, p.element.id, concrete_type))
       }.asAsyncCallback
 
-      def remove(p: Props): ButtonToolbar.CB = Callback {
-        p.array.runtime.dispatch(FR.RemoveArrayElement(p.array, p.element.id))
+      def remove(p: Props, concrete_type: Option[String] = None): ButtonToolbar.CB = Callback {
+        p.array.runtime.dispatch(FR.RemoveElement(p.array.id, p.element.id))
       }.asAsyncCallback
 
     }
@@ -69,16 +80,26 @@ object GroupArrayComponent extends AbstractFormComponent[FR.Array, FB.GroupArray
         .map(item => ArrayItemComponent.component.withKey(item._1.id.toString)(
           ArrayItemComponent.Props(p.obj, item._1, item._2, p.options)
         )).map(item => ArrayChildElement(item))
-      val menu = ButtonToolbar.builder
+
+      val menu_builder = ButtonToolbar.builder
         .dropdown(<.i(^.className:="fa fa-edit fa-x3"))
-        .button("Append", Effects.append(p))
-        .build
-      layout(children.toSeq, Some(menu), p.options)
+
+      p.obj.prototype.prototype match {
+        case group: FB.FieldGroup => menu_builder.button("Append", Effects.append(p))
+        case union: FB.GroupUnion => {
+          union.subtypes.foreach{(group: FB.FieldGroup) =>
+            menu_builder.button(s"Append ${group.symbol}", Effects.append(p, Some(group.symbol)))
+          }
+        }
+      }
+
+
+      layout(children.toSeq, Some(menu_builder.build), p.options)
     }
 
     object Effects {
-      def append(p: Props): ButtonToolbar.CB = Callback {
-        p.obj.runtime.dispatch(FR.AppendElement(p.obj.id))
+      def append(p: Props, concrete_type: Option[String] = None): ButtonToolbar.CB = Callback {
+        p.obj.runtime.dispatch(FR.AppendElement(p.obj.id, concrete_type))
       }.asAsyncCallback
     }
   }

@@ -7,10 +7,10 @@ case class GroupUnion(vertex: TP.Vertex) extends AbstractGroup {
   override type ED = GroupUnion.Def.type
   override val ed = GroupUnion.Def
   override def symbol: String = get(_.symbol).get
-  def subtypes: Seq[AbstractGroup] = {
+  def subtypes: Seq[FieldGroup] = {
     vertex.vertices(TP.Direction.OUT, Seq(HasPrototype.Def.label))
       .map {
-        case v: FieldGroup => new FieldGroup(v)
+        case v if v.label == FieldGroup.Def.label => new FieldGroup(v)
         case _ => throw new IllegalStateException()
       }.toSeq
   }

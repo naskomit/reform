@@ -11,7 +11,7 @@ import scala.scalajs.js
 
 object ReferenceEditorComponent extends AbstractFormComponent[FR.Reference, FB.Reference] {
   type FieldValueType = FR.FieldValue[FR.Reference]
-  case class State(choices: Seq[LabeledValue[_]], is_loading: Boolean)
+  case class State(choices: Seq[LabeledValue[FR.ObjectId]], is_loading: Boolean)
   implicit class PropOps(p: Props) {
     def value: FieldValueType = p.obj.ref_id.asInstanceOf[FieldValueType]
     def field: FieldBuildType = p.obj.prototype.asInstanceOf[FieldBuildType]
@@ -28,12 +28,6 @@ object ReferenceEditorComponent extends AbstractFormComponent[FR.Reference, FB.R
         .on_input_change(on_input_change(p, s))
         .on_menu_open(on_menu_open(p, s))
         .build
-    }
-
-    def label_value(x: LabeledValue[_], s: State): LabeledValue[_] = x match {
-      case LabeledValue(value, Some(label)) => x
-      case LabeledValue(value, None) if s.choices.nonEmpty => s.choices.find(_.value == value).getOrElse(x)
-      case _ => x
     }
 
     def load_choices(p: Props, s: State): AsyncCallback[Unit] = {

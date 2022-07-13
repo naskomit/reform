@@ -19,7 +19,7 @@ object ColumnsLayoutComponent extends FormGroupLayout {
     private val grid: mutable.ArrayBuffer[VdomElement] = mutable.ArrayBuffer()
     private var row_index = 0
     private var elem_index = 0
-    private val base_col_width = 0.33
+    private val base_col_width = 0.25
 
     def compute_width(elem: GroupChildNode): Double  = {
       val size = elem.size_hint match {

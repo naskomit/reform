@@ -1,46 +1,7 @@
 package sysmo.coviddata.panels
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.VdomElement
-import sysmo.reform.shared.form.{build => FB}
 import sysmo.reform.shared.form.{runtime => FR}
-import sysmo.reform.ApplicationConfiguration
-import sysmo.reform.components.ApplicationPanel
-import sysmo.reform.shared.gremlin.memg.MemGraph
-import sysmo.reform.components.forms.FormEditorComponent
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-import sysmo.reform.shared.form.runtime.FormRuntime
 import sysmo.reform.shared.expr.{Expression => E}
-
-trait FormPanel extends ApplicationPanel {
-  case class Props(group: FR.Group)
-  case class State()
-  final class Backend($: BackendScope[Props, State]) {
-    def render (p: Props, s: State): VdomElement = {
-      FormEditorComponent(p.group)
-    }
-  }
-
-  val display_name: String
-  def create(): FR.Group
-
-  val component =
-    ScalaComponent.builder[Props](display_name)
-      .initialState(State())
-      .renderBackend[Backend]
-      .build
-
-  val build_graph: MemGraph = MemGraph()
-  val runtime: FormRuntime = FR.FormRuntime(build_graph)
-  def field_group(name: String): FB.FieldGroup.Builder =
-    FB.FieldGroup.builder(build_graph, name)
-
-  def apply(app_config: ApplicationConfiguration): Unmounted = {
-    component(Props(create()))
-  }
-
-
-}
 
 object CompanyPanel extends FormPanel {
   import FR.instantiation._
@@ -75,18 +36,19 @@ object CompanyPanel extends FormPanel {
       .field(_("symbol").descr("Symbol"), _.char)
       .ref(_("manager").descr("Manager"), _(PersonBuilder, "cid").label_expr(E.field("name")))
       .array(_("units").descr("Units"), UnitBuilder)
+      .ref(_("people").descr("People"), _(PersonBuilder, "cid").label_expr(E.field("name")).multiple())
       .build
 
     val Group = GroupBuilder
       .field(_("name").descr("Name"), _.char)
       .field(_("symbol").descr("Symbol"), _.char)
-//      .ref(_("manager").descr("Manager"), PersonBuilder)
-//      .ref_array(_("people").descr("People"), PersonBuilder)
+      .ref(_("manager").descr("Manager"), _(PersonBuilder, "cid").label_expr(E.field("name")))
+      .ref(_("people").descr("People"), _(PersonBuilder, "cid").label_expr(E.field("name")).multiple())
       .build
 
     val Project = ProjectBuilder
       .field(_("name").descr("Name"), _.char)
-//      .ref(_("manager").descr("Manager"), PersonBuilder)
+      .ref(_("manager").descr("Manager"), _(PersonBuilder, "cid").label_expr(E.field("name")))
       .build
 
     val Company = CompanyBuilder
@@ -94,7 +56,7 @@ object CompanyPanel extends FormPanel {
       .array(_("people").descr("People"), PersonBuilder)
       .array(_("units").descr("Units"), UnitBuilder)
       .array(_("projects").descr("Projects"), ProjectBuilder)
-//      .layout("tabbed")
+      .layout("tabbed")
       .build
 
     val my_company = runtime.instantiate(

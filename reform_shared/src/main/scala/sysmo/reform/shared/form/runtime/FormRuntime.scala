@@ -1,6 +1,6 @@
 package sysmo.reform.shared.form.runtime
 
-import sysmo.reform.shared.form.build.{FormElement, HasElement}
+import sysmo.reform.shared.form.build.{FieldGroup, FormElement, HasElement}
 import sysmo.reform.shared.gremlin.{tplight => TP}
 import sysmo.reform.shared.form.{build => FB}
 import sysmo.reform.shared.{expr => E}
@@ -32,6 +32,13 @@ class FormRuntime(val type_graph: TP.Graph)(implicit val ec: ExecutionContext) {
     }
   }
 
+  def remove(id: ObjectId): Unit = {
+    get(id).foreach{obj =>
+      obj.remove_children()
+    }
+    objects.remove(id)
+  }
+
   protected def new_id: ObjectId = {
     current_id = current_id.next
     current_id
@@ -44,6 +51,14 @@ class FormRuntime(val type_graph: TP.Graph)(implicit val ec: ExecutionContext) {
     obj
   }
 
+  def create_default(prototype: FB.FormElement, parent_rel: Option[ParentRelation]): RuntimeObject = prototype match {
+    case p: FB.GroupArray => instantiation.ArrayBuilder.default(p, parent_rel, this)
+    case p: FB.FieldGroup => instantiation.GroupBuilder.default(p, parent_rel, this)
+    case p: FB.AtomicField => instantiation.AtomicBuilder.default(p, parent_rel, this)
+    case p: FB.GroupUnion => instantiation.GroupBuilder.default(p, parent_rel, this)
+    case p: FB.Reference => instantiation.ReferenceBuilder.default(p, parent_rel, this)
+  }
+
   def dispatch(action: FormAction): Unit = {
     println(action)
     action match {
@@ -54,15 +69,48 @@ class FormRuntime(val type_graph: TP.Graph)(implicit val ec: ExecutionContext) {
               x.copy(value = value)
             })
           }
+
+          case Some(_: Reference) => {
+            update[Reference](id, {(x: Reference) =>
+              x.copy(ref_id = value.asInstanceOf[FieldValue[ObjectId]])
+            })
+          }
           case Some(_) => ???
           case None => ???
         }
       }
-      case action: GroupArrayAction => action match {
-        case InsertElementBefore(array, id) => ???
-        case InsertElementAfter(array, id) => ???
-        case AppendElement(array) => ???
-        case RemoveArrayElement(array, id) => ???
+      case action: GroupArrayAction => {
+        def array_getter(array_id: ObjectId): Array = get(array_id) match {
+          case Some(x: Array) => x
+          case _ => throw new IllegalArgumentException(s"No Array with id $array_id")
+        }
+        def type_getter(array: Array, symbol: Option[String]): Option[FB.FieldGroup] = {
+          (array.prototype.prototype, symbol) match {
+            case (union: FB.GroupUnion, Some(s)) => union.subtypes.find(g => g.symbol == s)
+            case _ => None
+          }
+
+        }
+        action match {
+          case InsertElementBefore(array_id, id, typename) => {
+            val array = array_getter(array_id)
+            val concrete_type = type_getter(array, typename)
+            array.insert_element(id, concrete_type, before = true)
+          }
+          case InsertElementAfter(array_id, id, typename) =>  {
+            val array = array_getter(array_id)
+            val concrete_type = type_getter(array, typename)
+            array.insert_element(id, concrete_type, before = false)
+          }
+          case AppendElement(array_id, typename) => {
+            val array = array_getter(array_id)
+            val concrete_type = type_getter(array, typename)
+            array.append_element(concrete_type)
+          }
+          case RemoveElement(array_id, id) => {
+            array_getter(array_id).remove_element(id)
+          }
+        }
       }
     }
     force_render.foreach(f => f())
@@ -92,9 +140,20 @@ class FormRuntime(val type_graph: TP.Graph)(implicit val ec: ExecutionContext) {
     }
   }
 
-  def get_ref_choices(id: ObjectId): Future[Seq[LabeledValue[_]]] = {
-    ???
-    Future(Seq())
+  def get_ref_choices(id: ObjectId): Future[Seq[LabeledValue[ObjectId]]] = {
+    get(id) match {
+      case Some(Reference(prototype, id, parent_rel, ref_id)) => {
+        val result = search(Seq(prototype.prototype), None).map { obj =>
+          val label = prototype.label_expr.flatMap(expr => eval(expr, obj) match {
+            case Right(SomeValue(LabeledValue(v, _))) => Some(v.toString)
+            case _ => None
+          })
+          LabeledValue(obj.id, label)
+        }
+        Future(result)
+      }
+      case _ => Future(Seq())
+    }
   }
 
   def bind(f: DoRender): Unit = {
@@ -108,13 +167,16 @@ class FormRuntime(val type_graph: TP.Graph)(implicit val ec: ExecutionContext) {
     E.Expression.eval(e, obj.as_context)
   }
 
-  def search(types: Seq[FB.FormElement], q: E.PredicateExpression): Seq[RuntimeObject] = {
+  def search(types: Seq[FB.FormElement], flt: Option[E.PredicateExpression]): Seq[RuntimeObject] = {
     val type_set = types.toSet
     objects.values.filter {obj =>
         if (type_set.contains(obj.prototype)) {
-          eval(q, obj) match {
-            case Right(true) => true
-            case _ => false
+          flt match {
+            case Some(expr) => eval(expr, obj) match {
+              case Right(true) => true
+              case _ => false
+            }
+            case None => true
           }
         } else
           false
@@ -195,7 +257,7 @@ object instantiation {
       field_relations.foreach {rel =>
         val child_instance: RuntimeObject = (child_value_map.get(rel.name) match {
           case Some(v) => v.build(Some(rel.child_field), Some(ParentRelation(group, rel)), rt)
-          case None => create_default(rel.child_field, Some(ParentRelation(group, rel)), rt)
+          case None => rt.create_default(rel.child_field, Some(ParentRelation(group, rel)))
         })
         group.children.addOne(rel.name -> child_instance.id)
       }
@@ -208,8 +270,27 @@ object instantiation {
       val builder = new GroupBuilder(prototype, Seq())
       builder.build(Some(prototype), parent_rel, rt)
     }
+    def default(prototype: FB.GroupUnion, parent_rel: Option[ParentRelation], rt: FormRuntime): RuntimeObject = {
+      val group_prototype = prototype.subtypes.head
+      val builder = new GroupBuilder(group_prototype, Seq())
+      builder.build(Some(prototype), parent_rel, rt)
+    }
+  }
 
-    def default(prototype: FB.GroupUnion, parent_rel: Option[ParentRelation], rt: FormRuntime): RuntimeObject = ???
+  object AbstractGroupBuilder {
+    def default(prototype: FB.AbstractGroup, concrete: Option[FB.FieldGroup], parent_rel: Option[ParentRelation], rt: FormRuntime): RuntimeObject = {
+      (prototype, concrete) match {
+        case (p: FB.FieldGroup, _) => GroupBuilder.default(p, parent_rel, rt)
+        case (p: FB.GroupUnion, Some(c)) => {
+          if (p.supertype_of(c)) {
+            GroupBuilder.default(c, parent_rel, rt)
+          } else {
+            throw new IllegalArgumentException(s"Union ${p.symbol} is not supertype of ${c.symbol}")
+          }
+        }
+        case (p: FB.GroupUnion, None) => GroupBuilder.default(p, parent_rel, rt)
+      }
+    }
   }
 
   case class ReferenceBuilder(q: Option[E.PredicateExpression]) extends InstanceBuilder {
@@ -218,9 +299,12 @@ object instantiation {
         case Some(prototype: FB.Reference) =>  {
           q match {
             case Some(query) => {
-              val found = rt.search(Seq(prototype.prototype), query)
+              val found = rt.search(Seq(prototype.prototype), Some(query))
               if (prototype.multiple) {
-                ???
+                val ref_value = MultiValue(found.map(x => LabeledValue(x.id)))
+                rt.create_object(
+                  id => Reference(prototype, id, parent_rel, ref_value)
+                )
               } else {
                 if (found.size == 1) {
                   val ref_value = SomeValue(LabeledValue(found.head.id))
@@ -235,7 +319,9 @@ object instantiation {
               }
             }
             case None => if (prototype.multiple) {
-              ???
+              rt.create_object(
+                id => Reference(prototype, id, parent_rel, NoValue)
+              )
             } else {
               rt.create_object(
                 id => Reference(prototype, id, parent_rel, NoValue)
@@ -255,14 +341,6 @@ object instantiation {
       builder.build(Some(prototype), parent_rel, rt)
     }
 
-  }
-
-  def create_default(prototype: FB.FormElement, parent_rel: Option[ParentRelation], rt: FormRuntime): RuntimeObject = prototype match {
-    case p: FB.GroupArray => ArrayBuilder.default(p, parent_rel, rt)
-    case p: FB.FieldGroup => GroupBuilder.default(p, parent_rel, rt)
-    case p: FB.AtomicField => AtomicBuilder.default(p, parent_rel, rt)
-    case p: FB.GroupUnion => GroupBuilder.default(p, parent_rel, rt)
-    case p: FB.Reference => ReferenceBuilder.default(p, parent_rel, rt)
   }
 
   // Atomic values converters
