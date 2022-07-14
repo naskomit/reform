@@ -22,13 +22,10 @@ object BooleanEditorComponent extends AbstractEditor[FB.BooleanField] {
 
     def render(p: Props, s: State): VdomElement = {
       val field_prototype = p.obj.prototype
-      <.div(
-        ^.onClick ==> on_click(p),
-        <.br(),
-        <.div(^.className := "checkbox checkbox-inline",
-          <.input(^.`type` := "checkbox", ^.autoFocus := false,
-          ^.checked := format(p.value))
-        )
+      <.div(^.className := "checkbox", ^.onClick ==> on_click(p),
+        <.input(^.`type` := "checkbox", ^.autoFocus := false,
+          ^.checked := format(p.value)),
+        <.label("")
       )
     }
 
