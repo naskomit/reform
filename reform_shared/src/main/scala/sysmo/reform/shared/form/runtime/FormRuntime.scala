@@ -206,7 +206,13 @@ object instantiation {
 
   object AtomicBuilder {
     def default(prototype: FB.AtomicField, parent_rel: Option[ParentRelation], rt: FormRuntime): RuntimeObject =
-      rt.create_object(id => AtomicValue(prototype, NoValue, id, parent_rel))
+      rt.create_object(id => {
+        val initial_value = prototype.default match {
+          case Some(x) => SomeValue(LabeledValue(x))
+          case None => NoValue
+        }
+        AtomicValue(prototype, initial_value, id, parent_rel)
+      })
   }
 
   case class ArrayBuilder(children: Seq[InstanceBuilder]) extends InstanceBuilder {

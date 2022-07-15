@@ -143,7 +143,7 @@ object Expression {
     }
   }
 
-  def apply(x: Any): Constant = Constant(x)
+  def apply[T](x: T): Constant = Constant(x)
   def col(id: String): ColumnRef = ColumnRef(id)
   def field(id: String): FieldRef = FieldRef(id)
 }

@@ -2,24 +2,35 @@ package sysmo.reform.shared.form.build
 
 import sysmo.reform.shared.gremlin.{tplight => TP}
 import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
+import sysmo.reform.shared.{expr => E}
 
 trait AtomicField extends FormElement {
   type ValueType
+  def unique: Boolean = get(_.asInstanceOf[AtomicFieldCompanion[this.type]#IDef#Props].unique).get
+  def optional: Boolean = get(_.asInstanceOf[AtomicFieldCompanion[this.type]#IDef#Props].optional).get
+  def default: Option[ValueType] = get(_.asInstanceOf[AtomicFieldCompanion[this.type]#IDef#Props].default)
+//  val ed: ED
   override def symbol: String = "---"
 }
 
 
-trait AtomicFieldCompanion[U] extends FormElementCompanion[U] {
+trait AtomicFieldCompanion[U <: AtomicField] extends FormElementCompanion[U] {
   trait IDef extends super.IDef {
     trait Props extends super.Props {
       val unique = GO.Property[Boolean]("unique", Some(false))
-      val optional = GO.Property[Boolean]("unique", Some(false))
+      val optional = GO.Property[Boolean]("optional", Some(false))
+      val default = GO.Property[U#ValueType]("default", None)
     }
     val props: Props
   }
   val Def: IDef
 
   trait IBuilder extends super.IBuilder {
+    def default(v: U#ValueType): this.type = {
+      set_prop(_.default, v)
+      this
+    }
+
     def optional(flag: Boolean = true): this.type = {
       set_prop(_.optional, flag)
       this
@@ -76,7 +87,6 @@ object BooleanField extends AtomicFieldCompanion[BooleanField] {
     }
   }
   class Builder(val graph: TP.Graph) extends IBuilder {
-
     def build: BooleanField = new BooleanField(vertex)
   }
 //  implicit val _cmp: FormElementCompanion[BooleanField] = this

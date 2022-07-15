@@ -24,7 +24,8 @@ object BooleanEditorComponent extends AbstractEditor[FB.BooleanField] {
       val field_prototype = p.obj.prototype
       <.div(^.className := "checkbox", ^.onClick ==> on_click(p),
         <.input(^.`type` := "checkbox", ^.autoFocus := false,
-          ^.checked := format(p.value)),
+          ^.checked := format(p.value),
+          ^.onChange --> Callback {}),
         <.label("")
       )
     }

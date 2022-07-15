@@ -18,7 +18,7 @@ object FormElement {
   }
 }
 
-trait FormElementCompanion[U] {
+trait FormElementCompanion[U <: FormElement] {
   /** The form element type to which this is companion */
   type FET = U
   trait IBuilder {

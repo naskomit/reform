@@ -87,7 +87,7 @@ object ReactionKinetics extends FormModelHelper {
         .field(_("use_max").descr("Use max"), _.bool)
         .field(_("max").descr("Max"), _.float)
         .field(_("label").descr("Label"), _.char)
-        .field(_("label_font_size").descr("Label font size"), _.float)
+        .field(_("label_font_size").descr("Label font size"), _.float.default(10.0))
         .build
 
       val PointSettingsBuilder = field_group("PointSettings")
@@ -98,14 +98,23 @@ object ReactionKinetics extends FormModelHelper {
         .build
 
 
+      val TitleSettingsBuilder = field_group("TitleSettings")
+      val TitleSettings = TitleSettingsBuilder
+        .field(_("position").descr("Position"), _.select)
+        .field(_("font_size").descr("Font size"), _.float.default(10.0))
+        .build
+
+      val LegendSettingsBuilder = field_group("LegendSettings")
+      val LegendSettings = LegendSettingsBuilder
+        .field(_("position").descr("Position"), _.select)
+        .field(_("font_size").descr("Font size"), _.float.default(10.0))
+        .build
+
       val TimePlot = TimePlotBuilder
-        .field(_("title").descr("Title"), _.char)
-        .field(_("title_font_size").descr("Font size"), _.float)
-        //.field(_("title_position").descr("Title position"), _.char)
-        .field(_("legend_position").descr("Legend position"), _.select)
-        .field(_("legend_font_size").descr("Legend font size"), _.float)
-        .group(_("x_settings").descr("X Range"), AxisSettingsBuilder)
-        .group(_("y_settings").descr("Y Range"), AxisSettingsBuilder)
+        .group(_("title_settings").descr("Title settings"), TitleSettingsBuilder)
+        .group(_("x_axis_settings").descr("X Settings"), AxisSettingsBuilder)
+        .group(_("y_axis_settings").descr("Y Settings"), AxisSettingsBuilder)
+        .group(_("legend_settings").descr("Legend settings"), LegendSettingsBuilder)
         .array(_("trajectories").descr("Trajectories"), TimePlotLineBuilder)
         .build
 
