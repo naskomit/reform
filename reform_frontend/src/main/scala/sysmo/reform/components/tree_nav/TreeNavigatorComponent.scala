@@ -93,8 +93,9 @@ object TreeNavigatorItem extends ReactComponent {
   case class Props(node: T.TreeNode[_], level: Int, settings: Settings)
 
   final class Backend($: BackendScope[Props, State]) {
-    def toggle(e: ReactEvent): Callback = Callback {
+    def toggle(p: Props)(e: ReactEvent): Callback = Callback {
       e.stopPropagation()
+      p.node.dispatcher.select(p.node.id)
     } >> $.modState(s => s.copy(expanded = !s.expanded))
 
     def render (p: Props, s: State): VdomElement = {
@@ -102,7 +103,8 @@ object TreeNavigatorItem extends ReactComponent {
         ^.paddingLeft:= p.settings.indent(p.level).px,
 
         <.div(CSS.tree_nav.row,
-          ^.onClick ==> toggle,
+          CSS.tree_nav.row_selected.when(p.node.is_selected),
+          ^.onClick ==> toggle(p),
           p.node match {
             case n: T.TreeBranch[_] => <.div(CSS.tree_nav.item_expand, if (s.expanded) "-" else "+")
             case n: T.TreeLeaf[_] => <.div(CSS.tree_nav.item_expand_leaf)

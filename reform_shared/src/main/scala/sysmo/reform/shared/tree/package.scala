@@ -8,7 +8,8 @@ package object tree {
     def icon: Option[String]
 //    def content: T
     def actions: Seq[NodeAction[T]]
-    val dispatcher: Dispatcher[T]
+    def dispatcher: Dispatcher[T]
+    def is_selected: Boolean
   }
 
   trait TreeLeaf[T] extends TreeNode[T] {
@@ -18,10 +19,6 @@ package object tree {
     def children: Seq[TreeNode[T]]
   }
 
-  trait Tree[T] {
-    def root: TreeNode[T]
-  }
-
   trait NodeAction[T] {
     def name: String
     def data: T
@@ -29,33 +26,45 @@ package object tree {
 
   trait Dispatcher[T] {
     def dispatch[U <: T](action: U): Unit
+    def select(id: Any): Unit
   }
 
+  trait Renderer {
+    def rerender(): Unit
+  }
 
+  trait Tree[T] {
+    val dispatcher: Dispatcher[T]
+    var renderer: Option[Renderer] = None
+    def root: TreeNode[T]
+    def is_selected(id: Any): Boolean
+  }
 
   object MTree {
     trait MNode[T] extends TreeNode[T] {
       var _parent: Option[TreeNode[T]] = None
+      var _tree: Option[Tree[T]] = None
       override def parent: Option[TreeNode[T]] = _parent
-      def set_parents(pv: Option[MNode[T]]): Unit = {
+
+      override def dispatcher: Dispatcher[T] = _tree.get.dispatcher
+
+      def set_parents(tree: Tree[T], pv: Option[MNode[T]]): Unit = {
         _parent = pv
-        pv match {
-          case None => println(s"None --parent of-> ${name}")
-          case Some(p) => println(s"${p.name} --parent of-> ${name}")
-        }
+        _tree = Some(tree)
+//        pv match {
+//          case None => println(s"None --parent of-> ${name}")
+//          case Some(p) => println(s"${p.name} --parent of-> ${name}")
+//        }
 
         this match {
           case node: TreeLeaf[T] =>
           case node: TreeBranch[T] => node.children.foreach{c =>
-            c.asInstanceOf[MNode[T]].set_parents(Some(this))
+            c.asInstanceOf[MNode[T]].set_parents(tree, Some(this))
           }
         }
       }
-      val dispatcher = new Dispatcher[T] {
-        override def dispatch[U <: T](action: U): Unit =
-          println(s"[MTree/Action] ${action}")
-      }
 
+      override def is_selected: Boolean = _tree.get.is_selected(id)
     }
 
     case class MLeaf[T](id: Any, name: String, icon: Option[String] = None, actions: Seq[NodeAction[T]] = Seq()) extends MNode[T] with TreeLeaf[T] {
@@ -64,11 +73,36 @@ package object tree {
     case class MBranch[T](id: Any, name: String, icon: Option[String], children: Seq[TreeNode[T]], actions: Seq[NodeAction[T]] = Seq()) extends MNode[T] with TreeBranch[T] {
     }
 
-    case class MTree[T](root: MNode[T]) extends Tree[T]
+    case class MTree[T](root: MNode[T], multi_select: Boolean = false) extends Tree[T] {
+      var selection = Set[Any]()
+      val dispatcher = new Dispatcher[T] {
+        override def dispatch[U <: T](action: U): Unit = {
+          println(s"[MTree/Action] ${action}")
+          renderer.foreach(_.rerender())
+        }
 
-        def apply[T](root: MNode[T]): MTree[T] = {
-        root.set_parents(None)
-        new MTree(root)
+        override def select(id: Any): Unit = {
+          if (multi_select) {
+            if (selection.contains(id)) {
+              selection = selection - id
+            } else {
+              selection = selection + id
+            }
+          } else {
+            selection = Set(id)
+          }
+          println(s"Current selection: $selection")
+          renderer.foreach(_.rerender())
+        }
+      }
+
+      override def is_selected(id: Any): Boolean = selection.contains(id)
+    }
+
+    def apply[T](root: MNode[T]): MTree[T] = {
+      val tree = new MTree(root)
+      root.set_parents(tree, None)
+      tree
     }
 
     case class MAction(name: String, data: String = "") extends NodeAction[String]
@@ -93,7 +127,7 @@ package object tree {
     def example1: MTree[String] = {
       val i_group = Option("fa fa-map")
       val i_array = Option("fa fa-list")
-      MTree[String](
+      apply[String](
         MBranch("0", "Root", i_group, Seq(
           MBranch("1", "Branch 1", i_group, Seq(
             MLeaf("11", "Leaf 11"),

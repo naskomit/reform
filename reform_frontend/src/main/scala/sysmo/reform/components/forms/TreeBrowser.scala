@@ -8,8 +8,8 @@ import sysmo.reform.components.tree_nav.TreeNavigatorComponent
 
 
 object TreeBrowser extends ReactComponent {
-  case class State()
-  case class Props()
+  case class State(render_id: Int)
+  case class Props(tree: T.Tree[_])
 
   final class Backend($: BackendScope[Props, State]) {
 
@@ -20,7 +20,7 @@ object TreeBrowser extends ReactComponent {
         <.div(^.cls:= "row",
           <.div(^.cls:= "col-md-4",
             <.div(^.cls:= "panel panel-default",
-              TreeNavigatorComponent(T.MTree.example1)
+              TreeNavigatorComponent(p.tree)
             ),
           ),
           <.div(^.cls:= "col-md-8",
@@ -36,9 +36,16 @@ object TreeBrowser extends ReactComponent {
 
   val component =
     ScalaComponent.builder[Props]("TreeBrowser")
-    .initialState(State())
+    .initialState(State(0))
     .renderBackend[Backend]
+    .componentDidMount(f => Callback {
+      f.props.tree.renderer = Some(new T.Renderer {
+        override def rerender(): Unit = {
+          f.modState(s => s.copy(render_id = s.render_id + 1)).runNow()
+        }
+      })
+    })
     .build
 
-  def apply(): Unmounted = component(Props())
+  def apply(): Unmounted = component(Props(T.MTree.example1))
 }

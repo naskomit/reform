@@ -22,15 +22,19 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
     )
   )
 
+  val row_selected = style(
+    backgroundColor(c"#e0eff5"),
+    borderTop(1.px, solid, c"#c4e0eb"),
+    borderBottom(1.px, solid, c"#c4e0eb")
+  )
+
   val item_expand = style(
     display.flex,
     justifyContent.center,
     alignItems.center,
     height(11.px),
     width(11.px),
-    borderWidth(1.px),
-    borderStyle(solid),
-    borderColor(grey(200))
+    border(1.px, solid, grey(200))
   )
 
   val item_expand_leaf = style(
