@@ -6,7 +6,7 @@ import japgolly.scalajs.react.extra.router.{BaseUrl, Router}
 import sysmo.reform.components.layouts.ApplicationLayout
 import sysmo.reform.router.{PageCollection, RouterConfiguration}
 import sysmo.reform.util.log.Logging
-import components.forms.FormCss
+import components.ReFormCSS
 import scalacss.ScalaCssReact._
 import css.CssSettings._
 
@@ -27,7 +27,7 @@ trait ReactApplication extends Logging {
       BaseUrl.fromWindowOrigin / "",
       RouterConfiguration(pages, app_config, layout).config
     )
-    FormCss.addToDocument()
+    ReFormCSS.addToDocument()
     router().renderIntoDOM(app_node)
 
   }

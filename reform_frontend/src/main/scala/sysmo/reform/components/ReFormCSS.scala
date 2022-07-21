@@ -1,13 +1,14 @@
-package sysmo.reform.components.forms
+package sysmo.reform.components
 
 import sysmo.reform.css.CssSettings._
+import sysmo.reform.components.tree_nav.TreeNavCSS
 
-object FormCss extends StyleSheet.Inline {
+object ReFormCSS extends StyleSheet.Inline {
   import dsl._
   /** Global styles */
-//  style("container .wrapper")(
-//    border(1.px, solid, Color("#DDD"))
-//  )
+  //  style("container .wrapper")(
+  //    border(1.px, solid, Color("#DDD"))
+  //  )
 
   style("container .wrapper-neutral")(
     background:= "#EEF1F7"
@@ -43,4 +44,5 @@ object FormCss extends StyleSheet.Inline {
     overflow.hidden,
   )
 
+  val tree_nav = new TreeNavCSS
 }

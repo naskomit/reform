@@ -13,6 +13,8 @@ import sysmo.coviddata.shared.data.{CovidDatabaseSchema => CDS}
 import sysmo.reform.components.panels.TableGroupPanel
 import sysmo.reform.shared.data.table.Schema
 import sysmo.coviddata.{panels => P}
+import sysmo.reform.components.ApplicationPanel
+import sysmo.reform.components.forms.TreeBrowser
 import sysmo.reform.shared.form.{examples => Ex}
 
 object AppConfig extends ApplicationConfiguration {
@@ -61,6 +63,33 @@ object Application extends ReactApplication {
       SimplePage(
         "ReactionKineticsPanel", Some("Reaction Kinetics"), "fa fa-building",
         new FormPanel{lazy val fmb = Ex.ReactionKinetics.builder}
+      ),
+      SimplePage(
+        "BiomarkerAnalyticsPanel", Some("Biomarker Analytics"), "fa fa-book-medical",
+        new FormPanel{lazy val fmb = Ex.BiomarkerAnalytics.builder}
+      ),
+      SimplePage(
+        "TreeViewerPanel", Some("TreeViewer"), "fa fa-folder-tree",
+        new ApplicationPanel {
+          import japgolly.scalajs.react.{BackendScope, ScalaComponent}
+          import japgolly.scalajs.react.vdom.VdomElement
+          import japgolly.scalajs.react._
+          import japgolly.scalajs.react.vdom.html_<^._
+          case class Props()
+          type State = Unit
+          type Backend = Unit
+
+          def render(p: Props): VdomElement = {
+            TreeBrowser()
+          }
+          val component = ScalaComponent.builder[Props]("TreeViewerPanel")
+            .render_P(render)
+            .build
+
+          override def apply(app_config: ApplicationConfiguration): Unmounted = {
+            component(Props())
+          }
+        }
       )
     )
   }

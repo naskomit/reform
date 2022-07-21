@@ -153,6 +153,10 @@ object SelectField extends AtomicFieldCompanion[SelectField] {
     }
   }
   class Builder(val graph: TP.Graph) extends IBuilder {
+    def multiple(v: Boolean = true): this.type = {
+      set_prop(_.multiple, v)
+      this
+    }
 
     def build: SelectField = new SelectField(vertex)
   }
