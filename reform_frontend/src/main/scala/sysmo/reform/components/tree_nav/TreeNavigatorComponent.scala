@@ -19,6 +19,9 @@ object ContextMenu extends ReactComponent {
     private val outer_ref = Ref[html.Element]
 
     def open(e: ReactEvent): Callback = $.modState {s =>
+      if (e.eventType == "click") {
+        dom.window.dispatchEvent(new Event("click"))
+      }
       dom.window.addEventListener("click", close_native)
       s.copy(expanded = true)
 
@@ -29,24 +32,27 @@ object ContextMenu extends ReactComponent {
       s.copy(expanded = false)
     }.runNow()
 
-    def close(e: ReactEvent): Callback = Callback {
-      close_native(e.nativeEvent)
+    def close(event: ReactEvent): Callback = Callback {
+      close_native(event.nativeEvent)
     }
 
-    def toggle(s: State)(e: ReactEvent): Callback = Callback {
-        e.stopPropagation()
+    def toggle(s: State)(event: ReactEvent): Callback = Callback {
+        event.stopPropagation()
       } >> {
         println(s)
         if (s.expanded)
-          close(e)
+          close(event)
         else
-          open(e)
+          open(event)
       }
 
-    def fire_action[T](dispatcher: T.Dispatcher[T], a: T.NodeAction[_]): Callback =
-      $.modState(s => s.copy(expanded = false)) >> Callback {
+    def fire_action[T](dispatcher: T.Dispatcher[T], a: T.NodeAction[_])(event: ReactEvent): Callback = {
+      Callback {
+        event.stopPropagation()
+      } >> $.modState(s => s.copy(expanded = false)) >> Callback {
         dispatcher.dispatch(a.data.asInstanceOf[T])
       }
+    }
 
     def render (p: Props, s: State): VdomElement = {
       <.div(
@@ -59,7 +65,7 @@ object ContextMenu extends ReactComponent {
             <.div(
               CSS.tree_nav.context_menu_item,
               a.name,
-              ^.onClick --> fire_action(p.dispatcher, a)
+              ^.onClick ==> fire_action(p.dispatcher, a)
             )
           ).toTagMod
         ).when(s.expanded)
