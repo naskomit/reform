@@ -42,6 +42,7 @@ case class ObjectId(id: Int) extends AnyVal {
 }
 
 object ObjectId {
+  val empty = ObjectId(-1)
   val start = ObjectId(0)
 }
 

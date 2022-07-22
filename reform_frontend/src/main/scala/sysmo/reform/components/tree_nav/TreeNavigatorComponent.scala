@@ -14,7 +14,11 @@ import scala.scalajs.js
 object ContextMenu extends ReactComponent {
   type HandlerFn[T <: Event] = js.Function1[T, _]
   case class State(expanded: Boolean)
-  case class Props(actions: Seq[T.NodeAction[_]], dispatcher: T.Dispatcher[_])
+  trait Props {
+    type TT <: T.TreeTypes
+    val actions: Seq[T.NodeAction[TT#ActionType]]
+    val dispatcher: T.Dispatcher[TT]
+  }
   final class Backend($: BackendScope[Props, State]) {
     private val outer_ref = Ref[html.Element]
 
@@ -46,11 +50,11 @@ object ContextMenu extends ReactComponent {
           open(event)
       }
 
-    def fire_action[T](dispatcher: T.Dispatcher[T], a: T.NodeAction[_])(event: ReactEvent): Callback = {
+    def fire_action[U <: T.TreeTypes](dispatcher: T.Dispatcher[U], a: T.NodeAction[_])(event: ReactEvent): Callback = {
       Callback {
         event.stopPropagation()
       } >> $.modState(s => s.copy(expanded = false)) >> Callback {
-        dispatcher.dispatch(a.data.asInstanceOf[T])
+        dispatcher.dispatch(a.data.asInstanceOf[U#ActionType])
       }
     }
 
@@ -79,7 +83,12 @@ object ContextMenu extends ReactComponent {
       .renderBackend[Backend]
       .build
 
-  def apply(actions: Seq[T.NodeAction[_]], dispatcher: T.Dispatcher[_]): Unmounted = component(Props(actions, dispatcher))
+  def apply[T <: T.TreeTypes](_actions: Seq[T.NodeAction[T#ActionType]], _dispatcher: T.Dispatcher[T]): Unmounted =
+    component(new Props {
+      type TT = T
+      val actions = _actions
+      val dispatcher = _dispatcher
+    })
 }
 
 object TreeNavigatorItem extends ReactComponent {
@@ -90,7 +99,12 @@ object TreeNavigatorItem extends ReactComponent {
     def indent(level: Int): Int = level_offset
   }
   case class State(expanded: Boolean)
-  case class Props(node: T.TreeNode[_], level: Int, settings: Settings)
+  trait Props {
+    type TT <: T.TreeTypes
+    val node: T.TreeNode[TT]
+    val level: Int
+    val settings: Settings
+  }
 
   final class Backend($: BackendScope[Props, State]) {
     def toggle(p: Props)(e: ReactEvent): Callback = Callback {
@@ -117,7 +131,7 @@ object TreeNavigatorItem extends ReactComponent {
             p.node.name,
           ),
           <.div(CSS.tree_nav.item_context_menu,
-            ContextMenu(p.node.actions, p.node.dispatcher)
+            ContextMenu[p.TT](p.node.actions, p.node.dispatcher)
           )
         ),
         <.div(CSS.tree_nav.item_children,
@@ -137,15 +151,23 @@ object TreeNavigatorItem extends ReactComponent {
       .renderBackend[Backend]
       .build
 
-  def apply(node: T.TreeNode[_], level: Int, settings: Settings): Unmounted =
-    component(Props(node, level, settings))
+  def apply[T <: T.TreeTypes](_node: T.TreeNode[T], _level: Int, _settings: Settings): Unmounted =
+    component(new Props {
+      type TT = T
+      val node = _node
+      val level = _level
+      val settings = _settings
+    })
 
 }
 
 
 object TreeNavigatorComponent extends ReactComponent {
   case class State()
-  case class Props(data: T.Tree[_])
+  trait Props {
+    type TT <: T.TreeTypes
+    val data: T.Tree[TT]
+  }
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
@@ -161,6 +183,11 @@ object TreeNavigatorComponent extends ReactComponent {
       .renderBackend[Backend]
       .build
 
-  def apply(data: T.Tree[_]): Unmounted = component(Props(data))
+  def apply[T <: T.TreeTypes](_data: T.Tree[T]): Unmounted =
+    component(new Props {
+      type TT = T
+      val data = _data
+    })
 
 }
+

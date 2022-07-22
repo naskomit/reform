@@ -1,7 +1,7 @@
 package sysmo.reform.shared.tree
 
 object MTree {
-  trait MNode[T] extends TreeNode[T] {
+  trait MNode[T <: TreeTypes] extends TreeNode[T] {
     var _parent: Option[TreeNode[T]] = None
     var _tree: Option[Tree[T]] = None
     override def parent: Option[TreeNode[T]] = _parent
@@ -27,16 +27,16 @@ object MTree {
     override def is_selected: Boolean = _tree.get.node_is_selected(id)
   }
 
-  case class MLeaf[T](id: Any, name: String, icon: Option[String] = None, actions: Seq[NodeAction[T]] = Seq()) extends MNode[T] with TreeLeaf[T] {
+  case class MLeaf[T <: TreeTypes](id: T#NodeId, name: String, icon: Option[String] = None, actions: Seq[NodeAction[T#ActionType]] = Seq()) extends MNode[T] with TreeLeaf[T] {
   }
 
-  case class MBranch[T](id: Any, name: String, icon: Option[String], children: Seq[TreeNode[T]], actions: Seq[NodeAction[T]] = Seq()) extends MNode[T] with TreeBranch[T] {
+  case class MBranch[T <: TreeTypes](id: T#NodeId, name: String, icon: Option[String], children: Seq[TreeNode[T]], actions: Seq[NodeAction[T#ActionType]] = Seq()) extends MNode[T] with TreeBranch[T] {
   }
 
-  case class MTree[T](root: MNode[T], multi_select: Boolean = false) extends Tree[T] {
+  case class MTree[T <: TreeTypes](root: MNode[T], multi_select: Boolean = false) extends Tree[T] {
     var _selection = Set[NodeId]()
     val dispatcher = new Dispatcher[T] {
-      override def dispatch[U <: T](action: U): Unit = {
+      override def dispatch[U <: ActionType](action: U): Unit = {
         println(s"[MTree/Action] ${action}")
         renderer.foreach(_.rerender())
       }
@@ -57,10 +57,10 @@ object MTree {
     }
 
     override def selection: Seq[NodeId] = _selection.toSeq
-    override def node_is_selected(id: Any): Boolean = selection.contains(id)
+    override def node_is_selected(id: NodeId): Boolean = selection.contains(id)
   }
 
-  def apply[T](root: MNode[T]): MTree[T] = {
+  def apply[T <: TreeTypes](root: MNode[T]): MTree[T] = {
     val tree = new MTree(root)
     root.set_parents(tree, None)
     tree
@@ -85,22 +85,27 @@ object MTree {
       InsertBefore(id), InsertAfter(id), Remove(id)
     )
 
-  def example1: MTree[String] = {
+  class TT extends TreeTypes {
+    type NodeId = String
+    type ActionType = String
+  }
+
+  def example1: MTree[TT] = {
     val i_group = Option("fa fa-map")
     val i_array = Option("fa fa-list")
-    apply[String](
-      MBranch("0", "Root", i_group, Seq(
-        MBranch("1", "Branch 1", i_group, Seq(
-          MLeaf("11", "Leaf 11"),
-          MBranch("12", "Branch 12", i_group, Seq(
-            MLeaf("121", "Leaf 121"),
-            MLeaf("122", "Leaf 122"),
+    apply[TT](
+      MBranch[TT]("0", "Root", i_group, Seq(
+        MBranch[TT]("1", "Branch 1", i_group, Seq(
+          MLeaf[TT]("11", "Leaf 11"),
+          MBranch[TT]("12", "Branch 12", i_group, Seq(
+            MLeaf[TT]("121", "Leaf 121"),
+            MLeaf[TT]("122", "Leaf 122"),
           ))
         )),
-        MBranch("2", "Branch 2", i_array, Seq(
-          MLeaf("21", "Leaf 21", actions = array_actions("21")),
-          MLeaf("22", "Leaf 22", actions = array_actions("22")),
-          MLeaf("23", "Leaf 23", actions = array_actions("23")),
+        MBranch[TT]("2", "Branch 2", i_array, Seq(
+          MLeaf[TT]("21", "Leaf 21", actions = array_actions("21")),
+          MLeaf[TT]("22", "Leaf 22", actions = array_actions("22")),
+          MLeaf[TT]("23", "Leaf 23", actions = array_actions("23")),
         ),
           actions = Seq(MAction("Append", "2"))
         )

@@ -9,7 +9,7 @@ import sysmo.reform.shared.form.{runtime => FR}
 
 object TreeBrowser extends ReactComponent {
   case class State(render_id: Int, active_item: Option[FR.ObjectId])
-  case class Props(runtime: FR.FormRuntime, id: FR.ObjectId, tree: Option[T.Tree[FR.FormAction]])
+  case class Props(runtime: FR.FormRuntime, id: FR.ObjectId, tree: Option[FR.Tree])
 
   final class Backend($: BackendScope[Props, State]) {
 
@@ -60,7 +60,7 @@ object TreeBrowser extends ReactComponent {
 
   def apply(runtime: FR.FormRuntime, id: FR.ObjectId): Unmounted = {
     import sysmo.reform.shared.form.runtime.TreeView._
-    val tree: Option[T.Tree[FR.FormAction]] = runtime.get(id).map(x => x)
+    val tree: Option[FR.Tree] = runtime.get(id).map(x => x)
     component(Props(runtime, id, tree))
   }
 }
