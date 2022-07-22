@@ -5,11 +5,11 @@ import japgolly.scalajs.react._
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.shared.{tree => T}
 import sysmo.reform.components.tree_nav.TreeNavigatorComponent
-
+import sysmo.reform.shared.form.{runtime => FR}
 
 object TreeBrowser extends ReactComponent {
-  case class State(render_id: Int)
-  case class Props(tree: T.Tree[_])
+  case class State(render_id: Int, active_item: Option[FR.ObjectId])
+  case class Props(runtime: FR.FormRuntime, id: FR.ObjectId, tree: Option[T.Tree[FR.FormAction]])
 
   final class Backend($: BackendScope[Props, State]) {
 
@@ -17,18 +17,26 @@ object TreeBrowser extends ReactComponent {
     def render (p: Props, s: State): VdomElement = {
       <.div(^.cls:= "page-title",
         <.h1("Tree Form Editor"),
-        <.div(^.cls:= "row",
-          <.div(^.cls:= "col-md-4",
-            <.div(^.cls:= "panel panel-default",
-              TreeNavigatorComponent(p.tree)
+        p.tree match {
+          case Some(tree) => <.div(^.cls:= "row",
+            <.div(^.cls:= "col-md-4",
+              <.div(^.cls:= "panel panel-default",
+                TreeNavigatorComponent(tree)
+              ),
             ),
-          ),
-          <.div(^.cls:= "col-md-8",
-            <.div(^.cls:= "panel panel-default",
-              "Property Editor"
+            <.div(^.cls:= "col-md-8",
+              <.div(^.cls:= "panel panel-default",
+                s.active_item.flatMap(id => p.runtime.get(id)) match {
+                  case Some(group: FR.Group) => FormEditorComponent(group)
+                  case _ => "Nothing to show"
+                }
+              ),
             ),
-          ),
-        )
+          )
+
+          case None => <.div("Nothing to display")
+        }
+
       )
     }
 
@@ -36,16 +44,23 @@ object TreeBrowser extends ReactComponent {
 
   val component =
     ScalaComponent.builder[Props]("TreeBrowser")
-    .initialState(State(0))
+    .initialState(State(0, None))
     .renderBackend[Backend]
     .componentDidMount(f => Callback {
-      f.props.tree.renderer = Some(new T.Renderer {
+      f.props.tree.foreach(tree => tree.renderer = Some(new T.Renderer {
         override def rerender(): Unit = {
-          f.modState(s => s.copy(render_id = s.render_id + 1)).runNow()
+          f.modState(s => s.copy(
+            render_id = s.render_id + 1,
+//            active_item = tree.selection
+          )).runNow()
         }
-      })
+      }))
     })
     .build
 
-  def apply(): Unmounted = component(Props(T.MTree.example1))
+  def apply(runtime: FR.FormRuntime, id: FR.ObjectId): Unmounted = {
+    import sysmo.reform.shared.form.runtime.TreeView._
+    val tree: Option[T.Tree[FR.FormAction]] = runtime.get(id).map(x => x)
+    component(Props(runtime, id, tree))
+  }
 }

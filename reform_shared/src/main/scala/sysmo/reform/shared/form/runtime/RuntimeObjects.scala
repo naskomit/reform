@@ -26,14 +26,14 @@ case class AtomicValue(prototype: FB.AtomicField, value: FieldValue[_], id: Obje
   def remove_children(): Unit = ()
 }
 
-trait WithNamedChildren[K, V] extends RuntimeObject {
+sealed trait WithNamedChildren[K, V] extends RuntimeObject {
   val children: mutable.Map[K, V] = new mutable.HashMap()
   def child(key: K): Option[V] = {
     children.get(key)
   }
 }
 
-trait WithOrderedChildren[V] extends RuntimeObject {
+sealed trait WithOrderedChildren[V] extends RuntimeObject {
   val children: mutable.ArrayBuffer[V] = new mutable.ArrayBuffer()
 }
 
@@ -84,6 +84,8 @@ case class Array(prototype: FB.GroupArray, id: ObjectId, parent_rel: Option[Pare
     case Some(c: Group) => c
     case None => throw new IllegalStateException(s"Array element $cid not found or not a group!")
   }).iterator
+
+  def count: Int = children.size
 
   def insert_element(id: ObjectId, concrete_type: Option[FB.FieldGroup], before: Boolean): ObjectId = {
     var inserted = false

@@ -75,19 +75,23 @@ object Application extends ReactApplication {
           import japgolly.scalajs.react.vdom.VdomElement
           import japgolly.scalajs.react._
           import japgolly.scalajs.react.vdom.html_<^._
-          case class Props()
+          import sysmo.reform.shared.form.{runtime => FR}
+          import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
+          case class Props(data: FR.Group)
           type State = Unit
           type Backend = Unit
 
           def render(p: Props): VdomElement = {
-            TreeBrowser()
+            TreeBrowser(p.data.runtime, p.data.id)
           }
           val component = ScalaComponent.builder[Props]("TreeViewerPanel")
             .render_P(render)
             .build
 
           override def apply(app_config: ApplicationConfiguration): Unmounted = {
-            component(Props())
+            val root_group = Ex.ReactionKinetics.builder.build()
+            component(Props(root_group))
           }
         }
       )
