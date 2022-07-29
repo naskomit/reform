@@ -29,6 +29,12 @@ trait FormElementCompanion[U <: FormElement] {
       this
     }
 
+    def extend[T <: IBuilder](f: T => T): this.type = {
+      f(this.asInstanceOf[T])
+      this
+    }
+
+
     def build: FET
   }
 

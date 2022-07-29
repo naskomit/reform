@@ -4,7 +4,7 @@ import japgolly.scalajs.react.{BackendScope, ScalaComponent}
 import japgolly.scalajs.react.vdom.VdomElement
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
-import sysmo.reform.components.forms.FormEditorComponent
+import sysmo.reform.components.forms.{FormEditorComponent, TreeBrowser}
 import sysmo.reform.shared.form.{FormModelBuilder, build => FB, runtime => FR}
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
@@ -14,7 +14,8 @@ trait FormPanel extends ApplicationPanel {
   case class State()
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      FormEditorComponent(p.group)
+      //FormEditorComponent(p.group)
+      TreeBrowser(p.group.runtime, p.group.id)
     }
   }
 

@@ -7,7 +7,7 @@ import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import sysmo.reform.shared.data.{TableService, table => sdt}

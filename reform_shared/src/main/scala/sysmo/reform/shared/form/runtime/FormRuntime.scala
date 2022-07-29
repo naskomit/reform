@@ -19,6 +19,10 @@ class FormRuntime(val type_graph: TP.Graph)(implicit val ec: ExecutionContext) {
   var force_render: Option[DoRender] = None
 
   def get(id: ObjectId): Option[RuntimeObject] = objects.get(id)
+  def get_typed[T <: RuntimeObject](id: ObjectId)(implicit tag: ClassTag[T]): Option[T] = objects.get(id) match {
+    case Some(x: T) => Some(x)
+    case _ => None
+  }
   def update[T <: RuntimeObject](id: ObjectId, f: T => T)(implicit ctag: ClassTag[T]): Try[T] = {
     get(id) match {
       case Some(obj: T) => {
@@ -351,11 +355,16 @@ object instantiation {
 
   // Atomic values converters
   implicit def str2ab(x: String): AtomicBuilder = AtomicBuilder(x)
+  implicit def int2ab(x: Int): AtomicBuilder = AtomicBuilder(x)
 
   implicit def seq2builder(x: Seq[InstanceBuilder]): ArrayBuilder = ArrayBuilder(x)
 
   def ref(q: E.PredicateExpression): ReferenceBuilder = {
     new ReferenceBuilder(Some(q))
+  }
+
+  implicit class FormGroupBuilderApply(gb: FB.FieldGroup.Builder) {
+    def apply(children: (String, InstanceBuilder)*): GroupBuilder = GroupBuilder(gb.build, children)
   }
 
   implicit class FormGroupApply(g: FB.FieldGroup) {

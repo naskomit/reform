@@ -1,6 +1,6 @@
 package sysmo.reform.shared.form.build
 
-import sysmo.reform.shared.gremlin.tplight.{Vertex, gobject => GO}
+import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
 import sysmo.reform.shared.gremlin.{tplight => TP}
 import sysmo.reform.shared.{expr => E}
 

@@ -11,7 +11,7 @@ import org.scalajs.dom
 object IntuitiveLayout extends ApplicationLayout {
   case class State
   (
-    menu_expanded: Boolean = true,
+    menu_expanded: Boolean = false,
     active_item: String = "Root"
   )
   case class Props(router: RouterCtl[Page], resolution: Resolution[Page], pages: PageCollection, elem_height: Int = 50)

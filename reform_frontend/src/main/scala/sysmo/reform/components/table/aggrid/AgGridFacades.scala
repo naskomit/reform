@@ -65,8 +65,6 @@ object AgGridFacades extends Logging {
   def extract_filter(flt_js : ColumnFilterJS, column: String): Option[E.PredicateExpression] = {
     import E.{Expression => EX}
       val flt = ColumnFilter.fromJS(flt_js)
-      println("Filter")
-      println(flt)
       dom.console.log(flt_js)
       flt match {
         case ColumnFilter(_, Some(op), None) => {

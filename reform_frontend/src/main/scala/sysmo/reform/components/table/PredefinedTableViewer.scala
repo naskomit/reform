@@ -8,7 +8,7 @@ import sysmo.reform.shared.data.table.Schema
 import sysmo.reform.shared.{query => Q}
 
 import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 object PredefinedTableViewer extends ReactComponent {
 
@@ -37,7 +37,7 @@ object PredefinedTableViewer extends ReactComponent {
     }
 
     def load_schema(p: Props): AsyncCallback[Unit] = AsyncCallback.fromFuture(
-      p.table_data_source.table_schema(p.table_id)
+      p.table_data_source.table_schema(p.table_id.asInstanceOf[p.table_data_source.TableIdType])
     ).flatMap(schema => $.modState(s => s.copy(table_schema = Some(schema), table_id_loaded = p.table_id)).asAsyncCallback)
   }
 

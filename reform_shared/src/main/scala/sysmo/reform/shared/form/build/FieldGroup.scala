@@ -88,6 +88,17 @@ object FieldGroup extends FormElementCompanion[FieldGroup] {
     }
 
     def array(f_rel: HasElement.Builder => HasElement.Builder,
+              child_builder: FieldGroup.Builder,
+              f_arr: GroupArray.Builder => GroupArray.Builder
+             ): this.type = {
+      val array_builder = GroupArray.builder(graph)
+      f_arr(array_builder)
+      f_rel(new HasElement.Builder(graph, vertex, array_builder.vertex))
+      new HasPrototype.Builder(graph, array_builder.vertex, child_builder.vertex)
+      this
+    }
+
+    def array(f_rel: HasElement.Builder => HasElement.Builder,
               child_builder: GroupUnion.Builder): this.type = {
       val array_builder = GroupArray.builder(graph)
       f_rel(new HasElement.Builder(graph, vertex, array_builder.vertex))

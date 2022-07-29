@@ -8,12 +8,13 @@ trait TreeTypes {
 trait TreeNode[T <: TreeTypes] {
   type Id = T#NodeId
   type ActionType = T#ActionType
+  type Action = NodeAction[ActionType]
   def parent: Option[TreeNode[T]]
   def id: Id
   def name: String
   def icon: Option[String]
   //    def content: T
-  def actions: Seq[NodeAction[ActionType]]
+  def actions: Seq[Action]
   def dispatcher: Dispatcher[T]
   def is_selected: Boolean
 }
@@ -47,6 +48,6 @@ trait Tree[T <: TreeTypes] {
   var renderer: Option[Renderer] = None
   def root: TreeNode[T]
   def node_is_selected(id: NodeId): Boolean
-  def selection: Seq[NodeId]
+  def selection: Set[NodeId]
 }
 

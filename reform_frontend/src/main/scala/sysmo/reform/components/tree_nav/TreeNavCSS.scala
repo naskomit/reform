@@ -44,10 +44,13 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
 
   val item_icon = style(
     marginLeft(10.px),
-    marginRight(10.px)
+    marginRight(10.px),
+    display.inline
   )
 
-  val item_name = style()
+  val item_name = style(
+    display.inline
+  )
 
   val item_context_menu = style(
     marginLeft(auto),

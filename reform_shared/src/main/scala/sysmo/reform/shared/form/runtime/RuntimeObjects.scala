@@ -7,6 +7,18 @@ import sysmo.reform.shared.form.{build => FB}
 import scala.collection.mutable
 import sysmo.reform.shared.{expr => E}
 
+case class ObjectId(id: Int) extends AnyVal {
+  def next: ObjectId = ObjectId(id + 1)
+}
+
+object ObjectId {
+  import scala.util.control.Exception._
+  val empty = ObjectId(-1)
+  val start = ObjectId(0)
+  def apply(s: String): ObjectId = allCatch.opt(s.toInt)
+    .map(apply).getOrElse(empty)
+}
+
 sealed trait RuntimeObject extends Product with Serializable {
   type Prototype <: FB.FormElement
   val id: ObjectId
@@ -35,15 +47,6 @@ sealed trait WithNamedChildren[K, V] extends RuntimeObject {
 
 sealed trait WithOrderedChildren[V] extends RuntimeObject {
   val children: mutable.ArrayBuffer[V] = new mutable.ArrayBuffer()
-}
-
-case class ObjectId(id: Int) extends AnyVal {
-  def next: ObjectId = ObjectId(id + 1)
-}
-
-object ObjectId {
-  val empty = ObjectId(-1)
-  val start = ObjectId(0)
 }
 
 case class GroupElement(relation: FB.HasElement, target: RuntimeObject)

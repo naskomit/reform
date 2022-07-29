@@ -2,7 +2,7 @@ package sysmo.coviddata
 
 
 import sysmo.reform.router.{PageCollection, SimplePage}
-import router.{HomePage, Plots}
+import router.{HomePage}
 import sysmo.reform.{ApplicationConfiguration, ReactApplication}
 import sysmo.reform.components.layouts.IntuitiveLayout
 import org.scalajs.dom.Event
@@ -49,7 +49,7 @@ object Application extends ReactApplication {
         TableGroupPanel.builder("TableData", Some("Таблични Данни"))
       )((bld, table) => bld.add(table))
       .build,
-      Plots,
+//      Plots,
 //      SimplePage("RefrigerationCycle", Some("Refrigeration cycle"), "fa fa-pencil", P.RefrigerationCyclePanel),
 //      SimplePage("BiomarkerAnalysis", Some("Biomarker analysis"), "fa fa-pencil", P.BiomarkerAnalysisPanel),
       SimplePage("TaskManagementPanel",
@@ -61,7 +61,7 @@ object Application extends ReactApplication {
         new FormPanel{lazy val fmb = Ex.Company.builder}
       ),
       SimplePage(
-        "ReactionKineticsPanel", Some("Reaction Kinetics"), "fa fa-building",
+        "ReactionKineticsPanel", Some("Reaction Kinetics"), "fa fa-bong",
         new FormPanel{lazy val fmb = Ex.ReactionKinetics.builder}
       ),
       SimplePage(
@@ -69,32 +69,9 @@ object Application extends ReactApplication {
         new FormPanel{lazy val fmb = Ex.BiomarkerAnalytics.builder}
       ),
       SimplePage(
-        "TreeViewerPanel", Some("TreeViewer"), "fa fa-folder-tree",
-        new ApplicationPanel {
-          import japgolly.scalajs.react.{BackendScope, ScalaComponent}
-          import japgolly.scalajs.react.vdom.VdomElement
-          import japgolly.scalajs.react._
-          import japgolly.scalajs.react.vdom.html_<^._
-          import sysmo.reform.shared.form.{runtime => FR}
-          import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-
-          case class Props(data: FR.Group)
-          type State = Unit
-          type Backend = Unit
-
-          def render(p: Props): VdomElement = {
-            TreeBrowser(p.data.runtime, p.data.id)
-          }
-          val component = ScalaComponent.builder[Props]("TreeViewerPanel")
-            .render_P(render)
-            .build
-
-          override def apply(app_config: ApplicationConfiguration): Unmounted = {
-            val root_group = Ex.ReactionKinetics.builder.build()
-            component(Props(root_group))
-          }
-        }
-      )
+        "Microcontrollers", Some("Microcontrollers"), "fa fa-shuttle-space",
+        new FormPanel{lazy val fmb = Ex.MicroController.builder}
+      ),
     )
   }
   override val layout = IntuitiveLayout

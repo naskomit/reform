@@ -43,7 +43,6 @@ object ContextMenu extends ReactComponent {
     def toggle(s: State)(event: ReactEvent): Callback = Callback {
         event.stopPropagation()
       } >> {
-        println(s)
         if (s.expanded)
           close(event)
         else
@@ -107,10 +106,14 @@ object TreeNavigatorItem extends ReactComponent {
   }
 
   final class Backend($: BackendScope[Props, State]) {
-    def toggle(p: Props)(e: ReactEvent): Callback = Callback {
+    def toggle_expanded(p: Props)(e: ReactEvent): Callback = Callback {
+      e.stopPropagation()
+    } >> $.modState(s => s.copy(expanded = !s.expanded))
+
+    def toggle_selected(p: Props)(e: ReactEvent): Callback = Callback {
       e.stopPropagation()
       p.node.dispatcher.select(p.node.id)
-    } >> $.modState(s => s.copy(expanded = !s.expanded))
+    }
 
     def render (p: Props, s: State): VdomElement = {
       <.div(CSS.tree_nav.nav_item,
@@ -118,18 +121,27 @@ object TreeNavigatorItem extends ReactComponent {
 
         <.div(CSS.tree_nav.row,
           CSS.tree_nav.row_selected.when(p.node.is_selected),
-          ^.onClick ==> toggle(p),
-          p.node match {
-            case n: T.TreeBranch[_] => <.div(CSS.tree_nav.item_expand, if (s.expanded) "-" else "+")
-            case n: T.TreeLeaf[_] => <.div(CSS.tree_nav.item_expand_leaf)
 
-          },
-          <.div(CSS.tree_nav.item_icon,
-            <.i(^.cls:= p.node.icon.getOrElse("fa fa-circle-check"))
+          <.div(
+            ^.onClick ==> toggle_expanded(p),
+            p.node match {
+              case n: T.TreeBranch[_] => <.div(CSS.tree_nav.item_expand, if (s.expanded) "-" else "+")
+              case n: T.TreeLeaf[_] => <.div(CSS.tree_nav.item_expand_leaf)
+
+            },
           ),
-          <.div(CSS.tree_nav.item_name,
-            p.node.name,
+
+          <.div(
+            ^.flex:= "1",
+            ^.onClick ==> toggle_selected(p),
+            <.div(CSS.tree_nav.item_icon,
+              <.i(^.cls:= p.node.icon.getOrElse("fa fa-circle-check"))
+            ),
+            <.div(CSS.tree_nav.item_name,
+              p.node.name,
+            ),
           ),
+
           <.div(CSS.tree_nav.item_context_menu,
             ContextMenu[p.TT](p.node.actions, p.node.dispatcher)
           )

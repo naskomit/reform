@@ -16,6 +16,7 @@ import sysmo.reform.util.log.Logging
 class ServerTableDataSource(schemas: Schema*) extends TableService with Logging {
   import sdt.Transport._
   import Q.Transport._
+  type TableIdType = String
 
   val api_client = ApiClient("api/table")
   val base_path: Seq[String] = Seq("sysmo", "reform", "services", "TableDataService")
@@ -32,7 +33,7 @@ class ServerTableDataSource(schemas: Schema*) extends TableService with Logging 
       ).toSeq)
   }
 
-  override def table_schema(table_id: String): Future[Schema] = {
+  override def table_schema(table_id: TableIdType): Future[Schema] = {
     schemas.find(x => x.name == table_id) match {
       case Some(schema) => Future.successful(schema)
       case None => Future.failed(new IllegalArgumentException(s"No table $table_id found"))

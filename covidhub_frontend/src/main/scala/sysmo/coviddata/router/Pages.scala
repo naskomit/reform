@@ -11,9 +11,9 @@ case object HomePage extends Page {
   val panel = P.HomePanel
 }
 
-case object Plots extends Page {
-  val name = "Plots"
-  val label = Some("Графики")
-  val icon = "fa fa-pencil"
-  val panel = P.ChartPanel
-}
+//case object Plots extends Page {
+//  val name = "Plots"
+//  val label = Some("Графики")
+//  val icon = "fa fa-pencil"
+//  val panel = P.ChartPanel
+//}

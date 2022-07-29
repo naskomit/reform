@@ -56,7 +56,7 @@ object MTree {
       }
     }
 
-    override def selection: Seq[NodeId] = _selection.toSeq
+    override def selection: Set[NodeId] = _selection
     override def node_is_selected(id: NodeId): Boolean = selection.contains(id)
   }
 
