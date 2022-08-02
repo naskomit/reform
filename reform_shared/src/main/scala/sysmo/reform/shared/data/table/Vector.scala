@@ -34,7 +34,7 @@ class Vector[V, +Storage <: VectorStorage[V]](storage: Storage)(implicit tci: Ve
     builder.toVector
   }
 
-  def tpe: VectorType.Value = tci.tpe
+  def tpe: VectorType = tci.tpe
   def show: String = f"${tpe}(" + this.map {
     case Some(x) => x.toString
     case None => "N/A"
@@ -60,7 +60,7 @@ class VectorIterator[V](vec: Vector[V, _]) extends Iterator[Option[V]] {
 // (storage: Storage)(implicit tci: VectorTypeclass[V])
 trait VectorBuilder[V, Storage <: VectorStorage[V]] {
   val storage: Storage
-  def tpe: VectorType.Value
+  def tpe: VectorType
   def toVector: Vector[V, VectorStorage[V]]
 }
 
@@ -72,7 +72,7 @@ class IncrementalVectorBuilder[V, Storage <: VectorStorage[V]]
   (val storage: Storage)(implicit tci: VectorTypeclass[V])
     extends VectorBuilder[V, Storage] {
   var num_elements: Int = 0
-  def tpe: VectorType.Value = tci.tpe
+  def tpe: VectorType = tci.tpe
   def append(value: Option[V]): Unit = {
     num_elements += 1
     value match {

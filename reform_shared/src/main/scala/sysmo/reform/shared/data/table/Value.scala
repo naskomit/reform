@@ -59,23 +59,23 @@ case class CategoricalValue(v: Option[Int], categories: Seq[String]) extends Val
 
 
 object Value {
-  def real(x: Option[Double]) = RealValue(x)
-  def real(x: Double) = RealValue(Some(x))
-  def int(x: Option[Int]) = IntValue(x)
-  def int(x: Int) = IntValue(Some(x))
-  def bool(x: Option[Boolean]) = BoolValue(x)
-  def bool(x: Boolean) = BoolValue(Some(x))
-  def char(x: Option[String]) = CharValue(x)
-  def char(x: String) = CharValue(Some(x))
-  def date(x: Option[Double]) = DateValue(x)
-  def date(x: Double) = DateValue(Some(x))
-  def date(x: java.util.Date) = DateValue(Some(x.getTime.toDouble))
-  def empty(fieldType: FieldType) = fieldType.tpe match {
+  def real(x: Option[Double]): RealValue = RealValue(x)
+  def real(x: Double): RealValue = RealValue(Some(x))
+  def int(x: Option[Int]): IntValue = IntValue(x)
+  def int(x: Int): IntValue = IntValue(Some(x))
+  def bool(x: Option[Boolean]): BoolValue = BoolValue(x)
+  def bool(x: Boolean): BoolValue = BoolValue(Some(x))
+  def char(x: Option[String]): CharValue = CharValue(x)
+  def char(x: String): CharValue = CharValue(Some(x))
+  def date(x: Option[Double]): DateValue = DateValue(x)
+  def date(x: Double): DateValue = DateValue(Some(x))
+  def date(x: java.util.Date): DateValue = DateValue(Some(x.getTime.toDouble))
+  def empty(fieldType: FieldType): Value[_] = fieldType.tpe match {
     case VectorType.Int => int(None)
     case VectorType.Real => real(None)
     case VectorType.Bool => bool(None)
     case VectorType.Char => char(None)
   }
-  def empty = IntValue(None)
+  def empty: Value[_] = IntValue(None)
 }
 

@@ -29,7 +29,7 @@ object TableView {
     // case class FieldType(tpe: VectorType.Value, nullable: Boolean = true)
     private def create_schema(group: FieldGroup): sdt.Schema = sdt.Schema(
       group.symbol, None, group.field_relations.map{ rel =>
-        val col_type: VectorType.Value = rel.child_field match {
+        val col_type: VectorType = rel.child_field match {
           case x: FB.StringField => sdt.VectorType.Char
           case x: FB.IntegerField => sdt.VectorType.Int
           case x: FB.FloatField => sdt.VectorType.Real

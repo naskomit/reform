@@ -9,13 +9,13 @@ case object Categorical extends ExtClass
 case object Date extends ExtClass
 case object DateTime extends ExtClass
 
-case class FieldType(tpe: VectorType.Value, nullable: Boolean = true,
+case class FieldType(tpe: VectorType, nullable: Boolean = true,
                      ext_class: ExtClass = Same, categories: Seq[String] = Seq(), metadata: Map[String, String] = Map())
 
 case class Field(name: String, field_type: FieldType, label: Option[String] = None) extends INamed
 
 object Field {
-  class FieldBuilder(name: String, tpe: VectorType.Value) {
+  class FieldBuilder(name: String, tpe: VectorType) {
     var field: Field = Field(name, FieldType(tpe))
     def label(value: String): this.type = {
       field = field.copy(label = Some(value))
@@ -64,12 +64,12 @@ object Schema {
       _label = Some(v)
       this
     }
-    def field(name: String, tpe: VectorType.Value): this.type = {
+    def field(name: String, tpe: VectorType): this.type = {
       val builder = new Field.FieldBuilder(name, tpe)
       fields = fields :+ builder.build
       this
     }
-    def field(name: String, tpe: VectorType.Value, b: FieldBuilder => _): this.type = {
+    def field(name: String, tpe: VectorType, b: FieldBuilder => _): this.type = {
       val builder = new Field.FieldBuilder(name, tpe)
       b(builder)
       fields = fields :+ builder.build

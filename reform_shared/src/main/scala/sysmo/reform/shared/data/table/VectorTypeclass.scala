@@ -1,17 +1,26 @@
 package sysmo.reform.shared.data.table
 
-// Type class
+sealed trait VectorType
+object VectorType {
+  case object Int extends VectorType
+  case object Real extends VectorType
+  case object Bool extends VectorType
+  case object Char extends VectorType
 
-
-object VectorType extends Enumeration {
-  type VectorType = Value
-  val Int, Real, Bool, Char = Value
+  def with_name(name: String): VectorType= {
+    name match {
+      case "Int" => Int
+      case "Real" => Real
+      case "Bool" => Bool
+      case "Char" => Char
+    }
+  }
 }
 
 trait VectorTypeclass[V] {
   type ValueType = V
   type MutableStorage <: VectorStorage[ValueType]
   type ImmutableStorage <: VectorStorage[ValueType]
-  val tpe: VectorType.VectorType
+  val tpe: VectorType
   def create_mutable_storage(manager: TableManager, name: String): MutableStorage
 }

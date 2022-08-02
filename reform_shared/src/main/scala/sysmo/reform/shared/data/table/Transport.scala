@@ -52,7 +52,7 @@ object Transport extends CirceTransport {
       categories <- c.downField("categories").as[Seq[String]]
       metadata <- c.downField("metadata").as[Map[String, String]]
 
-    } yield FieldType(VectorType.withName(tpe), nullable, ext_class, categories, metadata)
+    } yield FieldType(VectorType.with_name(tpe), nullable, ext_class, categories, metadata)
   }
 
   implicit val codec_field: Codec[Field] = deriveCodec[Field]
