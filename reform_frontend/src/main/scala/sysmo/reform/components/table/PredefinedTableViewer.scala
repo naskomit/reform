@@ -27,7 +27,7 @@ object PredefinedTableViewer extends ReactComponent {
           s.table_schema match{
             case Some(schema) =>
               if (s.table_id_loaded == p.table_id)
-                RecordTableViewer(p.table_data_source, schema, Q.SingleTable(p.table_id))
+                RecordTableViewer(p.table_data_source, schema, Q.SingleTable(p.table_id), selection_handler = None)
               else
                 <.div("Reloading!")
             case None => <.div("No schema!")

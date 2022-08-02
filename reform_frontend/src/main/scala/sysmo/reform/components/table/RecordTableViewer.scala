@@ -11,7 +11,8 @@ import sysmo.reform.shared.data.{TableService, table => sdt}
 object RecordTableViewer {
   import japgolly.scalajs.react._
 
-  case class Props(ds: TableService, source: Q.QuerySource, schema: sdt.Schema, height: String)
+  case class Props(ds: TableService, source: Q.QuerySource, schema: sdt.Schema, height: String,
+                    selection_handler: Option[TableSelectionHandler])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -53,7 +54,8 @@ object RecordTableViewer {
         AgGridComponent(
           p.ds, p.source, p.schema,
           schema2columns(p.schema),
-          p.height
+          p.height,
+          p.selection_handler
         )
       )
     }
@@ -65,7 +67,7 @@ object RecordTableViewer {
     .renderBackend[Backend]
     .build
 
-  def apply(ds : TableService, schema: sdt.Schema, source: Q.QuerySource, height: String = "800px") = {
-    component(Props(ds, source, schema, height))
+  def apply(ds : TableService, schema: sdt.Schema, source: Q.QuerySource, height: String = "800px", selection_handler: Option[TableSelectionHandler]) = {
+    component(Props(ds, source, schema, height, selection_handler))
   }
 }

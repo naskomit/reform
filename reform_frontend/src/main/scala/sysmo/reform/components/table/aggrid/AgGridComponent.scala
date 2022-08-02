@@ -6,8 +6,9 @@ import sysmo.reform.components.ReactComponent
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
-
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import sysmo.reform.components.table.TableSelectionHandler
+
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import sysmo.reform.shared.data.{TableService, table => sdt}
@@ -83,7 +84,8 @@ object AgGridSourceAgaptor{
 object AgGridComponent extends ReactComponent {
   import japgolly.scalajs.react.ScalaComponent
   import japgolly.scalajs.react.component.Scala.BackendScope
-  case class Props(ds : AgGridSourceAgaptor, columns : Seq[agf.ColumnProps], height: String)
+  case class Props(ds : AgGridSourceAgaptor, columns : Seq[agf.ColumnProps], height: String,
+                   selection_handler: Option[TableSelectionHandler])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -93,7 +95,7 @@ object AgGridComponent extends ReactComponent {
         ^.cls := "ag-theme-alpine",
         ^.height := p.height,
         ^.width := "100%",
-        agf.AgGridNativeComponent(p.ds.native, p.columns)
+        agf.AgGridNativeComponent(p.ds.native, p.columns, p.selection_handler)
       )
     }
   }
@@ -103,7 +105,8 @@ object AgGridComponent extends ReactComponent {
     .renderBackend[Backend]
     .build
 
-  def apply(ds: TableService, table: Q.QuerySource, schema: sdt.Schema, columns: Seq[agf.ColumnProps], height: String): Unmounted =
-    component(Props(AgGridSourceAgaptor(ds, table, schema), columns, height))
+  def apply(ds: TableService, table: Q.QuerySource, schema: sdt.Schema,
+            columns: Seq[agf.ColumnProps], height: String, selection_handler: Option[TableSelectionHandler]): Unmounted =
+    component(Props(AgGridSourceAgaptor(ds, table, schema), columns, height, selection_handler))
 
 }

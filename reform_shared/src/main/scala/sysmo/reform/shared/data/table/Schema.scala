@@ -42,10 +42,22 @@ extends INamed {
   def field(index: Int): Option[Field] = if (index < fields.length) Some(fields(index)) else None
   def field(name: String): Option[Field] = field_index(name).map(index => fields(index))
   def field_index(name: String): Option[Int] = field_map.get(name)
+
+  def modify(f: Schema.Builder => Schema.Builder): Schema = {
+    val builder = new Schema.Builder(this)
+    f(builder)
+    builder.build
+  }
 }
 
 object Schema {
   class Builder(name: String) {
+    def this(s: Schema) = {
+      this(s.name)
+      this._label = s.label
+      this.fields = s.fields
+    }
+
     var _label: Option[String] = None
     private var fields = Seq[Field]()
     def label(v: String): this.type = {

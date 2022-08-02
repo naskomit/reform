@@ -91,21 +91,28 @@ object TreeView {
       }
 
       override def actions: Seq[Action] = append_actions
-      override def children: Seq[T.TreeNode[FTypes]] =
+      override def children: Seq[T.TreeNode[FTypes]] = {
+        def evaluate_label(e: E.Expression, group: Group): Option[String] = {
+          E.Expression.eval(e, group.as_context) match {
+            case Right(SomeValue(LabeledValue(v: String, _))) => Some(v)
+            case x => {println(x); None}
+          }
+        }
+
         obj.element_iterator
           .zipWithIndex
           .map { case (group, i) =>
-            val label: Option[String] = obj.prototype.label_expr.flatMap(e =>
-              E.Expression.eval(e, group.as_context) match {
-                case Right(SomeValue(LabeledValue(v: String, _))) => Some(v)
-                case x => {println(x); None}
-              }
-            ).orElse(Some((i + 1).toString))
+            val label: Option[String] = obj.prototype.label_expr
+              .flatMap(e => evaluate_label(e, group))
+            .orElse(group.prototype.label_expr.flatMap(e =>
+              evaluate_label(e, group)
+            )).orElse(Some((i + 1).toString))
 
             as_node(group, label)
           }
           .filterNot(x => x == EmptyNode)
           .toSeq
+      }
     }
 
   }

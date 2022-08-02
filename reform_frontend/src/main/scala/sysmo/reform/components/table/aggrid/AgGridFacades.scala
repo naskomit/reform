@@ -8,8 +8,9 @@ import scala.scalajs.js
 import js.JSConverters._
 import scala.scalajs.js.annotation.JSImport
 import japgolly.scalajs.react.{Children, JsComponent}
+import sysmo.reform.components.table.TableSelectionHandler
 
-import scala.scalajs.js.|
+import scala.scalajs.js.{UndefOr, |}
 import scalajs.js.annotation.JSGlobal
 import sysmo.reform.shared.data.{table => sdt}
 import sysmo.reform.util.log.Logging
@@ -120,50 +121,6 @@ object AgGridFacades extends Logging {
 
         case _ => {logger.warn(s"Cannot decode filter $flt") ;None}
       }
-//      if (flt_js.hasOwnProperty("filterType")) {
-//        flt_js.filterType match {
-//          case "text" => {
-//            val f = flt_js.asInstanceOf[TextFilterModelJS]
-//            val predicate = f.`type` match {
-//              case "equals" => StringPredicateOp.Equal
-//              case "notEqual" => StringPredicateOp.NotEqual
-//              case "contains" => StringPredicateOp.Containing
-//              case "notContains" => StringPredicateOp.NotContaining
-//              case "startsWith" => StringPredicateOp.StartingWith
-//              case "endsWith" => StringPredicateOp.EndingWith
-//
-//            }
-//            Some(StringPredicate(predicate, ColumnRef(column), Val(f.filter)))
-//          }
-//
-//          case "number" => {
-//            val f = flt_js.asInstanceOf[NumberFilterModelJS]
-//            if (f.`type` == "inRange") {
-//              Some(LogicalAnd(
-//                NumericalPredicate(NumericalPredicateOp.>=, ColumnRef(column), Val(f.filter)),
-//                NumericalPredicate(NumericalPredicateOp.<=, ColumnRef(column), Val(f.filterTo))
-//              ))
-//            } else {
-//              val predicate = f.`type` match {
-//                case "equals" => NumericalPredicateOp.Equal
-//                case "notEqual" => NumericalPredicateOp.NotEqual
-//                case "lessThan" => NumericalPredicateOp.<
-//                case "lessThanOrEqual" => NumericalPredicateOp.<=
-//                case "greaterThan" => NumericalPredicateOp.>
-//                case "greaterThanOrEqual" => NumericalPredicateOp.>=
-//
-//              }
-//              Some(NumericalPredicate(predicate, ColumnRef(column), Val(f.filter)))
-//            }
-//          }
-//
-//          case x => {
-//            dom.console.warn(f"Unimplemented filter type $x")
-//            None
-//          }
-//        }
-//      } else
-//        None
   }
 
   @js.native
@@ -272,6 +229,23 @@ object AgGridFacades extends Logging {
     new Proxy(table, table_proxy_handler)
   }
 
+  @js.native
+  trait API extends js.Object {
+    val getSelectedRows: js.Function0[js.Any] = js.native
+    val getSelectedNodes: js.Function0[js.Any] = js.native
+  }
+
+  @js.native
+  trait ColumnAPI extends js.Object {
+
+  }
+
+  @js.native
+  trait OnGridReady extends js.Object {
+    val api: API = js.native
+    val columnApi: ColumnAPI = js.native
+  }
+
   object AgGridNativeComponent {
 
     @JSImport("ag-grid-react", "AgGridReact")
@@ -285,13 +259,18 @@ object AgGridFacades extends Logging {
       var rowData: js.Object = js.native
       var reactUi: Boolean = js.native
       var gridOptions: GridOptions = js.native
-
+      var rowSelection: js.UndefOr[String] = js.native
+      var onSelectionChanged: js.UndefOr[js.Function0[Unit]] = js.native
+      var onGridReady: js.UndefOr[js.Function1[OnGridReady, Unit]] = js.native
     }
 
     val component = JsComponent[Props, Children.None, Null](AgGridReact)
 
-    def apply(datasource: TableDatasource, columns : Seq[ColumnProps]) = {
+    def apply(datasource: TableDatasource, columns : Seq[ColumnProps],
+              selection_handler: Option[TableSelectionHandler]) = {
       val p = (new js.Object).asInstanceOf[Props]
+      var api: Option[API] = None
+      var column_api: Option[ColumnAPI] = None
 
       p.reactUi = true
 
@@ -300,6 +279,40 @@ object AgGridFacades extends Logging {
       grid_options.datasource = datasource
       p.gridOptions = grid_options
       p.columnDefs = columns.toJSArray
+
+      val onGridReady: js.Function1[OnGridReady, Unit] = (params: OnGridReady) => {
+        api = Some(params.api)
+        column_api = Some(params.columnApi)
+      }
+      p.onGridReady = Some(onGridReady).orUndefined
+
+      def install_handler(handler: TableSelectionHandler): Unit = {
+        println(s"Installing handler ${handler.mode}")
+        val onSelectionChanged: js.Function0[Unit] = () => {
+          val selection = api.get.getSelectedRows.bind(api.get)()
+            .asInstanceOf[js.Array[Option[sdt.Row]]]
+            .toSeq.collect {
+              case Some(row: sdt.Row) => row
+            }
+          handler.on_change(selection)
+        }
+        p.onSelectionChanged = Some(onSelectionChanged).orUndefined
+      }
+
+      selection_handler match {
+        case Some(handler) => handler.mode match {
+          case TableSelectionHandler.NoSelection =>
+          case TableSelectionHandler.SingleRow => {
+            p.rowSelection = Some("single").orUndefined
+            install_handler(handler)
+          }
+          case TableSelectionHandler.MultiRow => {
+            p.rowSelection = Some("multiple").orUndefined
+            install_handler(handler)
+          }
+        }
+        case None =>
+      }
 
       component.withProps(p)()
     }

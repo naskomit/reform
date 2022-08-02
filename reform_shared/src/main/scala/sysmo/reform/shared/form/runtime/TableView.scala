@@ -70,7 +70,8 @@ object TableView {
         case BasicQuery(Q.SingleTable(id, _, schema), columns, filter, sort, range) => table_schema(id)
         case _ => ???
       }
-      schema_req.map{schema =>
+      schema_req.map{orig_schema =>
+        val schema = orig_schema.modify(_.field("$objectid", sdt.VectorType.Int))
         val builder = sdt.table_manager.incremental_table_builder(schema)
         array.children.foreach(child_id =>
           array.runtime.get_typed[Group](child_id) match {
@@ -89,7 +90,7 @@ object TableView {
                 }.getOrElse(sdt.Value.empty)
                 (field.name, field_value)
               }.toMap
-              builder.append_value_map(row)
+              builder.append_value_map(row + ("$objectid" -> sdt.Value.int(child_id.id)))
             }
             case None =>
           }

@@ -13,9 +13,11 @@ object MicroController extends FormModelHelper {
     override def create(build_graph: BuildGraph, runtime: Runtime): Group = {
 
       def io_common(gb: FB.FieldGroup.Builder): FB.FieldGroup.Builder = gb
-          .field(_("name"), _.char)
-          .field(_("descr"), _.char)
-          .field(_("pin"), _.int)
+        .field(_("name"), _.char)
+        .field(_("descr"), _.char)
+        .field(_("pin"), _.int)
+        .keys(Seq("name"))
+        .label_expr(E.field("name"))
 
       val DigitalInput = field_group("DigitalInput").extend(io_common)
       val AnalogInput = field_group("AnalogInput").extend(io_common)
@@ -33,6 +35,7 @@ object MicroController extends FormModelHelper {
       val Structure = field_group("Structure")
         .field(_("symbol").descr("Symbol"), _.char)
         .array(_("fields").descr("Fields"), Field)
+        .label_expr(E.field("name"))
 
 //      val VariableType = union("VariableType", IntegerVariable, FloatVariable, BooleanVariable, Structure)
 
@@ -53,6 +56,10 @@ object MicroController extends FormModelHelper {
             Structure("symbol" -> "Integer"),
             Structure("symbol" -> "Float"),
             Structure("symbol" -> "Boolean"),
+            Structure("symbol" -> "TCState", "fields" -> Seq(
+              Field("name" -> "TSet", "descr" -> "Setpoint temperature"),
+              Field("name" -> "dT", "descr" -> "Delta T")
+            ))
           ),
           "inputs" -> Seq(
             AnalogInput.apply(

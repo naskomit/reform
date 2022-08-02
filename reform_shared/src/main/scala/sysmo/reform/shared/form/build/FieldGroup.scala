@@ -1,7 +1,8 @@
 package sysmo.reform.shared.form.build
 
+import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.form.build.FieldGroup._cmp
-import sysmo.reform.shared.gremlin.tplight.{gobject => GO}
+import sysmo.reform.shared.gremlin.tplight.{Direction, gobject => GO}
 import sysmo.reform.shared.gremlin.{tplight => TP}
 import sysmo.reform.shared.{expr => E}
 
@@ -30,6 +31,7 @@ case class FieldGroup(vertex: TP.Vertex) extends AbstractGroup {
       HasElement(e).get(_.name).contains(name)
     }.map(e => HasElement(e))
 
+  def label_expr: Option[Expression] = get(_.label_expr)
 }
 
 object FieldGroup extends FormElementCompanion[FieldGroup] {
@@ -39,6 +41,7 @@ object FieldGroup extends FormElementCompanion[FieldGroup] {
     object props extends Props {
       val symbol: GO.Property[String] = GO.Property[String]("symbol")
       val layout: GO.Property[String] = GO.Property[String]("layout")
+      val label_expr: GO.Property[E.Expression] = GO.Property[E.Expression]("label_expr")
     }
   }
   class Builder(val graph: TP.Graph, symbol: String) extends IBuilder {
@@ -106,10 +109,28 @@ object FieldGroup extends FormElementCompanion[FieldGroup] {
       this
     }
 
+    def keys(ids: Seq[String]): this.type = {
+      val has_element_map = vertex.edges(Direction.OUT, Seq(HasElement.Def.label))
+        .map(e => HasElement(e))
+        .map(rel => (rel.name, rel))
+        .toMap
+      ids.zipWithIndex.map{case(id, index) => has_element_map.get(id) match {
+        case Some(rel) => vertex.add_edge(HasKey.Def.label, rel.child_field.vertex, HasKey.Def.props.seq_num.name -> index)
+        case None => throw new IllegalArgumentException(s"FieldGroup ${vertex.value[String]("symbol").getOrElse("Unknown")} has no field $id")
+      }}
+      this
+    }
+
+    def label_expr(v: E.Expression): this.type = {
+      set_prop(_.label_expr, v)
+      this
+    }
+
     def union (symbol: String, f_union: GroupUnion.Builder => GroupUnion.Builder): GroupUnion.Builder = {
       val union_builder = GroupUnion.builder(graph, symbol)
       f_union(union_builder | this)
     }
+
 
     def layout(v: String): this.type = {
       set_prop(_.layout, v)
@@ -194,5 +215,21 @@ object HasPrototype extends FormRelationCompanion[HasPrototype] {
     }
 
     def build: FRT = HasPrototype(edge)
+  }
+}
+
+case class HasKey(edge: TP.Edge) extends FormRelation {
+  override type ED = HasElement.Def.type
+  override val ed = HasElement.Def
+  def child_field: FormElement = FormElement.from_vertex(edge.in_vertex).get
+}
+
+object HasKey extends FormRelationCompanion[HasElement] {
+  object Def extends IDef {
+    val label: String = "HasKey"
+
+    object props extends Props {
+      val seq_num: GO.Property[Int] = GO.Property[Int]("seq_num")
+    }
   }
 }
