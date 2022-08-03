@@ -7,13 +7,14 @@ import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
 import sysmo.reform.components.table.aggrid.{AgGridFacades => agf}
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-import sysmo.reform.components.table.TableSelectionHandler
 
 import scala.scalajs.js
 import scala.util.{Failure, Success}
-import sysmo.reform.shared.data.{TableService, table => sdt}
+import sysmo.reform.shared.table2.{TableService, Table, SelectionHandler}
+import sysmo.reform.shared.field.RecordType
+import cats.syntax.MonadErrorSyntax
 
-class AgGridSourceAgaptor(ds: TableService, source: Q.QuerySource, schema: sdt.Schema) {
+class AgGridSourceAgaptor[U[_]](ds: TableService[U], source: Q.QuerySource, schema: Table.Schema) {
   private def process_filter(filter_model : AgGridFacades.FilterModel): Option[Q.QueryFilter] = {
     val filter_seq = filter_model.toMap.map {case (k, v) =>
       (k, AgGridFacades.extract_filter(v, k))
@@ -53,22 +54,40 @@ class AgGridSourceAgaptor(ds: TableService, source: Q.QuerySource, schema: sdt.S
         source = source, columns = Some(columns), filter = filter, sort = sort, range = Some(range)
       )
 
-      ds.query_table(query).onComplete {
-        case Success(table) => {
-          val data_proxy = agf.table_proxy(table)
-//          val data = table.row_iter.toJSArray
-          val requested_rows = params.endRow - params.startRow
-          val total_rows = if (table.nrow < requested_rows)
-            params.startRow + table.nrow
-          else
-            -1
-          params.successCallback(data_proxy, total_rows)
-        }
-        case Failure(e) => {
-          params.failCallback()
-          throw new RuntimeException("Failed fetching table data", e)
-        }
+      val f_data: ds.MT[Table] = ds.query_table(query)
+      ds.mt.map(f_data){(table: Table) =>
+        val data_proxy = agf.table_proxy(table)
+        //          val data = table.row_iter.toJSArray
+        val requested_rows = params.endRow - params.startRow
+        val total_rows = if (table.nrow < requested_rows)
+          params.startRow + table.nrow
+        else
+          -1
+        params.successCallback(data_proxy, total_rows)
+
       }
+
+      ds.mt.handleError(f_data){error =>
+        params.failCallback()
+        throw new RuntimeException("Failed fetching table data", error)
+      }
+
+//      ds.().onComplete {
+//        case Success(table) => {
+//          val data_proxy = agf.table_proxy(table)
+////          val data = table.row_iter.toJSArray
+//          val requested_rows = params.endRow - params.startRow
+//          val total_rows = if (table.nrow < requested_rows)
+//            params.startRow + table.nrow
+//          else
+//            -1
+//          params.successCallback(data_proxy, total_rows)
+//        }
+//        case Failure(e) => {
+//          params.failCallback()
+//          throw new RuntimeException("Failed fetching table data", e)
+//        }
+//      }
     }
     ag_ds
   }
@@ -77,15 +96,21 @@ class AgGridSourceAgaptor(ds: TableService, source: Q.QuerySource, schema: sdt.S
 }
 
 object AgGridSourceAgaptor{
-  def apply(ds: TableService, source: Q.QuerySource, schema: sdt.Schema): AgGridSourceAgaptor =
+  def apply[U[_]](ds: TableService[U], source: Q.QuerySource, schema: Table.Schema): AgGridSourceAgaptor[U] =
     new AgGridSourceAgaptor(ds, source, schema)
 }
 
 object AgGridComponent extends ReactComponent {
   import japgolly.scalajs.react.ScalaComponent
   import japgolly.scalajs.react.component.Scala.BackendScope
-  case class Props(ds : AgGridSourceAgaptor, columns : Seq[agf.ColumnProps], height: String,
-                   selection_handler: Option[TableSelectionHandler])
+  trait Props {
+    type U[_]
+    val ds : AgGridSourceAgaptor[U]
+    val columns : Seq[agf.ColumnProps]
+    val height: String
+    val selection_handler: Option[SelectionHandler]
+  }
+
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -105,8 +130,13 @@ object AgGridComponent extends ReactComponent {
     .renderBackend[Backend]
     .build
 
-  def apply(ds: TableService, table: Q.QuerySource, schema: sdt.Schema,
-            columns: Seq[agf.ColumnProps], height: String, selection_handler: Option[TableSelectionHandler]): Unmounted =
-    component(Props(AgGridSourceAgaptor(ds, table, schema), columns, height, selection_handler))
-
+  def apply[T[_]](_ds: TableService[T], _table: Q.QuerySource, _schema: Table.Schema,
+                  _columns: Seq[agf.ColumnProps], _height: String, _selection_handler: Option[SelectionHandler]): Unmounted =
+    component(new Props {
+      type U[X] = T[X]
+      val ds = AgGridSourceAgaptor(_ds, _table, _schema)
+      val columns = _columns
+      val height = _height
+      val selection_handler = _selection_handler
+    })
 }

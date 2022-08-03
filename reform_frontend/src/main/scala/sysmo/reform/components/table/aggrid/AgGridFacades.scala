@@ -3,16 +3,15 @@ package sysmo.reform.components.table.aggrid
 import org.scalajs.dom
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.{query => Q}
+import sysmo.reform.shared.table2.{Table, SelectionHandler}
 
 import scala.scalajs.js
 import js.JSConverters._
 import scala.scalajs.js.annotation.JSImport
 import japgolly.scalajs.react.{Children, JsComponent}
-import sysmo.reform.components.table.TableSelectionHandler
 
 import scala.scalajs.js.{UndefOr, |}
 import scalajs.js.annotation.JSGlobal
-import sysmo.reform.shared.data.{table => sdt}
 import sysmo.reform.util.log.Logging
 
 object AgGridFacades extends Logging {
@@ -166,7 +165,7 @@ object AgGridFacades extends Logging {
   @js.native
   trait ValueGetterParams extends js.Object {
     val node: RowNode = js.native
-    val data: js.UndefOr[Option[sdt.Row]] = js.native
+    val data: js.UndefOr[Option[Table.Row]] = js.native
     val column: Column = js.native
   }
 
@@ -211,9 +210,9 @@ object AgGridFacades extends Logging {
   @JSGlobal
   class Proxy(target: Any, handler: js.Any) extends js.Object
 
-  def table_proxy(table: sdt.Table): Proxy = {
-    val getter : js.Function3[sdt.Table, String, js.Any, Option[sdt.Row]] =
-      (table: sdt.Table, prop: String, receiver: js.Any) => {
+  def table_proxy(table: Table): Proxy = {
+    val getter : js.Function3[Table, String, js.Any, Option[Table.Row]] =
+      (table: Table, prop: String, receiver: js.Any) => {
         val index = prop.toInt
         if (index < table.nrow) {
           Some(table.row(index))
@@ -267,7 +266,7 @@ object AgGridFacades extends Logging {
     val component = JsComponent[Props, Children.None, Null](AgGridReact)
 
     def apply(datasource: TableDatasource, columns : Seq[ColumnProps],
-              selection_handler: Option[TableSelectionHandler]) = {
+              selection_handler: Option[SelectionHandler]) = {
       val p = (new js.Object).asInstanceOf[Props]
       var api: Option[API] = None
       var column_api: Option[ColumnAPI] = None
@@ -286,13 +285,13 @@ object AgGridFacades extends Logging {
       }
       p.onGridReady = Some(onGridReady).orUndefined
 
-      def install_handler(handler: TableSelectionHandler): Unit = {
+      def install_handler(handler: SelectionHandler): Unit = {
         println(s"Installing handler ${handler.mode}")
         val onSelectionChanged: js.Function0[Unit] = () => {
           val selection = api.get.getSelectedRows.bind(api.get)()
-            .asInstanceOf[js.Array[Option[sdt.Row]]]
+            .asInstanceOf[js.Array[Option[Table.Row]]]
             .toSeq.collect {
-              case Some(row: sdt.Row) => row
+              case Some(row: Table.Row) => row
             }
           handler.on_change(selection)
         }
@@ -301,12 +300,12 @@ object AgGridFacades extends Logging {
 
       selection_handler match {
         case Some(handler) => handler.mode match {
-          case TableSelectionHandler.NoSelection =>
-          case TableSelectionHandler.SingleRow => {
+          case SelectionHandler.NoSelection =>
+          case SelectionHandler.SingleRow => {
             p.rowSelection = Some("single").orUndefined
             install_handler(handler)
           }
-          case TableSelectionHandler.MultiRow => {
+          case SelectionHandler.MultiRow => {
             p.rowSelection = Some("multiple").orUndefined
             install_handler(handler)
           }
