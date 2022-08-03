@@ -44,11 +44,18 @@ object MicroController extends FormModelHelper {
         .field(_("descr").descr("Description"), _.char)
         .ref(_("type").descr("Type"), _(Structure, "symbol").label_expr(E.field("symbol")))
 
+      val InputEvent = field_group("InputEvent")
+        .field(_("name").descr("Name"), _.char)
+        .label_expr(E.field("name"))
+
+      val Event = union("Event", InputEvent)
+
       val Controller = field_group("Controller")
         .array(_("structures").descr("Structures"), Structure, _.label_expr(E.field("symbol")))
         .array(_("inputs").descr("Inputs"), Input)
         .array(_("outputs").descr("Outputs"), Output)
         .ref(_("state").descr("State"), _(Structure, "symbol").label_expr(E.field("symbol")))
+        .array(_("events").descr("Events"), Event)
 
       val controller = runtime.instantiate(
         Controller(
@@ -72,6 +79,9 @@ object MicroController extends FormModelHelper {
               "name" -> "heat_on", "descr" -> "Heater On",
               "pin" -> 14
             )
+          ),
+          "events" -> Seq(
+            InputEvent("name" -> "Temperature too high")
           )
         )
       )
