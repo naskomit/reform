@@ -1,9 +1,10 @@
 package sysmo.reform.components.panels
 
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.ApplicationConfiguration
 import sysmo.reform.components.ApplicationPanel
-import sysmo.reform.components.table.PredefinedTableViewer
+//import sysmo.reform.components.table.PredefinedTableViewer
 import sysmo.reform.router.{Category, Page, PageBase}
 import sysmo.reform.shared.data.{table => sdt}
 
@@ -15,7 +16,7 @@ case class TableGroupPanel(name: String, label: Option[String], icon: String, ch
 object TableGroupPanel {
   case class PanelProps(app_config: ApplicationConfiguration, table_id: String, table_label: Option[String])
   val component = ScalaComponent.builder[PanelProps]("TablePanels")
-    .render_P(p => PredefinedTableViewer(p.app_config, p.table_id, p.table_label))
+    .render_P(p => <.div("Not implemented")) // PredefinedTableViewer(p.app_config, p.table_id, p.table_label)
     .build
 
   class Builder(_name: String, _label: Option[String]) {

@@ -11,8 +11,6 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import sysmo.reform.shared.table2.{TableService, Table, SelectionHandler}
-import sysmo.reform.shared.field.RecordType
-import cats.syntax.MonadErrorSyntax
 
 class AgGridSourceAgaptor[U[_]](ds: TableService[U], source: Q.QuerySource, schema: Table.Schema) {
   private def process_filter(filter_model : AgGridFacades.FilterModel): Option[Q.QueryFilter] = {

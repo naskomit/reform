@@ -62,7 +62,7 @@ object Value {
     }
   }
 
-  case class RecordValue[T <: Record : RecordType](v: Option[T]) extends Value[T] {
+  case class RecordValue[T <: Record](v: Option[T]) extends Value[T] {
     override def as_record[U : ClassTag]: Option[U] = v match {
       case Some(x: U) => Some(x)
       case Some(x) => None
@@ -81,15 +81,15 @@ object Value {
   def date(x: Option[Double]): DateValue = DateValue(x)
   def date(x: Double): DateValue = DateValue(Some(x))
   def date(x: java.util.Date): DateValue = DateValue(Some(x.getTime.toDouble))
-  def record[T : RecordType](x: T): RecordValue[T] = RecordValue(Some(x))
-  def record[T : RecordType](x: Option[T]): RecordValue[T] = RecordValue(x)
+  def record[T <: Record](x: T): RecordValue[T] = RecordValue(Some(x))
+  def record[T <: Record](x: Option[T]): RecordValue[T] = RecordValue(x)
   def empty(tpe: FieldType = FieldType.Int): Value[_] = tpe match {
     case FieldType.Int => int(None)
     case FieldType.Real => real(None)
     case FieldType.Bool => bool(None)
     case FieldType.Char => char(None)
   }
-  def empty[T : RecordType]: Value[_] = record[T](None)
+  def empty[T <: Record]: Value[_] = record[T](None)
 //  def empty: Value[_] = IntValue(None)
 }
 

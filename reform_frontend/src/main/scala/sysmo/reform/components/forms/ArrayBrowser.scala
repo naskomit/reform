@@ -7,39 +7,44 @@ import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms.editors.AbstractFormComponent
 import sysmo.reform.components.forms.layouts.ArrayChildElement
 import sysmo.reform.components.forms.options.FormRenderingOptions
-import sysmo.reform.components.table.{RecordTableViewer, TableSelectionHandler}
+import sysmo.reform.components.table.RecordTableViewer
 import sysmo.reform.components.menu.ButtonToolbar
 import sysmo.reform.shared.form.{build => FB}
 import sysmo.reform.shared.form.{runtime => FR}
 import sysmo.reform.shared.{query => Q}
-import sysmo.reform.shared.data.{NoFilter, TableService, table => T}
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.components.layouts.{NamedContent, TabbedLayout}
-import sysmo.reform.shared.data.table.{Row, Schema}
+import sysmo.reform.shared.table2.{SelectionHandler, Table, TableService}
 import sysmo.reform.shared.form.build.{FieldGroup, GroupUnion}
+import cats.syntax.flatMap
+import sysmo.reform.shared.util.Named
 
 import scala.concurrent.Future
 
 object ArrayBrowser extends ReactComponent {
-  class SelectionHandler() extends TableSelectionHandler {
+  class SHandler extends SelectionHandler {
     //      override val id_columns: Seq[String] = _
-    override val mode: TableSelectionHandler.RowSelectionMode = TableSelectionHandler.SingleRow
-    override def on_change(selection: Iterable[Row]): Unit = {
+    override val mode = SelectionHandler.SingleRow
+    override def on_change(selection: Iterable[Table.Row]): Unit = {
       if (selection.size == 1) {
-
+        println(s"Selected row $selection")
       }
     }
   }
 
-  case class Props(obj: FR.Array, table_service: TableService, options: FormRenderingOptions)
-  case class State(schema: Seq[T.Schema], selection_handler: Option[SelectionHandler])
+  trait Props {
+    val obj: FR.Array
+    val table_service: TableService[Future]
+    val options: FormRenderingOptions
+  }
+  case class State(schemas: Seq[Table.Schema], selection_handler: Option[SelectionHandler])
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      if (s.schema.nonEmpty) {
-        TabbedLayout(s.schema.map(schema =>
-          NamedContent(schema.name,
+      if (s.schemas.nonEmpty) {
+        TabbedLayout(s.schemas.map(schema =>
+          NamedContent(schema.symbol,
             RecordTableViewer(
-              p.table_service, schema, Q.SingleTable(schema.name), "400px", s.selection_handler
+              p.table_service, schema, Q.SingleTable(schema.symbol), "400px", s.selection_handler
             )
           )
         ))
@@ -57,13 +62,12 @@ object ArrayBrowser extends ReactComponent {
 
   def get_schemas(p: Props, mod_state: (State => State) => Callback): AsyncCallback[Unit] = {
     AsyncCallback.fromFuture{
-      p.table_service.list_tables(NoFilter)
-        .flatMap(tables =>
-          Future.sequence(tables.map { table_id=>
+      p.table_service.list_tables()
+        .flatMap(tables => Future.sequence(tables.map { table_id=>
             p.table_service.table_schema(table_id.name)
-          })
-        )
-    }.flatMap(schema_list => mod_state(s => s.copy(schema = schema_list)).asAsyncCallback)
+        })
+      )
+    }.flatMap(schema_list => mod_state(s => s.copy(schemas = schema_list)).asAsyncCallback)
 
   }
 
@@ -72,20 +76,23 @@ object ArrayBrowser extends ReactComponent {
       .initialState(State(Seq(), None))
       .renderBackend[Backend]
       .componentDidMount(
-        f => f.modState(s => s.copy(selection_handler = Some(new SelectionHandler))).asAsyncCallback
+        f => f.modState(s => s.copy(selection_handler = Some(new SHandler))).asAsyncCallback
           >> get_schemas(f.props, f.modState)
       )
       .componentDidUpdate{f =>
         if (f.currentProps.obj != f.prevProps.obj) {
-          f.modState(s => s.copy(schema = Seq())).asAsyncCallback >> get_schemas(f.currentProps, f.modState)
+          f.modState(s => s.copy(schemas = Seq())).asAsyncCallback >> get_schemas(f.currentProps, f.modState)
         } else {
           AsyncCallback.unit
         }
       }
       .build
 
-  def apply(field_obj: FR.Array, options: FormRenderingOptions): Unmounted = {
-    val table_service: TableService = FR.TableView(field_obj)
-    component(Props(field_obj, table_service, options))
+  def apply(_field_obj: FR.Array, _options: FormRenderingOptions): Unmounted = {
+    component(new Props{
+      val obj = _field_obj
+      val table_service = FR.TableView(_field_obj)
+      val options = _options
+    })
   }
 }

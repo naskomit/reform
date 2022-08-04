@@ -78,7 +78,7 @@ object RecordTableViewer extends ReactComponent {
   def apply[T[_]](_ds : TableService[T], _schema: Table.Schema, _source: Q.QuerySource,
                   _height: String = "800px", _selection_handler: Option[SelectionHandler]): Unmounted = {
     component(new Props{
-      type F = T
+      type F[X] = T[X]
       val ds = _ds
       val source = _source
       val schema = _schema

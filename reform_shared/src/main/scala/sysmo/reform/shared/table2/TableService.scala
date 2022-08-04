@@ -3,7 +3,7 @@ package sysmo.reform.shared.table2
 import sysmo.reform.shared.query.Query
 import sysmo.reform.shared.util.Named
 import cats.MonadThrow
-import sysmo.reform.shared.field.RecordType
+import sysmo.reform.shared.field.Schema
 
 trait TableService[U[_]] {
   type MT[T] = U[T]
@@ -11,8 +11,8 @@ trait TableService[U[_]] {
   type TableIdType
 //  def row_count : Future[Int]
   def list_tables(): MT[Seq[Named]]
-  def table_schema(table_id: TableIdType): MT[RecordType[_]]
-  def table_schema(table_id: String): MT[RecordType[_]]
+  def table_schema(table_id: TableIdType): MT[Schema]
+  def table_schema(table_id: String): MT[Schema]
   def query_table(q : Query): MT[Table]
 
 //  def test(): Unit = {
