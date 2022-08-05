@@ -60,30 +60,7 @@ object TableView {
         case x => ???
       }
     }
-//    override def schema: Schema = new GroupAsTableSchema(group.prototype)
 
-    //        array.children.foreach(child_id =>
-    //          array.runtime.get_typed[Group](child_id) match {
-    //            case Some(child) => {
-    //              val row: Map[String, sdt.Value[_]] = schema.fields.map { field =>
-    //                val field_value: sdt.Value[_] = child.child(field.name).flatMap(array.runtime.get).map{
-    //                  case AtomicValue(prototype, value, id, parent_rel) => value match {
-    //                    case NoValue => sdt.Value.empty
-    //                    case AllValues => ???
-    //                    case v: SomeValue[_] => vector_value(v)
-    //                    case MultiValue(v) => sdt.Value.char("...")
-    //                  }
-    //                  case g: Group => sdt.Value.char(s"[${g.prototype.symbol}]")
-    //                  case a: Array => sdt.Value.char(s"Array[${a.prototype.prototype.symbol}]")
-    //                  case r: Reference => sdt.Value.char(r.ref_id.toString)
-    //                }.getOrElse(sdt.Value.empty)
-    //                (field.name, field_value)
-    //              }.toMap
-    //              builder.append_value_map(row + ("$objectid" -> sdt.Value.int(child_id.id)))
-    //            }
-    //            case None =>
-    //          }
-    //        )
     override protected def _get(col: Int): Value[_] = {
       schema.field(col).flatMap(field => group.child(field.name)).flatMap(group.runtime.get).map{
         case AtomicValue(prototype, value, id, parent_rel) => value match {

@@ -4,6 +4,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
 import sysmo.reform.components.ReactComponent
 import sysmo.reform.components.forms.options.FormRenderingOptions
+import sysmo.reform.components.property.PropertyEditor
 import sysmo.reform.shared.{tree => T}
 import sysmo.reform.components.tree_nav.TreeNavigatorComponent
 import sysmo.reform.shared.form.{runtime => FR}
@@ -28,7 +29,7 @@ object TreeBrowser extends ReactComponent {
             <.div(^.cls:= "col-md-8",
               <.div(^.cls:= "wrapper wrapper-white",
                 s.active_item.flatMap(id => p.runtime.get(id)) match {
-                  case Some(group: FR.Group) => FormEditorComponent(group)
+                  case Some(group: FR.Group) => PropertyEditor(new FR.PropertyView.GroupAsPropertySource(group))
                   case Some(array: FR.Array) => ArrayBrowser(array, FormRenderingOptions.default)
                   case _ => "Nothing to show"
                 }

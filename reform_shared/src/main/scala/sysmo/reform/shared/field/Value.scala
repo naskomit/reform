@@ -1,13 +1,17 @@
 package sysmo.reform.shared.field
 
 import scala.reflect.ClassTag
+import scala.runtime.Nothing$
 
-sealed trait Value[T] {
-  val v: Option[T]
-
+sealed trait Value[+T] {
+  protected val v: Option[T]
+  def descr: Option[String] = None
+  def make_descr: String = descr.getOrElse(v match {
+    case Some(x) => x.toString
+    case None => "None"
+  })
   def get: T = v.get
   def get_opt: Option[T] = v
-  def get_or_else(x: T): T = v.getOrElse(x)
 
   def is_set: Boolean = v.isDefined
   def not_set: Boolean = v.isEmpty
@@ -29,6 +33,15 @@ sealed trait Value[T] {
 }
 
 object Value {
+  case object NoValue extends Value[Nothing] {
+    val v: Option[Nothing] = None
+  }
+
+  case object AllValues extends Value[Any] {
+    val v: Option[Nothing] = None
+    override def descr: Option[String] = Some("ALL")
+  }
+
   case class RealValue(v: Option[Double]) extends Value[Double] {
     override def as_real: Option[Double] = v
     override def as_int: Option[Int] = v.map(_.round.toInt)
