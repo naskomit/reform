@@ -67,8 +67,8 @@ sealed trait ContainmentPredicateOp extends PredicateOp
 case object Within extends ContainmentPredicateOp
 case object Without extends ContainmentPredicateOp
 
-//  case class ContainmentPredicate(op: ContainmentPredicateOp, element: Expression, container: Seq[Constant])
-//    extends PredicateExpression
+case class ContainmentPredicate(op: ContainmentPredicateOp, element: Expression, container: Seq[Constant])
+  extends PredicateExpression
 
 object Expression {
   def apply(v: Value): Constant = Constant(v)

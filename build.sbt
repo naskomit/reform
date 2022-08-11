@@ -15,15 +15,15 @@ val test_libs = Seq(
   "org.scalatest" %% "scalatest" % "3.2.12" % "test",
 )
 
-/** =================== Reform ====================== */
+/** =================== Reform =================== */
 
 lazy val root = (project in file("."))
-  .aggregate(reform.jvm, reform.js)
+  .aggregate(shared.jvm, shared.js, backend)
 
 val circeVersion = "0.14.1"
 
-lazy val reform = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Full)
+lazy val shared = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .settings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core",
@@ -31,12 +31,14 @@ lazy val reform = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-parser",
       "io.circe" %%% "circe-generic-extras",
     ).map(_ % circeVersion),
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.7.0"
-    ),
+//    libraryDependencies ++= Seq(
+//      "com.lihaoyi" %%% "pprint" % "0.7.0"
+//    ),
     libraryDependencies ++= test_libs,
   ).jvmSettings(
     libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided",
+//    Test / scalaSource := new File("/data/Workspace/SysMo/re-form/reform/jvm/src/test/scala")
+    //Test / unmanagedSourceDirectories += //baseDirectory.value / "../shared/src/test/scala"
   ).jsSettings(
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.0.0",
@@ -61,8 +63,11 @@ lazy val reform = crossProject(JSPlatform, JVMPlatform)
     )
   ).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
 
-// lazy val reform_jvm = project
-//   .settings(
+lazy val backend = project
+   .settings(
+     libraryDependencies ++= test_libs,
+     Test / unmanagedSourceDirectories += baseDirectory.value / "../shared/src/test/scala"
+   ).dependsOn(shared.jvm)
 //     // Logging
 // //    libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.36",
 // //    libraryDependencies += "org.slf4j" % "slf4j-reload4j" % "1.7.36",
@@ -153,7 +158,7 @@ lazy val reform = crossProject(JSPlatform, JVMPlatform)
 //     libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
 //   )
 
-/** =================== Covid Hub ====================== */
+/** =================== Covid Hub =================== */
 
 
-onLoad in Global := (onLoad in Global).value andThen {s: State => "project reformJVM" :: s} //andThen {s: State => "run" :: s}
+onLoad in Global := (onLoad in Global).value andThen {s: State => "project backend" :: s} //andThen {s: State => "run" :: s}

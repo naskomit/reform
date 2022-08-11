@@ -9,7 +9,7 @@ object Transport extends CirceTransport {
   import sysmo.reform.shared.data.Transport._
 
   implicit val codec_ColumnRef: Codec[ColumnRef] = deriveCodec[ColumnRef]
-  implicit val enc_Constant: Encoder[Constant] = deriveCodec[Constant]
+  implicit val codec_Constant: Codec[Constant] = deriveCodec[Constant]
 
   implicit val codec_LogicalAnd: Codec[LogicalAnd] = deriveCodec
   implicit val codec_LogicalOr: Codec[LogicalOr] = deriveCodec
@@ -80,7 +80,7 @@ object Transport extends CirceTransport {
       case "Without" => Without
     }
 
-//  implicit val codec_ContainmentPredicate: Codec[ContainmentPredicate] = deriveCodec[ContainmentPredicate]
+  implicit val codec_ContainmentPredicate: Codec[ContainmentPredicate] = deriveCodec[ContainmentPredicate]
 
   implicit val codec_PredicateExpression: Codec[PredicateExpression] = deriveCodec[PredicateExpression]
 

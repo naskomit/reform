@@ -22,7 +22,7 @@ trait Evaluator[_F[+_]] {
   type EContext = Context[F, Value]
   /** Begin requirements */
   val mt: MonadThrow[F]
-  import Value._
+  import Value.implicits._
   /** End requirements */
 
 
@@ -40,16 +40,16 @@ trait Evaluator[_F[+_]] {
   })
 
   def num_compare(arg1: Expression, arg2: Expression, cmp_fn: Evaluator.CmpFn, ctx: EContext): F[Value] = {
-    mt.map2(as_float(eval(arg1, ctx)), as_float(eval(arg2, ctx)))((x, y) => Value(cmp_fn(x, y)))
+    mt.map2(as_float(eval(arg1, ctx)), as_float(eval(arg2, ctx)))((x, y) => cmp_fn(x, y))
   }
 
   def bool_eval_until(expr_list: List[PredicateExpression], until: Boolean, ctx: EContext): F[Value] = {
     if (expr_list.isEmpty)
-      mt.pure(Value(!until))
+      mt.pure(!until)
     else {
       val (head :: tail) = expr_list
       mt.flatMap(eval(head, ctx))(x => x.get[Boolean] match {
-        case Some(x) if x == until => mt.pure(Value(until))
+        case Some(x) if x == until => mt.pure(until)
         case Some(x) if x != until => bool_eval_until(tail, until, ctx)
         case x => mt.raiseError(IncorrectTypeError(x, Boolean.getClass.getName))
       })
@@ -65,13 +65,13 @@ trait Evaluator[_F[+_]] {
         case LogicalAnd(expr_list@_*) => bool_eval_until(expr_list.toList, until = false, ctx)
         case LogicalOr(expr_list@_*) => bool_eval_until(expr_list.toList, until = true, ctx)
         case LogicalNot(expr) => mt.flatMap(eval(expr, ctx))(x => x.get[Boolean] match {
-          case Some(x) => mt.pure(Value(!x))
+          case Some(x) => mt.pure(!x)
           case x => mt.raiseError(IncorrectTypeError(x, Boolean.getClass.getName))
         })
 
         case CommonPredicate(op, arg1, arg2) => op match {
-          case Equal => mt.map2(eval(arg1, ctx), eval(arg2, ctx))((x, y) => Value(x == y))
-          case NotEqual => mt.map2(eval(arg1, ctx), eval(arg2, ctx))((x, y) => Value(x != y))
+          case Equal => mt.map2(eval(arg1, ctx), eval(arg2, ctx))((x, y) => x == y)
+          case NotEqual => mt.map2(eval(arg1, ctx), eval(arg2, ctx))((x, y) => x != y)
         }
 
         case NumericalPredicate(op, arg1, arg2) => op match {
@@ -80,7 +80,7 @@ trait Evaluator[_F[+_]] {
           case NP_> => num_compare(arg1, arg2, Evaluator.compare_fns.>, ctx)
           case NP_>= => num_compare(arg1, arg2, Evaluator.compare_fns.>=, ctx)
         }
-        case StringPredicate(op, arg1, arg2) => ???
+//        case StringPredicate(op, arg1, arg2) => ???
 //        case ContainmentPredicate(op, element, container) => ???
         //      case ContainmentPredicate(op, element, container) => {
         //        eval(element, ctx) match {
@@ -110,4 +110,8 @@ object Evaluator {
     val >= : CmpFn = (x, y) => x >= y
   }
 
+  def apply[F[+_]](implicit _mt: MonadThrow[F]): Evaluator[F] = new Evaluator[F] {
+    /** Begin requirements */
+    override val mt = _mt
+  }
 }
