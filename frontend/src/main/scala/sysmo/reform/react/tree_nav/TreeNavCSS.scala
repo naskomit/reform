@@ -6,15 +6,15 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
   import dsl._
 
   /** Tree navigator */
-  val nav = style(
+  val nav: StyleA = style(
 
   )
 
-  val nav_item = style(
+  val nav_item: StyleA = style(
     cursor.pointer,
   )
 
-  val row = style(
+  val row: StyleA = style(
     display.flex,
     flexWrap.nowrap,
     &.hover(
@@ -22,13 +22,13 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
     )
   )
 
-  val row_selected = style(
+  val row_selected: StyleA = style(
     backgroundColor(c"#e0eff5"),
     borderTop(1.px, solid, c"#c4e0eb"),
     borderBottom(1.px, solid, c"#c4e0eb")
   )
 
-  val item_expand = style(
+  val item_expand: StyleA = style(
     display.flex,
     justifyContent.center,
     alignItems.center,
@@ -37,22 +37,22 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
     border(1.px, solid, grey(200))
   )
 
-  val item_expand_leaf = style(
+  val item_expand_leaf: StyleA = style(
     item_expand,
     borderColor(transparent)
   )
 
-  val item_icon = style(
+  val item_icon: StyleA = style(
     marginLeft(10.px),
     marginRight(10.px),
     display.inline
   )
 
-  val item_name = style(
+  val item_name: StyleA = style(
     display.inline
   )
 
-  val item_context_menu = style(
+  val item_context_menu: StyleA = style(
     marginLeft(auto),
     marginRight(10.px),
     padding(3.px),
@@ -64,7 +64,7 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
     )
   )
 
-  val context_menu_container = style(
+  val context_menu_container: StyleA = style(
     position.absolute,
 //    float.left,
     border.solid,
@@ -81,7 +81,7 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
 //    left(0.px)
   )
 
-  val context_menu_item = style(
+  val context_menu_item: StyleA = style(
     padding(10.px),
     &.hover(
       backgroundColor(grey(220))
@@ -94,7 +94,7 @@ class TreeNavCSS(implicit r: StyleSheet.Register) extends StyleSheet.Inline()(r)
   //  )
 
 
-  val item_children = style(
+  val item_children: StyleA = style(
     display.block,
     borderLeftWidth(1.px),
     borderLeftStyle.solid,

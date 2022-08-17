@@ -20,8 +20,8 @@ object log {
 
   object Logger {
     class Default(fmt_str: String) extends Logger {
-      def format(msg: String, level: String) = s"[$level/$fmt_str] $msg"
-      def format(msg: Json, level: String) = s"[$level/$fmt_str]"
+      def format(msg: String, level: String): String = s"[$level/$fmt_str] $msg"
+      def format(msg: Json, level: String): String = s"[$level/$fmt_str]"
       def debug(msg: String): Unit = dom.console.log(format(msg, "DEBUG"))
       def debug(msg: Json): Unit = dom.console.log(format(msg, "DEBUG"), circe_2_js(msg))
       def info(msg: String): Unit= dom.console.log(format(msg, "INFO"))
@@ -45,6 +45,6 @@ object log {
   }
 
   trait Logging {
-    lazy val logger = Logger.get_logger(this.getClass)
+    lazy val logger: Logger = Logger.get_logger(this.getClass)
   }
 }

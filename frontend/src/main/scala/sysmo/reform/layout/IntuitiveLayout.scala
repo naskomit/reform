@@ -16,7 +16,7 @@ object IntuitiveLayout extends Layout {
   case class Props(router: RouterCtl[Page], resolution: Resolution[Page], pages: PageCollection, elem_height: Int = 50)
 
   final class Backend($: BackendScope[Props, State]) {
-    def header(p: Props) = {
+    def header(p: Props): VdomElement = {
       <.div(^.className:="dev-page-header",
         //<.a(^.href:= p.router.urlFor(p.pages.home).value,
         <.div(^.className:="dph-logo",
@@ -30,12 +30,12 @@ object IntuitiveLayout extends Layout {
             ))))
     }
 
-    def footer() = {
+    def footer(): VdomElement = {
       <.div(^.className:="dev-page-footer dev-page-footer-fixed dev-page-footer-effect",
         "Footer")
     }
 
-    def panel_link(p: Props, x: Page) = {
+    def panel_link(p: Props, x: Page): VdomElement = {
       <.li(p.router.link(x)(<.i(^.className := x.icon), x.make_label))
     }
 
@@ -51,7 +51,7 @@ object IntuitiveLayout extends Layout {
 
     })
 
-    def sidebar(p: Props, s: State) = {
+    def sidebar(p: Props, s: State): VdomElement = {
       val links : TagMod = p.pages.html(
         x => panel_link(p, x)
       )(
@@ -71,7 +71,7 @@ object IntuitiveLayout extends Layout {
         ))
     }
 
-    def content(resolution: Resolution[Page]) = {
+    def content(resolution: Resolution[Page]): VdomElement = {
       <.div(^.className:="dev-page-content",
         <.div(^.className:= "container",resolution.render()))
     }
