@@ -122,32 +122,32 @@ lazy val backend = project
 
 //   ).dependsOn(reform_shared.jvm)
 
-// lazy val reform_js = project
-//   .settings(
-//     libraryDependencies ++= Seq(
-//       "org.scala-js" %%% "scalajs-dom" % "2.0.0",
-//       "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
-//       "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
-//       "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
-//       "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
-//       "com.lihaoyi" %%% "autowire" % "0.3.3",
-//       //    "org.typelevel" %%% "cats-effect" % "3.3.5",
-//       //    "co.fs2" %%% "fs2-core" % "3.2.0",
-//       "io.monix" %%% "monix" % "3.4.0",
-//     ),
-//     Compile / npmDependencies ++= Seq(
-//       "react" -> "17.0.0",
-//       "react-dom" -> "17.0.0",
-//       "ag-grid-react"     -> "26.2.0",
-//       "ag-grid-community" -> "26.2.0",
-//       "react-select" ->  "5.2.2",
-//       "plotly.js" -> "1.47.4",
-//       "mermaid" -> "8.14.0",
-//       "react-transition-group" -> "4.4.2",
-//     )
-//   )
-//   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
-//   .dependsOn(reform_shared.js)
+ lazy val frontend = project
+   .settings(
+     libraryDependencies ++= Seq(
+       "org.scala-js" %%% "scalajs-dom" % "2.0.0",
+       "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
+       "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
+       "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
+       "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
+       "com.lihaoyi" %%% "autowire" % "0.3.3",
+       //    "org.typelevel" %%% "cats-effect" % "3.3.5",
+       //    "co.fs2" %%% "fs2-core" % "3.2.0",
+       "io.monix" %%% "monix" % "3.4.0",
+     ),
+     Compile / npmDependencies ++= Seq(
+       "react" -> "17.0.0",
+       "react-dom" -> "17.0.0",
+       "ag-grid-react"     -> "26.2.0",
+       "ag-grid-community" -> "26.2.0",
+       "react-select" ->  "5.2.2",
+       "plotly.js" -> "1.47.4",
+       "mermaid" -> "8.14.0",
+       "react-transition-group" -> "4.4.2",
+     )
+   )
+   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+   .dependsOn(shared.js)
 
 
 
@@ -158,7 +158,33 @@ lazy val backend = project
 //     libraryDependencies += "org.scalameta" %% "scalameta" % "4.4.33"
 //   )
 
-/** =================== Covid Hub =================== */
+/** =================== Demo 1 =================== */
+lazy val demo1_frontend = project
+  .in(file("apps/demo1/frontend"))
+  .settings(
+    scalaJSLinkerConfig ~= { _.withOptimizer(false) },
+    scalaJSUseMainModuleInitializer := true,
+    webpackBundlingMode := BundlingMode.LibraryOnly(),
+    webpackEmitSourceMaps := true
+  )
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .dependsOn(frontend)
 
+lazy val demo1_backend = project
+  .in(file("apps/demo1/backend"))
+  .settings(
+    scalaJSProjects := Seq(demo1_frontend),
+    libraryDependencies += guice,
+    libraryDependencies += "com.vmunier" %% "scalajs-scripts" % "1.2.0",
+    Assets / pipelineStages  := Seq(scalaJSPipeline),
+    pipelineStages := Seq(digest, gzip),
+    // triggers scalaJSPipeline when using compile or continuous compilation
+    Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
+    dockerChmodType := DockerChmodType.UserGroupWriteExecute,
+    dockerBaseImage := "openjdk:11",
+    dockerExposedPorts += 9000,
+  )
+  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin)
+  .dependsOn(backend)
 
-onLoad in Global := (onLoad in Global).value andThen {s: State => "project backend" :: s} //andThen {s: State => "run" :: s}
+onLoad in Global := (onLoad in Global).value andThen {s: State => "project demo1_backend" :: s} //andThen {s: State => "run" :: s}

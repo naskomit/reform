@@ -1,0 +1,20 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET        /                             sysmo.coviddata.controllers.Application.index
+#POST        /api/table       sysmo.coviddata.controllers.Application.table_api
+#POST        /api/chart       sysmo.coviddata.controllers.Application.chart_api
+
+# Prefix must match `play.assets.urlPrefix`
+GET        /assets/*file                 controllers.Assets.at(file)
+GET        /versionedAssets/*file        controllers.Assets.versioned(path="/public", file: Asset)
+
+# Source files
+# TODO Remove in production
+GET     /frontend/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/frontend", file)
+GET     /shared/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/shared", file)
+
+#GET     /src/main/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/covidhub_frontend/src/main", file)
+#GET     /reform_shared/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/covidhub_shared", file)
