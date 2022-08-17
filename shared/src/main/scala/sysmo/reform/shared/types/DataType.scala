@@ -1,6 +1,6 @@
 package sysmo.reform.shared.types
 
-import sysmo.reform.shared.data.{ObjectId}
+import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.expr.Expression
 
 sealed trait DataType {
@@ -15,7 +15,9 @@ sealed trait DataType {
 }
 
 /** AtomicDataType */
-sealed trait AtomicDataType extends DataType
+sealed trait AtomicDataType extends DataType {
+  def default: Value = Value.empty
+}
 
 object AtomicDataType extends AtomicDataTypeAux {
   case object Real extends AtomicDataType {

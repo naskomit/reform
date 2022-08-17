@@ -62,38 +62,40 @@ object MicroController {
       f_ref("state", Type) +
       f_array("triggers", Trigger)
 
-    import sysmo.reform.shared.runtime.Instantiation._
     val runtime = LocalRuntime()
-    val controller = runtime.instantiate(
-      Controller(
-        "structures" -> Seq(
-          AtomicType("symbol" -> "Integer"),
-          AtomicType("symbol" -> "Float"),
-          AtomicType("symbol" -> "Boolean"),
-          StructureType(
-            "symbol" -> "TCState",
-            "fields" -> Seq(
-              Field("name" -> "TSet", "descr" -> "Setpoint temperature"),
-              Field("name" -> "dT", "descr" -> "Delta T")
-            ))
-        ),
-        "inputs" -> Seq(
-          AnalogInput(
-            "name" -> "Tamb", "descr" -> "Ambient temperature",
-            "quantity" -> "Temperature", "pin" -> 12
+    import sysmo.reform.shared.runtime.Instantiation
+    val inst = new Instantiation(runtime)
+    import inst._
+    import Value.implicits._
+    val controller: RuntimeObject[EitherRes] =
+        Controller(
+          "structures" -> Seq(
+            AtomicType("symbol" -> "Integer"),
+            AtomicType("symbol" -> "Float"),
+            AtomicType("symbol" -> "Boolean"),
+            StructureType(
+              "symbol" -> "TCState",
+              "fields" -> Seq(
+                Field("name" -> "TSet", "descr" -> "Setpoint temperature"),
+                Field("name" -> "dT", "descr" -> "Delta T")
+              ))
+          ),
+          "inputs" -> Seq(
+            AnalogInput(
+              "name" -> "Tamb", "descr" -> "Ambient temperature",
+              "quantity" -> "Temperature", "pin" -> 12
+            )
+          ),
+          "outputs"-> Seq(
+            DigitalOutput(
+              "name" -> "heat_on", "descr" -> "Heater On",
+              "pin" -> 14
+            )
+          ),
+          "events" -> Seq(
+            Trigger("name" -> "Temperature too high")
           )
-        ),
-        "outputs"-> Seq(
-          DigitalOutput(
-            "name" -> "heat_on", "descr" -> "Heater On",
-            "pin" -> 14
-          )
-        ),
-        "events" -> Seq(
-          Trigger("name" -> "Temperature too high")
-        )
-      )
-    )
+        ).build(Some(Controller), None, runtime)
 
   }
 
