@@ -5,7 +5,7 @@ import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.expr.{Expression => E}
 import sysmo.reform.shared.runtime.{LocalRuntime, RuntimeObject}
 import cats.instances.either
-import sysmo.reform.shared.runtime.LocalRuntime.EitherRes
+import sysmo.reform.shared.runtime.LocalRuntime.Result
 object MicroController {
   object Builder extends ModelBuilder {
     def io_common(gb: RecordType.Builder): RecordType.Builder =
@@ -67,7 +67,7 @@ object MicroController {
     val inst = new Instantiation(runtime)
     import inst._
     import Value.implicits._
-    val controller: RuntimeObject[EitherRes] =
+    val controller: Result[RuntimeObject[Result]] =
         Controller(
           "structures" -> Seq(
             AtomicType("symbol" -> "Integer"),
@@ -95,7 +95,7 @@ object MicroController {
           "events" -> Seq(
             Trigger("name" -> "Temperature too high")
           )
-        ).build(Some(Controller), None, runtime)
+        ).build(Controller, None, runtime)
 
   }
 

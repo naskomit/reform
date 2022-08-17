@@ -7,11 +7,11 @@ import scala.collection.mutable
 import cats.MonadThrow
 import sysmo.reform.shared.runtime.LocalRuntime.constructors
 
-class LocalRuntime() extends ObjectRuntime[LocalRuntime.EitherRes] {
+class LocalRuntime() extends ObjectRuntime[LocalRuntime.Result] {
   override protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
-  val mt: MonadThrow[LocalRuntime.EitherRes] = MonadThrow[LocalRuntime.EitherRes]
+  val mt: MonadThrow[LocalRuntime.Result] = MonadThrow[LocalRuntime.Result]
   val objects: mutable.Map[ObjectId, RTO] = mutable.HashMap()
-  val constructors: Constructors[F] =
+  val constructors: Constructors[F] = LocalRuntime.constructors
   override def get(id: ObjectId): F[RTO] = objects.get(id) match {
     case Some(x) => mt.pure(x)
     case None => mt.raiseError(new NoSuchElementException(s"$id"))
@@ -29,16 +29,16 @@ class LocalRuntime() extends ObjectRuntime[LocalRuntime.EitherRes] {
 }
 
 object LocalRuntime {
-  type EitherRes[+T] = Either[Throwable, T]
+  type Result[+T] = Either[Throwable, T]
 
   trait LocalMT {
-    val mt: MonadThrow[EitherRes] = MonadThrow[EitherRes]
+    val mt: MonadThrow[Result] = MonadThrow[Result]
   }
   case class AtomicObjectImpl(val dtype: AtomicDataType, val id: ObjectId, val value: Value, val parent: Option[ObjectId])
-    extends AtomicObject[EitherRes] with LocalMT
+    extends AtomicObject[Result] with LocalMT
 
   case class RecordObjectImpl(val dtype: RecordType, val id: ObjectId, val parent: Option[ObjectId])
-    extends RecordObject[EitherRes] with LocalMT {
+    extends RecordObject[Result] with LocalMT {
     protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
     override def own_children: MIter = {
       MonadicIterator.from_iterator[F, ObjectId](children.iterator)
@@ -48,7 +48,7 @@ object LocalRuntime {
   }
 
   case class ArrayObjectImpl(val dtype: ArrayType, val id: ObjectId, val parent: Option[ObjectId])
-    extends ArrayObject[EitherRes] with LocalMT {
+    extends ArrayObject[Result] with LocalMT {
     protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
     override def own_children: MIter = {
       MonadicIterator.from_iterator[F, ObjectId](children.iterator)
@@ -58,7 +58,7 @@ object LocalRuntime {
     def elements: MonadicIterator[F, ArrayElementInstance[F]] = ???
   }
 
-  object constructors extends Constructors[EitherRes] {
+  object constructors extends Constructors[Result] {
     override def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]] =
       Right(AtomicObjectImpl(dtype, id, value, parent))
     override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]] =
