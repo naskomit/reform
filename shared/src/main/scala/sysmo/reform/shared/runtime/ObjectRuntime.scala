@@ -35,9 +35,13 @@ trait ObjectRuntime[_F[+_]] {
   }
 
   def remove_recursive(id: ObjectId): F[Unit] = {
-    mt.flatMap(
-      mt.flatMap(get(id))(obj => obj.own_children.fold_left(())((acc, child_id) => acc))
-    )(_ => remove(id))
+    for {
+      obj <- get(id)
+      _ <- obj.own_children.map(child => remove_recursive(child.id)).traverse()
+    } yield ()
+//    mt.flatMap(
+//      mt.flatMap(get(id))(obj => obj.own_children.fold_left(())((acc, child_id) => acc))
+//    )(_ => remove(id))
   }
 
   def create_object[T <: RTO](create_fn: ObjectId => F[T]): F[T] = {

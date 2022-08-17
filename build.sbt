@@ -15,6 +15,8 @@ val test_libs = Seq(
   "org.scalatest" %% "scalatest" % "3.2.12" % "test",
 )
 
+//addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
+
 /** =================== Reform =================== */
 
 lazy val root = (project in file("."))

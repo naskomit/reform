@@ -1,6 +1,6 @@
 package sysmo.reform.shared.runtime
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUIDSupplier, Value}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordType}
+import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
@@ -44,7 +44,15 @@ object LocalRuntime {
       MonadicIterator.from_iterator[F, ObjectId](children.iterator)
         .flat_map(id => runtime.get(id))
     }
-    override def fields: MonadicIterator[F, RecordFieldInstance[F]] = ???
+    override def fields: MonadicIterator[F, RecordFieldInstance[F]] =
+      MonadicIterator.from_iterator[F, (RecordFieldType, ObjectId)](dtype.fields.zip(children).iterator)
+        .map {case (dtype, id) => RecordFieldInstance(dtype, id)}
+
+    override private[runtime] def set_field(name: String, instance: ObjectId): F[Unit] =
+      dtype.field_index(name) match {
+        case Some(i) => {children(i) = instance; mt.pure()}
+        case None => {mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))}
+      }
   }
 
   case class ArrayObjectImpl(val dtype: ArrayType, val id: ObjectId, val parent: Option[ObjectId])
@@ -55,7 +63,13 @@ object LocalRuntime {
         .flat_map(id => runtime.get(id))
     }
 
-    def elements: MonadicIterator[F, ArrayElementInstance[F]] = ???
+    def elements: MonadicIterator[F, ArrayElementInstance[F]] =
+      MonadicIterator.from_iterator[F, ArrayElementInstance[F]](
+        children.zipWithIndex.map(x => ArrayElementInstance[F](x._2, x._1)).iterator
+      )
+
+    private[runtime] def add_element(instance: ObjectId): F[Unit] =
+      mt.pure(children.append(instance))
   }
 
   object constructors extends Constructors[Result] {

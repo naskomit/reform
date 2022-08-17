@@ -74,6 +74,7 @@ sealed trait CompoundDataType extends DataType with HasSymbol
 trait RecordType extends CompoundDataType with HasLabelExpr {
   def fields: Seq[RecordFieldType]
   def field(name: String): Option[RecordFieldType]
+  def field_index(name: String): Option[Int]
 }
 
 object RecordType extends RecordTypeAux

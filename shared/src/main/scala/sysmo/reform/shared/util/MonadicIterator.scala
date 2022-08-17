@@ -34,6 +34,15 @@ trait MonadicIterator[F[+_], +V] {
           mt.pure(Right(acc))
       ))
   }
+
+  def traverse[A](f: Seq[V] => A): F[A] =
+    mt.map(
+      fold_left(Seq[V]())((acc, elem) => acc :+ elem)
+    )(f)
+
+  def traverse(): F[Seq[V]] =
+    fold_left(Seq[V]())((acc, elem) => acc :+ elem)
+
 }
 
 object MonadicIterator {

@@ -37,6 +37,7 @@ trait RecordTypeAux {
     override def descr: Option[String] = builder._descr
     override def fields: Seq[RecordFieldType] = builder._fields
     override def field(name: String): Option[RecordFieldType] = builder._field_index.get(name)
+    override def field_index(name: String): Option[Int] = builder._field_index.get_index(name)
     override def label_expr: Option[Expression] = builder.label_expr
   }
 
