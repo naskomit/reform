@@ -14,8 +14,12 @@ trait UnionTypeAux {
     override def supertype_of(r: RecordType): Boolean = subtypes.contains(r)
   }
 
-  trait Constr {
-    def union(symbol: String, subtypes: RecordType.Builder*): Builder =
-      new Builder(symbol, subtypes)
-  }
+//  trait Constr {
+//    def union(symbol: String, subtypes: RecordType.Builder*): Builder =
+//      new Builder(symbol, subtypes)
+//  }
+
+  def apply(symbol: String, subtypes: RecordType.Builder*): Builder =
+    new Builder(symbol, subtypes)
+
 }

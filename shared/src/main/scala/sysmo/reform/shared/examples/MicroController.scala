@@ -1,19 +1,18 @@
 package sysmo.reform.shared.examples
 
-import sysmo.reform.shared.data.Value
+import sysmo.reform.shared.data.{Value}
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.expr.{Expression => E}
-import sysmo.reform.shared.runtime.{LocalRuntime, RuntimeObject}
-import cats.instances.either
-import sysmo.reform.shared.runtime.LocalRuntime.Result
-object MicroController {
-  object Builder extends ModelBuilder {
+import sysmo.reform.shared.runtime.{RuntimeObject}
+
+object MicroController extends ModelBuilder {
+  object type_builder extends TypeBuilder {
     def io_common(gb: RecordType.Builder): RecordType.Builder =
       gb.label_expr(E.field("name")) +
-      f_char("name") +
-      f_char("descr") +
-      f_int("pin")
-//      .keys(Seq("name"))
+        f_char("name") +
+        f_char("descr") +
+        f_int("pin")
+    //      .keys(Seq("name"))
 
     /** Data structures */
     val AtomicType = record("AtomicType")
@@ -53,7 +52,7 @@ object MicroController {
     val Trigger = record("Trigger").label_expr(E.field("name")) +
       f_char("name")
 
-//    val Event = union("Event", InputEvent)
+    //    val Event = union("Event", InputEvent)
 
     val Controller = record("Controller") +
       f_array("types", Type) +
@@ -61,13 +60,14 @@ object MicroController {
       f_array("outputs", Output).label_expr(E.field("name")) +
       f_ref("state", Type) +
       f_array("triggers", Trigger)
+  }
 
-    val runtime = LocalRuntime()
-    import sysmo.reform.shared.runtime.Instantiation
-    val inst = new Instantiation(runtime)
-    import inst._
+  object initializer1 extends Initializer {
     import Value.implicits._
-    val controller: Result[RuntimeObject[Result]] =
+    import inst._
+    import type_builder._
+    def apply(): F[RuntimeObject[F]] =
+      inst(
         Controller(
           "structures" -> Seq(
             AtomicType("symbol" -> "Integer"),
@@ -95,8 +95,7 @@ object MicroController {
           "events" -> Seq(
             Trigger("name" -> "Temperature too high")
           )
-        ).build(Controller, None, runtime)
-
-  }
-
+        )
+      )
+    }
 }

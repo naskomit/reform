@@ -41,6 +41,7 @@ trait RecordTypeAux {
     override def label_expr: Option[Expression] = builder.label_expr
   }
 
+  def apply(symbol: String): Builder = new Builder(symbol)
 }
 
 trait RecordFieldTypeAux {

@@ -16,6 +16,7 @@ sealed trait RuntimeObject[_F[+_]] {
   protected[runtime] var runtime: ObjectRuntime[F] = null
   def parent: Option[ObjectId]
   def own_children: MIter
+  def get_runtime: ObjectRuntime[F] = runtime
 }
 
 trait AtomicObject[_F[+_]] extends RuntimeObject[_F] {

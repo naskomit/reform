@@ -1,11 +1,16 @@
 package sysmo.reform.shared.examples
 
-import sysmo.reform.shared.types
-import sysmo.reform.shared.types.{RecordFieldType, RecordType, UnionType}
+import sysmo.reform.shared.runtime.{LocalRuntime, RuntimeObject}
+import sysmo.reform.shared.types.TypeSystemBuilder
 
-trait ModelBuilder extends
-  RecordFieldType.Constr with UnionType.Constr {
-  def record(symbol: String): RecordType.Builder =
-    new RecordType.Builder(symbol)
+trait ModelBuilder {
+  type TypeBuilder = TypeSystemBuilder
 
+  trait Initializer {
+    val runtime: LocalRuntime = LocalRuntime()
+    type F[+X] = runtime.F[X]
+    import sysmo.reform.shared.runtime.Instantiation
+    val inst = new Instantiation(runtime)
+    def apply: F[RuntimeObject[F]]
+  }
 }

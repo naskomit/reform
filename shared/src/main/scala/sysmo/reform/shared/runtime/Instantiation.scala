@@ -122,6 +122,9 @@ class Instantiation[F[+_]](runtime: ObjectRuntime[F]) {
     }
   }
 
+  def apply(builder: RecordBuilder): F[RecordObject[F]] =
+    builder.build(builder.dtype, None, runtime)
+
 
   implicit class Record2Builder(dtype: RecordType.Builder) {
     def apply(children: (String, InstanceBuilder)*): RecordBuilder = {
