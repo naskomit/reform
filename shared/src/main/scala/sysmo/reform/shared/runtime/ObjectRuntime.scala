@@ -2,12 +2,21 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import cats.implicits._
-import sysmo.reform.shared.types.RecordType
+import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, Value}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType}
+import sysmo.reform.shared.table.Table.Schema
+import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Query, Table, TableService}
+import sysmo.reform.shared.util.MonadicIterator
 
 import scala.reflect.ClassTag
-//import sysmo.reform.shared.util.MonadicIterator
+
+trait Constructors[_F[+_]] {
+  type F[+X] = _F[X]
+  def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]]
+  def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]]
+  def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayObject[F]]
+
+}
 
 trait ObjectRuntime[_F[+_]] {
   type F[+X] = _F[X]
@@ -18,6 +27,8 @@ trait ObjectRuntime[_F[+_]] {
   def get(id: ObjectId): F[RTO]
   def put[T <: RTO](id: ObjectId, obj: T): F[T]
   def remove(id: ObjectId): F[Unit]
+  def list: MonadicIterator[F, ObjectProxy]
+  def count: F[Int]
   val constructors: Constructors[F]
 
   def get_typed[T <: RTO](id: ObjectId)(implicit tag: ClassTag[T]): F[T] =
@@ -57,10 +68,45 @@ trait ObjectRuntime[_F[+_]] {
 
 }
 
-trait Constructors[_F[+_]] {
-  type F[+X] = _F[X]
-  def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]]
-  def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]]
-  def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayObject[F]]
+object ObjectRuntime {
+  object implicits {
+    import Value.implicits._
+    implicit def runtime2table[F[+_]](runtime: ObjectRuntime[F]): TableService[F] = new TableService[F] {
+      override val mt: MonadThrow[F] = runtime.mt
+      override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))
+      override def table_schema(table_id: String): F[RecordType] = {
+        import RecordFieldType.constr._
+        val schema = RecordType("Runtime") + f_char("id") + f_char("data_type") + f_char("parent")
+        mt.pure(schema)
+      }
+//      private val _ts = this
+      override def query_table(q: Query): F[Table[F]] = {
+        val object_list_it = runtime.list
+        mt.map(table_schema(""))(sch =>
+          new Table[F] {
+            override val mt: MonadThrow[F] = runtime.mt
+            override def schema: RecordType = sch
+            override def nrow: F[Int] = runtime.count
 
+            override def row_iter: MonadicIterator[F, Table.Row] = object_list_it.map(pr =>
+              new Table.Row {
+                override def schema: Schema = sch
+                override protected def _get(col: Int): Value = col match {
+                  case 0 => pr.id
+                  case 1 => pr.dtype.show
+                  case 2 => pr.parent.map(Value(_)).getOrElse(Value.empty)
+                }
+              }
+            )
+          }
+        )
+      }
+
+      override def cache_locally(table: Table[F]): F[LocalTable] = {
+        table.row_iter.traverse(rows =>
+          LocalRowBasedTable(table.schema, rows)
+        )
+      }
+    }
+  }
 }

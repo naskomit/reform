@@ -5,7 +5,7 @@ import sysmo.reform.shared.expr.Expression
 
 sealed trait DataType {
   def id: ObjectId
-
+  def show: String
   override def equals(obj: Any): Boolean = obj match {
     case other: DataType => other.id == id
     case _ => false
@@ -17,43 +17,38 @@ sealed trait DataType {
 /** AtomicDataType */
 sealed trait AtomicDataType extends DataType {
   def default: Value = Value.empty
+  val symbol: String
+  def show: String = symbol
 }
 
 object AtomicDataType extends AtomicDataTypeAux {
   case object Real extends AtomicDataType {
     val symbol = "Real"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Int extends AtomicDataType {
     val symbol = "Int"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Long extends AtomicDataType {
     val symbol = "Long"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Char extends AtomicDataType {
     val symbol = "Char"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Bool extends AtomicDataType {
     val symbol = "Bool"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Date extends AtomicDataType {
     val symbol = "Date"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Id extends AtomicDataType {
     val symbol = "Id"
-    val descr = Some("")
-    val id = DataTypeAux.IdSupplier.new_id
+    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
 
   def apply(name: String): AtomicDataType= {

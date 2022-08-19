@@ -25,6 +25,12 @@ class LocalRuntime() extends ObjectRuntime[FLocal] {
     mt.pure()
   }
 
+  override def list: MonadicIterator[F, ObjectProxy] =
+    MonadicIterator.from_iterator(
+      objects.values.map(x => ObjectProxy(x.id, x.dtype, x.parent)).iterator
+    )
+
+  def count: F[Int] = FLocal(objects.size)
 
 }
 
@@ -32,10 +38,10 @@ object LocalRuntime {
   trait LocalMT {
     val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
   }
-  case class AtomicObjectImpl(val dtype: AtomicDataType, val id: ObjectId, val value: Value, val parent: Option[ObjectId])
+  case class AtomicObjectImpl(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId])
     extends AtomicObject[FLocal] with LocalMT
 
-  case class RecordObjectImpl(val dtype: RecordType, val id: ObjectId, val parent: Option[ObjectId])
+  case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
     extends RecordObject[FLocal] with LocalMT {
     protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
     override def own_children: MIter = {
@@ -48,12 +54,15 @@ object LocalRuntime {
 
     override private[runtime] def set_field(name: String, instance: ObjectId): F[Unit] =
       dtype.field_index(name) match {
-        case Some(i) => {children(i) = instance; mt.pure()}
-        case None => {mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))}
+        case Some(i) => {
+          children(i) = instance
+          mt.pure()
+        }
+        case None => mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))
       }
   }
 
-  case class ArrayObjectImpl(val dtype: ArrayType, val id: ObjectId, val parent: Option[ObjectId])
+  case class ArrayObjectImpl(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId])
     extends ArrayObject[FLocal] with LocalMT {
     protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
     override def own_children: MIter = {
@@ -72,11 +81,11 @@ object LocalRuntime {
 
   object constructors extends Constructors[FLocal] {
     override def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]] =
-      Right(AtomicObjectImpl(dtype, id, value, parent))
+      FLocal(AtomicObjectImpl(dtype, id, value, parent))
     override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]] =
-      Right(RecordObjectImpl(dtype, id, parent))
+      FLocal(RecordObjectImpl(dtype, id, parent))
     override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayObject[F]] =
-      Right(ArrayObjectImpl(dtype, id, parent))
+      FLocal(ArrayObjectImpl(dtype, id, parent))
   }
 
   def apply(): LocalRuntime = new LocalRuntime()

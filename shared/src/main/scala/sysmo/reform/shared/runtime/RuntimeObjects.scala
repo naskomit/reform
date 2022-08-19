@@ -19,6 +19,8 @@ sealed trait RuntimeObject[_F[+_]] {
   def get_runtime: ObjectRuntime[F] = runtime
 }
 
+case class ObjectProxy(id: ObjectId, dtype: TPE.DataType, parent: Option[ObjectId])
+
 trait AtomicObject[_F[+_]] extends RuntimeObject[_F] {
   override type DType = TPE.AtomicDataType
   def value: Value

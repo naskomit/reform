@@ -9,6 +9,7 @@ trait ReferenceTypeAux {
   implicit class Impl(builder: Builder) extends ReferenceType {
     override def id: ObjectId = builder._id
     override def prototype: CompoundDataType = builder._prototype
+    override def show: String = s"Ref[${builder._prototype.symbol}]"
   }
 }
 
@@ -20,6 +21,7 @@ trait MultiReferenceTypeAux {
   implicit class Impl(builder: Builder) extends MultiReferenceType {
     override def id: ObjectId = builder._id
     override def prototype: CompoundDataType = builder._prototype
+    override def show: String = s"MultiRef[${builder._prototype.symbol}]"
   }
 
 }

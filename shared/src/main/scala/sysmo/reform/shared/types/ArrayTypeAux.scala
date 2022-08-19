@@ -12,5 +12,6 @@ trait ArrayTypeAux {
     override def id: ObjectId = builder._id
     override def prototype: CompoundDataType = builder._prototype
     override def label_expr: Option[Expression] = builder._label_expr
+    override def show: String = s"Array[${builder.prototype.symbol}]"
   }
 }

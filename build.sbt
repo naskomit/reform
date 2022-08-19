@@ -37,33 +37,7 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
 //      "com.lihaoyi" %%% "pprint" % "0.7.0"
 //    ),
     libraryDependencies ++= test_libs,
-  ).jvmSettings(
-    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided",
-//    Test / scalaSource := new File("/data/Workspace/SysMo/re-form/reform/jvm/src/test/scala")
-    //Test / unmanagedSourceDirectories += //baseDirectory.value / "../shared/src/test/scala"
-  ).jsSettings(
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "2.0.0",
-      "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
-      "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
-      "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
-      "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
-      "com.lihaoyi" %%% "autowire" % "0.3.3",
-      //    "org.typelevel" %%% "cats-effect" % "3.3.5",
-      //    "co.fs2" %%% "fs2-core" % "3.2.0",
-      "io.monix" %%% "monix" % "3.4.0",
-    ),
-    Compile / npmDependencies ++= Seq(
-      "react" -> "17.0.0",
-      "react-dom" -> "17.0.0",
-      "ag-grid-react"     -> "26.2.0",
-      "ag-grid-community" -> "26.2.0",
-      "react-select" ->  "5.2.2",
-      "plotly.js" -> "1.47.4",
-      "mermaid" -> "8.14.0",
-      "react-transition-group" -> "4.4.2",
-    )
-  ).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  )
 
 lazy val backend = project
    .settings(
@@ -129,13 +103,13 @@ lazy val backend = project
      libraryDependencies ++= Seq(
        "org.scala-js" %%% "scalajs-dom" % "2.0.0",
        "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
+
        "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
        "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
        "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
-       "com.lihaoyi" %%% "autowire" % "0.3.3",
-       //    "org.typelevel" %%% "cats-effect" % "3.3.5",
-       //    "co.fs2" %%% "fs2-core" % "3.2.0",
-       "io.monix" %%% "monix" % "3.4.0",
+
+//       "com.lihaoyi" %%% "autowire" % "0.3.3",
+//       "io.monix" %%% "monix" % "3.4.0",
      ),
      Compile / npmDependencies ++= Seq(
        "react" -> "17.0.0",

@@ -39,6 +39,7 @@ trait RecordTypeAux {
     override def field(name: String): Option[RecordFieldType] = builder._field_index.get(name)
     override def field_index(name: String): Option[Int] = builder._field_index.get_index(name)
     override def label_expr: Option[Expression] = builder.label_expr
+    override def show: String = s"Record[${builder.symbol}]"
   }
 
   def apply(symbol: String): Builder = new Builder(symbol)
@@ -105,5 +106,7 @@ trait RecordFieldTypeAux {
         override val _dtype: DataType = new MultiReferenceType.Builder(prototype)
       }
   }
+
+  object constr extends Constr
 
 }

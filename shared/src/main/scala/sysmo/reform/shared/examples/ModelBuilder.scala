@@ -11,6 +11,6 @@ trait ModelBuilder {
     type F[+X] = runtime.F[X]
     import sysmo.reform.shared.runtime.Instantiation
     val inst = new Instantiation(runtime)
-    def apply: F[RuntimeObject[F]]
+    def apply(): F[RuntimeObject[F]]
   }
 }

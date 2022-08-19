@@ -3,6 +3,7 @@ package sysmo.reform.shared.table
 import cats.MonadThrow
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.runtime.{FLocal, LocalRuntime}
+import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.util.MonadicIterator
 
@@ -11,9 +12,14 @@ trait Table[F[+_]] {
   val mt: MonadThrow[F]
   def schema: RecordType
   def nrow: F[Int]
+//  def get(row_id: Int, col_id: Int): F[Value]
+//  def row(row_id: Int): F[Table.Row]
+  def row_iter: MonadicIterator[F, Table.Row]
+}
+
+trait RandomAccessTable[F[+_]] {
   def get(row_id: Int, col_id: Int): F[Value]
   def row(row_id: Int): F[Table.Row]
-  def row_iter: MonadicIterator[F, Table.Row]
 }
 
 object Table {
@@ -31,5 +37,21 @@ object Table {
   }
 }
 
-trait LocalTable extends Table[FLocal]
+trait LocalTable extends Table[FLocal] with RandomAccessTable[FLocal] {
+  val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
+}
 
+case class LocalRowBasedTable(_schema: Schema, rows: Seq[Table.Row]) extends LocalTable {
+  override def get(row_id: Int, col_id: Int): FLocal[Value] = row(row_id).map(_.get(col_id))
+
+  override def row(row_id: Int): FLocal[Table.Row] =
+    if (row_id < rows.size)
+      FLocal(rows(row_id))
+    else
+      FLocal.error(new NoSuchElementException(s"Row $row_id requested in a table with ${rows.size} rows"))
+
+  override def schema: Schema = _schema
+  override def nrow: FLocal[Int] = FLocal(rows.length)
+  override def row_iter: MonadicIterator[FLocal, Table.Row] =
+    MonadicIterator.from_iterator(rows.iterator)
+}

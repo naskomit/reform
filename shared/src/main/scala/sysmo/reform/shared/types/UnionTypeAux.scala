@@ -12,6 +12,7 @@ trait UnionTypeAux {
     override def descr: Option[String] = builder._descr
     override def subtypes: Seq[RecordType] = builder.subtypes.map(x => x: RecordType)
     override def supertype_of(r: RecordType): Boolean = subtypes.contains(r)
+    override def show: String = s"Union[${builder.symbol}]"
   }
 
 //  trait Constr {
