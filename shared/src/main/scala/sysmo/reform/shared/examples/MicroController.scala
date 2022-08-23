@@ -28,7 +28,8 @@ object MicroController extends ModelBuilder {
     val Type = union("Type", AtomicType, StructureType)
 
     Field + f_char("name") +
-      f_ref("type", Type)
+      f_char("descr")
+    //+ f_ref("type", Type)
 
     /** Input - Output */
     val DigitalInput = record("DigitalInput")
@@ -36,7 +37,8 @@ object MicroController extends ModelBuilder {
       .extend(io_common)
 
     val AnalogInput = record("AnalogInput")
-      .extend(io_common)
+      .extend(io_common) +
+      f_char("quantity")
 
     val Input = union("Input", DigitalInput, AnalogInput)
 
@@ -58,7 +60,7 @@ object MicroController extends ModelBuilder {
       f_array("types", Type) +
       f_array("inputs", Input).label_expr(E.field("name")) +
       f_array("outputs", Output).label_expr(E.field("name")) +
-      f_ref("state", Type) +
+//      f_ref("state", Type) +
       f_array("triggers", Trigger)
   }
 
@@ -69,7 +71,7 @@ object MicroController extends ModelBuilder {
     def apply(): F[RuntimeObject[F]] =
       inst(
         Controller(
-          "structures" -> Seq(
+          "types" -> Seq(
             AtomicType("symbol" -> "Integer"),
             AtomicType("symbol" -> "Float"),
             AtomicType("symbol" -> "Boolean"),
@@ -92,7 +94,7 @@ object MicroController extends ModelBuilder {
               "pin" -> 14
             )
           ),
-          "events" -> Seq(
+          "triggers" -> Seq(
             Trigger("name" -> "Temperature too high")
           )
         )

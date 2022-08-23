@@ -43,19 +43,19 @@ object LocalRuntime {
 
   case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
     extends RecordObject[FLocal] with LocalMT {
-    protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
+    protected val children: mutable.HashMap[String, ObjectId] = new mutable.HashMap()
     override def own_children: MIter = {
-      MonadicIterator.from_iterator[F, ObjectId](children.iterator)
-        .flat_map(id => runtime.get(id))
+      MonadicIterator.from_iterator[F, (String, ObjectId)](children.iterator)
+        .flat_map(c => runtime.get(c._2))
     }
     override def fields: MonadicIterator[F, RecordFieldInstance[F]] =
-      MonadicIterator.from_iterator[F, (RecordFieldType, ObjectId)](dtype.fields.zip(children).iterator)
+      MonadicIterator.from_iterator[F, (RecordFieldType, ObjectId)](dtype.fields.zip(children.values).iterator)
         .map {case (dtype, id) => RecordFieldInstance(dtype, id)}
 
     override private[runtime] def set_field(name: String, instance: ObjectId): F[Unit] =
       dtype.field_index(name) match {
         case Some(i) => {
-          children(i) = instance
+          children(name) = instance
           mt.pure()
         }
         case None => mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))

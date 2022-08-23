@@ -32,8 +32,9 @@ case class RecordFieldInstance[_F[+_]](dtype: TPE.RecordFieldType, instance: Obj
 
 trait RecordObject[_F[+_]] extends RuntimeObject[_F] {
   override type DType = TPE.RecordType
-  private[runtime] def set_field(name: String, instance: ObjectId): F[Unit]
   def fields: MonadicIterator[F, RecordFieldInstance[F]]
+
+  private[runtime] def set_field(name: String, instance: ObjectId): F[Unit]
 }
 
 case class ArrayElementInstance[_F[+_]](index: Int, instance: ObjectId)
@@ -41,6 +42,7 @@ case class ArrayElementInstance[_F[+_]](index: Int, instance: ObjectId)
 trait ArrayObject[_F[+_]] extends RuntimeObject[_F] {
   override type DType = TPE.ArrayType
   def elements: MonadicIterator[F, ArrayElementInstance[F]]
+
   private[runtime] def add_element(instance: ObjectId): F[Unit]
 }
 
