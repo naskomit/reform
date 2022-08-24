@@ -76,7 +76,7 @@ object ObjectRuntime {
       override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))
       override def table_schema(table_id: String): F[RecordType] = {
         import RecordFieldType.constr._
-        val schema = RecordType("Runtime") + f_char("id") + f_char("data_type") + f_char("parent")
+        val schema = RecordType("Runtime") + f_id("id") + f_char("data_type") + f_id("parent")
         mt.pure(schema)
       }
 //      private val _ts = this

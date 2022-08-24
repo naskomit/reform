@@ -6,12 +6,14 @@ trait ObjectId {
   type Id
   val v: Id
   def next: ObjectId
+  def show: String
 }
 
 object NoId extends ObjectId {
   override type Id = Unit
   val v = ()
   override def next: ObjectId = this
+  def show: String = "<N/A>"
 }
 
 trait ObjectIdSupplier {
@@ -26,6 +28,7 @@ case class UUObjectId(v: UUID) extends ObjectId {
     case UUObjectId(v_other) => v == v_other
     case _ => false
   }
+  def show: String = v.toString
 }
 
 class UUIDSupplier() extends ObjectIdSupplier {

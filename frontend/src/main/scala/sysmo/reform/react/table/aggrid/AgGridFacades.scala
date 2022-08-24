@@ -1,7 +1,10 @@
 package sysmo.reform.react.table.aggrid
 
 import japgolly.scalajs.react.{Children, JsComponent}
+import japgolly.scalajs.react.facade
+import japgolly.scalajs.react.facade.React.Node
 import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.table.{LocalTable, SelectionHandler, Table}
@@ -166,7 +169,14 @@ object AgGridFacades extends Logging {
     val column: Column = js.native
   }
 
-  type ValueGetter = js.Function1[ValueGetterParams, js.Any]
+  type ValueGetter = js.Function1[ValueGetterParams, Value]
+
+  @js.native
+  trait ICellRendererParams extends js.Object {
+    val value: Any = js.native
+    val valueFormatted: Any = js.native
+  }
+  type JSCellRenderer = js.Function1[ICellRendererParams, HTMLElement]
 
   @js.native
   trait ColumnProps extends js.Object {
@@ -176,6 +186,7 @@ object AgGridFacades extends Logging {
     var headerName: js.UndefOr[String] = js.native
     var filter: js.UndefOr[String | Boolean] = js.native
     var sortable: js.UndefOr[Boolean] = js.native
+    var cellRenderer: js.UndefOr[JSCellRenderer] = js.native
   }
 
   object Filters extends Enumeration {
@@ -186,7 +197,8 @@ object AgGridFacades extends Logging {
              value_getter: Option[ValueGetter] = None,
              headerName: Option[String] = None,
              filter: Option[Filters.Value] = None,
-             sortable: Option[Boolean] = None
+             sortable: Option[Boolean] = None,
+             cell_renderer: Option[CellRenderer] = None
             ) : ColumnProps = {
     val col_js = (new js.Object).asInstanceOf[ColumnProps]
     col_js.field = field
@@ -199,6 +211,11 @@ object AgGridFacades extends Logging {
       case Some(Filters.number) => "agNumberColumnFilter"
     }
     col_js.sortable = sortable.orUndefined
+
+    col_js.cellRenderer = cell_renderer.map[JSCellRenderer](cr => {
+      (params) => cr.render(params)
+    }).orUndefined
+
 
     col_js
   }

@@ -3,16 +3,13 @@ package sysmo.reform.react.table
 import sysmo.reform.react.ReactComponent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.react.table.aggrid.{AgGridComponent, AgGridFacades => AGF}
+import sysmo.reform.react.table.aggrid.{AgGridComponent, CellRenderer, DateCellRenderer, IdCellRenderer, TextCellRenderer, AgGridFacades => AGF}
 import sysmo.reform.shared.data.Value
 import Value.implicits._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.shared.table.{QuerySource, SelectionHandler, Table, TableService}
 import sysmo.reform.shared.types.AtomicDataType
 
-import java.util.Date
-
-//(implicit f2c: F2Callback[F])
 class TableViewerF[F[+_]] extends ReactComponent {
   case class Props(ts: TableService[F], schema: Table.Schema, source: QuerySource,
                    height: String, selection_handler: Option[SelectionHandler])
@@ -30,26 +27,25 @@ class TableViewerF[F[+_]] extends ReactComponent {
         }
 
         val value_getter: AGF.ValueGetter = (x : AGF.ValueGetterParams) => {
-          val NA: String = "<N/A>"
-          x.data.toOption match {
-            case Some(Some(row_data)) => row_data.get(field.name) match {
-              case y if y.is_na => NA
-              case y: Value.DateValue => {
-                y.get[Date].map(date =>
-                  (new scala.scalajs.js.Date(date.getTime)).toDateString()
-                ).getOrElse[String](NA)
-              }
-              case y => y.get[String].getOrElse[String](NA)
-            }
-            case _ => NA
+          x.data.toOption.flatten match {
+            case Some(row_data) => row_data.get(field.name)
+            case None => Value.empty
           }
         }
+
+        val cell_renderer = field.dtype match {
+          case AtomicDataType.Date => DateCellRenderer
+          case AtomicDataType.Id => IdCellRenderer
+          case _ => TextCellRenderer
+        }
+
 
         AGF.column(
           field.name,
           value_getter = Some(value_getter),
           headerName = Some(field.make_descr),
-          filter = filter, sortable = Some(true)
+          filter = filter, sortable = Some(true),
+          cell_renderer = Some(cell_renderer)
         )
       })
     }

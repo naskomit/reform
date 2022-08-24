@@ -64,10 +64,10 @@ trait RecordFieldTypeAux {
   }
 
   trait Constr {
-    def f_char(name: String): FieldBuilder =
+    def f_real(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Char
+        override val _dtype: DataType = AtomicDataType.Real
       }
 
     def f_int(name: String): FieldBuilder =
@@ -76,10 +76,34 @@ trait RecordFieldTypeAux {
         override val _dtype: DataType = AtomicDataType.Int
       }
 
-    def f_real(name: String): FieldBuilder =
+    def f_long(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Real
+        override val _dtype: DataType = AtomicDataType.Long
+      }
+
+    def f_char(name: String): FieldBuilder =
+      new FieldBuilder {
+        override val _name: String = name
+        override val _dtype: DataType = AtomicDataType.Char
+      }
+
+    def f_bool(name: String): FieldBuilder =
+      new FieldBuilder {
+        override val _name: String = name
+        override val _dtype: DataType = AtomicDataType.Bool
+      }
+
+    def f_date(name: String): FieldBuilder =
+      new FieldBuilder {
+        override val _name: String = name
+        override val _dtype: DataType = AtomicDataType.Date
+      }
+
+    def f_id(name: String): FieldBuilder =
+      new FieldBuilder {
+        override val _name: String = name
+        override val _dtype: DataType = AtomicDataType.Id
       }
 
     def f_compound(name: String, cmp: CompoundDataType): FieldBuilder =
