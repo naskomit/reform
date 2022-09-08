@@ -43,7 +43,29 @@ trait MonadicIterator[F[+_], +V] {
   def traverse(): F[Seq[V]] =
     fold_left(Seq[V]())((acc, elem) => acc :+ elem)
 
+//  def filter(f: V => Boolean): MonadicIterator[F, V] = {
+//    val source = this
+//    new MonadicIterator[F, V] {
+//      var _next: Option[V] = None
+//      override val mt: MonadThrow[F] = source.mt
+//      override def has_next: F[Boolean] = mt.tailRecM(true){x =>
+//        source.has_next.map()
+//      }
+//
+//      override def next: F[V] = {
+//        val res = _next.get
+//        _next = None
+//        mt.pure(_next)
+//      }
+//    }
+//  }
 }
+
+//trait LookAheadMonadicIterator[F[+_], +V] extends MonadicIterator[F, V] {
+//  private var _lookahead: Seq[V] = Seq()
+//  private def attempt_fetch
+//  override def has_next: F[Boolean] = ???
+//}
 
 object MonadicIterator {
   def empty[F[+_], V](implicit _mt: MonadThrow[F]): MonadicIterator[F, V] = new MonadicIterator[F, V] {

@@ -4,7 +4,7 @@ import cats.MonadThrow
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.app.{Configuration, Panel}
 import sysmo.reform.shared.examples.MicroController
-import sysmo.reform.shared.runtime.{ObjectRuntime, RuntimeObject}
+import sysmo.reform.shared.runtime.{RFRuntime, RFObject}
 
 object HomePanel extends Panel {
 

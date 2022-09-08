@@ -5,18 +5,18 @@ import cats.implicits._
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.types.{ArrayType, AtomicDataType, DataType, RecordType, UnionType}
 
-class Instantiation[F[+_]](runtime: ObjectRuntime[F]) {
+class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   implicit val mt: MonadThrow[F] = runtime.mt
 //  implicit class DefaultMonadicFor[A](fa: F[A]) {
 //    def withFilter(f: A => Boolean): F[A] = fa
 //  }
   trait InstanceBuilder {
-    def build(lbound: DataType, parent: Option[ObjectId], runtime: ObjectRuntime[F]): F[RuntimeObject[F]]
+    def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]]
   }
 
   case class AtomicBuilder(value: Value)
     extends InstanceBuilder {
-    override def build(lbound: DataType, parent: Option[ObjectId], runtime: ObjectRuntime[F]): F[AtomicObject[F]] = {
+    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[AtomicObject[F]] = {
       lbound match {
         case lb: AtomicDataType => runtime.create_object(id => runtime.constructors.atomic(lb, id, value, parent))
         case _ => runtime.mt.raiseError(new IllegalArgumentException("Lower bound for AtomicObject should be of type AtomicDataType"))
@@ -27,7 +27,7 @@ class Instantiation[F[+_]](runtime: ObjectRuntime[F]) {
   case class RecordBuilder(dtype: RecordType, children: Seq[(String, InstanceBuilder)])
     extends InstanceBuilder {
 
-    override def build(lbound: DataType, parent: Option[ObjectId], runtime: ObjectRuntime[F]): F[RecordObject[F]] = {
+    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RecordObject[F]] = {
       lbound match {
         case lb: RecordType => {
           if (dtype != lb) {
@@ -81,7 +81,7 @@ class Instantiation[F[+_]](runtime: ObjectRuntime[F]) {
 
   case class ArrayBuilder(children: Seq[InstanceBuilder])
     extends InstanceBuilder {
-    override def build(lbound: DataType, parent: Option[ObjectId], runtime: ObjectRuntime[F]): F[RuntimeObject[F]] = {
+    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]] = {
       lbound match {
         case lb: ArrayType => {
           for {
@@ -101,7 +101,7 @@ class Instantiation[F[+_]](runtime: ObjectRuntime[F]) {
   }
 
   object Defaults {
-    def create(dtype: DataType, parent: Option[ObjectId], runtime: ObjectRuntime[F]): F[RuntimeObject[F]] = {
+    def create(dtype: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]] = {
       dtype match {
         case lb: AtomicDataType =>
           runtime.create_object(id =>

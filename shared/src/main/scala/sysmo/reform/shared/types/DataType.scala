@@ -1,7 +1,9 @@
 package sysmo.reform.shared.types
 
+import cats.Show
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.expr.Expression
+import sysmo.reform.shared.util.CirceTransport
 
 sealed trait DataType {
   def id: ObjectId
@@ -105,3 +107,16 @@ trait MultiReferenceType extends DataType {
 }
 
 object MultiReferenceType extends MultiReferenceTypeAux
+
+
+object DataType {
+  object Encoders extends CirceTransport {
+    import io.circe.syntax._
+    implicit val enc_RecordFieldType: Encoder[RecordFieldType] = Encoder.instance(v =>
+      Map(
+        "name" -> v.name.asJson,
+        "optional" -> v.optional.asJson
+      ).asJson
+    )
+  }
+}

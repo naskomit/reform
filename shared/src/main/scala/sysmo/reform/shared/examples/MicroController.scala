@@ -1,9 +1,9 @@
 package sysmo.reform.shared.examples
 
-import sysmo.reform.shared.data.{Value}
+import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.expr.{Expression => E}
-import sysmo.reform.shared.runtime.{RuntimeObject}
+import sysmo.reform.shared.runtime.RFObject
 
 object MicroController extends ModelBuilder {
   object type_builder extends TypeBuilder {
@@ -68,7 +68,7 @@ object MicroController extends ModelBuilder {
     import Value.implicits._
     import inst._
     import type_builder._
-    def apply(): F[RuntimeObject[F]] =
+    def apply(): F[RFObject[F]] =
       inst(
         Controller(
           "types" -> Seq(

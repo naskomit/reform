@@ -7,7 +7,7 @@ import scala.collection.mutable
 import cats.MonadThrow
 import sysmo.reform.shared.runtime.LocalRuntime.constructors
 
-class LocalRuntime() extends ObjectRuntime[FLocal] {
+class LocalRuntime() extends RFRuntime[FLocal] {
   override protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
   val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
   val objects: mutable.Map[ObjectId, RTO] = mutable.HashMap()
@@ -27,11 +27,14 @@ class LocalRuntime() extends ObjectRuntime[FLocal] {
 
   override def list: MonadicIterator[F, ObjectProxy] =
     MonadicIterator.from_iterator(
-      objects.values.map(x => ObjectProxy(x.id, x.dtype, x.parent)).iterator
+      objects.values.map(x => ObjectProxy(x.id, x.dtype, x.parent, Value.empty)).iterator
     )
 
   def count: F[Int] = FLocal(objects.size)
 
+  override def dispatch(action: RuntimeAction): F[Unit] = {
+    mt.pure()
+  }
 }
 
 object LocalRuntime {
@@ -48,9 +51,9 @@ object LocalRuntime {
       MonadicIterator.from_iterator[F, (String, ObjectId)](children.iterator)
         .flat_map(c => runtime.get(c._2))
     }
-    override def fields: MonadicIterator[F, RecordFieldInstance[F]] =
-      MonadicIterator.from_iterator[F, (RecordFieldType, ObjectId)](dtype.fields.zip(children.values).iterator)
-        .map {case (dtype, id) => RecordFieldInstance(dtype, id)}
+    override def fields: MonadicIterator[F, RecordFieldInstance] =
+      MonadicIterator.from_iterator[F, RecordFieldType](dtype.fields.iterator)
+        .map(ftype => RecordFieldInstance(ftype, children(ftype.name)))
 
     override private[runtime] def set_field(name: String, instance: ObjectId): F[Unit] =
       dtype.field_index(name) match {

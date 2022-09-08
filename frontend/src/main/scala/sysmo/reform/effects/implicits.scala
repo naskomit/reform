@@ -11,7 +11,9 @@ import scala.scalajs.js.|
 object implicits {
   trait F2Callback[F[+_]] {
     def sync[T](f: F[T]): CallbackTo[T]
+    def sync_pure[T](t: T): CallbackTo[T]
     def async[T](f: F[T]): AsyncCallback[T]
+    def async_pure[T](t: T): AsyncCallback[T]
   }
   implicit object FLocal2AsyncCallback extends F2Callback[FLocal] {
     def sync[T](f: FLocal[T]): CallbackTo[T] = {
@@ -19,6 +21,11 @@ object implicits {
         case Left(error) => CallbackTo.throwException(error)
         case Right(value) => CallbackTo(value)
       }
+    }
+
+    def sync_pure[T](t: T): CallbackTo[T] = {
+      val mt = MonadThrow[FLocal]
+      sync(mt.pure(t))
     }
 
     def async[T](f: FLocal[T]): AsyncCallback[T] = {
@@ -34,6 +41,11 @@ object implicits {
         })
       )
     }
-  }
 
+    def async_pure[T](t: T): AsyncCallback[T] = {
+      val mt = MonadThrow[FLocal]
+      async(mt.pure(t))
+    }
+
+  }
 }

@@ -5,7 +5,6 @@ import sysmo.reform.shared.util.CirceTransport
 import sysmo.reform.shared.data.Value._
 
 object Transport extends CirceTransport {
-  import io.circe.generic.semiauto._
   import io.circe.syntax._
 
   implicit val enc_Id: Encoder[ObjectId] =

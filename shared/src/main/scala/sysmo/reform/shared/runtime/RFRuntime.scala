@@ -6,6 +6,8 @@ import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordFieldType, Re
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, Value}
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Query, Table, TableService}
+import sysmo.reform.shared.sources.tree
+import sysmo.reform.shared.sources.property
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.reflect.ClassTag
@@ -18,17 +20,18 @@ trait Constructors[_F[+_]] {
 
 }
 
-trait ObjectRuntime[_F[+_]] {
+trait RFRuntime[_F[+_]] {
   type F[+X] = _F[X]
   implicit val mt: MonadThrow[F]
   protected val objectid_supplier: ObjectIdSupplier
-  type RTO = RuntimeObject[F]
+  type RTO = RFObject[F]
 
   def get(id: ObjectId): F[RTO]
   def put[T <: RTO](id: ObjectId, obj: T): F[T]
   def remove(id: ObjectId): F[Unit]
   def list: MonadicIterator[F, ObjectProxy]
   def count: F[Int]
+  def dispatch(action: RuntimeAction): F[Unit]
   val constructors: Constructors[F]
 
   def get_typed[T <: RTO](id: ObjectId)(implicit tag: ClassTag[T]): F[T] =
@@ -68,45 +71,72 @@ trait ObjectRuntime[_F[+_]] {
 
 }
 
-object ObjectRuntime {
-  object implicits {
-    import Value.implicits._
-    implicit def runtime2table[F[+_]](runtime: ObjectRuntime[F]): TableService[F] = new TableService[F] {
-      override val mt: MonadThrow[F] = runtime.mt
-      override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))
-      override def table_schema(table_id: String): F[RecordType] = {
-        import RecordFieldType.constr._
-        val schema = RecordType("Runtime") + f_id("id") + f_char("data_type") + f_id("parent")
-        mt.pure(schema)
-      }
-//      private val _ts = this
-      override def query_table(q: Query): F[Table[F]] = {
-        val object_list_it = runtime.list
-        mt.map(table_schema(""))(sch =>
-          new Table[F] {
-            override val mt: MonadThrow[F] = runtime.mt
-            override def schema: RecordType = sch
-            override def nrow: F[Int] = runtime.count
+object RFRuntime {
+  import Value.implicits._
 
-            override def row_iter: MonadicIterator[F, Table.Row] = object_list_it.map(pr =>
+  class TreeTypes extends tree.TreeTypes {
+    override type NodeId = ObjectId
+    override type ActionType = RuntimeAction
+  }
+
+  class PropertyTypes extends property.PropertyTypes {
+    override type Id = ObjectId
+    override type ActionType = RuntimeAction
+  }
+
+  class TableView[_F[+_]](runtime: RFRuntime[_F]) extends TableService[_F] {
+    override val mt: MonadThrow[F] = runtime.mt
+    override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))
+
+    override def table_schema(table_id: String): F[RecordType] = {
+      import RecordFieldType.constr._
+      val schema = RecordType("Runtime") +
+        f_id("id") + f_char("data_type") +
+        f_id("parent") + f_char("value")
+      mt.pure(schema)
+    }
+
+    override def query_table(q: Query): F[Table[F]] = {
+      val object_list_it = runtime.list
+      mt.map(table_schema(""))(sch =>
+        new Table[F] {
+          override val mt: MonadThrow[F] = runtime.mt
+          override def schema: RecordType = sch
+          override def nrow: F[Int] = runtime.count
+
+          override def row_iter: MonadicIterator[F, Table.Row] = object_list_it
+            .flat_map{pr =>
+              mt.map(
+                pr.dtype match {
+                  case _: AtomicDataType => mt.map(runtime.get(pr.id))(inst =>  inst.asInstanceOf[AtomicObject[F]].value)
+                  case _ => mt.pure(Value.empty)
+                }
+              )(value => pr.copy(value = value))
+            }
+            .map(pr =>
               new Table.Row {
                 override def schema: Schema = sch
                 override protected def _get(col: Int): Value = col match {
                   case 0 => pr.id
                   case 1 => pr.dtype.show
                   case 2 => pr.parent.map(Value(_)).getOrElse(Value.empty)
+                  case 3 => pr.value
                 }
               }
-            )
-          }
-        )
-      }
-
-      override def cache_locally(table: Table[F]): F[LocalTable] = {
-        table.row_iter.traverse(rows =>
-          LocalRowBasedTable(table.schema, rows)
-        )
-      }
+          )
+        }
+      )
     }
+
+    override def cache_locally(table: Table[F]): F[LocalTable] = {
+      table.row_iter.traverse(rows =>
+        LocalRowBasedTable(table.schema, rows)
+      )
+    }
+  }
+
+  object implicits {
+
+    implicit class runtime2table[F[+_]](runtime: RFRuntime[F]) extends TableView[F](runtime)
   }
 }

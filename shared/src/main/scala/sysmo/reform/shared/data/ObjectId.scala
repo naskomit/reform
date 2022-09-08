@@ -9,11 +9,13 @@ trait ObjectId {
   def show: String
 }
 
-object NoId extends ObjectId {
-  override type Id = Unit
-  val v = ()
-  override def next: ObjectId = this
-  def show: String = "<N/A>"
+object ObjectId {
+  object NoId extends ObjectId {
+    override type Id = Unit
+    val v = ()
+    override def next: ObjectId = this
+    def show: String = "<N/A>"
+  }
 }
 
 trait ObjectIdSupplier {
