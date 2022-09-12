@@ -49,12 +49,6 @@ class ValueImpl {
   }
 
   def apply[T](x: T)(implicit f: T => Value): Value = x
-  //    constr.construct(x)
-  //
-  //  def opt[T](x: Option[T])(implicit constr: ValueConstructor[T]): Value =
-  //    constr.construct_opt(x)
-
-
 
   object implicits {
     implicit val value2double: ValueExtractor[Double] = {
