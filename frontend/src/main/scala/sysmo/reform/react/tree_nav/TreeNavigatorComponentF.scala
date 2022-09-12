@@ -24,10 +24,14 @@ class TreeNavigatorComponentF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback
   }
 
 
+
   val component =
     ScalaComponent.builder[Props]("TreeNavigator")
       .initialState(State())
       .renderBackend[Backend]
+//      .componentDidMount(f => Callback {
+//        f.props.data.renderer = Some(f.backend.R)
+//      })
       .build
 
   def apply(data: T.TreeSource[TT, F]): Unmounted =

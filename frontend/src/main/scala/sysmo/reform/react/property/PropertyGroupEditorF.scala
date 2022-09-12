@@ -1,24 +1,43 @@
 package sysmo.reform.react.property
 
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.shared.sources.property.{LocalPropertySource, PropertySource, PropertyTypes}
+import sysmo.reform.shared.sources.property.{LocalPropertySource, PropertySource}
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.layout.{FlexFormLayout, FormItem, FormLayout}
 import sysmo.reform.effects.implicits._
+import sysmo.reform.shared.types.{ArrayType, AtomicDataType, MultiReferenceType, RecordType, ReferenceType}
 
 case class PropertySourceView()
 case class PropertyView()
 
-class PropertyGroupEditorF[PT <: PropertyTypes, F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
-  case class Props(ps: PropertySource[PT, F], layout: FormLayout)
-  case class State(ps_local: Option[LocalPropertySource[PT, F]])
+class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
+  object StringEditorComponent extends StringEditorComponentF[F]
+  object IntegerEditorComponent extends IntegerEditorComponentF[F]
+
+  case class Props(ps: PropertySource[F], layout: FormLayout)
+  case class State(ps_local: Option[LocalPropertySource[F]])
   class Backend($: BScope) {
     def render(props: Props, state: State): VdomElement = {
 
       state.ps_local match {
-        case Some(ps) => props.layout(ps.props_sync.map(x =>
-          FormItem(x.descr, <.div(x.name))
-        ).toSeq)
+        case Some(ps) => props.layout(ps.props_sync.map {x =>
+          val editor: VdomElement = x.dtype match {
+            case dataType: AtomicDataType => dataType match {
+              case AtomicDataType.Real => ???
+              case AtomicDataType.Int => IntegerEditorComponent(x.id, x.value, props.ps.dispatcher)
+              case AtomicDataType.Long => IntegerEditorComponent(x.id, x.value, props.ps.dispatcher)
+              case AtomicDataType.Char => StringEditorComponent(x.id, x.value, props.ps.dispatcher)
+              case AtomicDataType.Bool => ???
+              case AtomicDataType.Date => ???
+              case AtomicDataType.Id => ???
+            }
+            case recordType: RecordType => <.div(s"Record[${recordType.symbol}]")
+            case arrayType: ArrayType => <.div(s"Array[${arrayType.prototype.symbol}]")
+            case referenceType: ReferenceType => ???
+            case referenceType: MultiReferenceType => ???
+          }
+          FormItem(x.descr, editor)
+        }.toSeq)
         case None => <.div("Loading properties")
       }
     }
@@ -27,10 +46,7 @@ class PropertyGroupEditorF[PT <: PropertyTypes, F[+_]](implicit f2c: F2Callback[
       for {
         p_seq <- f2c.async(props.ps.cache)
         _ <- $.modStateAsync(s => s.copy(ps_local = Some(p_seq)))
-      } yield {
-        println("Props loaded")
-        ()
-      }
+      } yield ()
     }
   }
 
@@ -40,6 +56,6 @@ class PropertyGroupEditorF[PT <: PropertyTypes, F[+_]](implicit f2c: F2Callback[
       .componentDidMount(f => f.backend.load_props(f.props))
       .build
 
-  def apply(ps: PropertySource[PT, F]): Unmounted =
+  def apply(ps: PropertySource[F]): Unmounted =
     component(Props(ps, FlexFormLayout))
 }

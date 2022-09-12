@@ -79,11 +79,6 @@ object RFRuntime {
     override type ActionType = RuntimeAction
   }
 
-  class PropertyTypes extends property.PropertyTypes {
-    override type Id = ObjectId
-    override type ActionType = RuntimeAction
-  }
-
   class TableView[_F[+_]](runtime: RFRuntime[_F]) extends TableService[_F] {
     override val mt: MonadThrow[F] = runtime.mt
     override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))

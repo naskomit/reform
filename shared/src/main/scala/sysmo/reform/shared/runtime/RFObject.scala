@@ -2,7 +2,8 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.runtime.RFRuntime.{PropertyTypes, TreeTypes}
+import sysmo.reform.shared.runtime.RFRuntime.{TreeTypes}
+import sysmo.reform.shared.sources.property.ActionType
 import sysmo.reform.shared.types.{AtomicDataType, DataType}
 import sysmo.reform.shared.util.{CirceTransport, MonadicIterator}
 import sysmo.reform.shared.{types => TPE}
@@ -167,11 +168,12 @@ object RFObject {
   object NamedPropertyView {
     import sysmo.reform.shared.sources.property.{Property, PropertySource, Dispatcher}
     import Value.implicits._
-    class RecordObjectAsNode[F[+_]](val obj: RecordObject[F]) extends PropertySource[PropertyTypes, F] {
-      private var _dispatcher = new Dispatcher[PropertyTypes, F] {
+    class RecordObjectAsNode[F[+_]](val obj: RecordObject[F]) extends PropertySource[F] {
+      private var _dispatcher = new Dispatcher[F] {
         val mt: MonadThrow[F] = obj.runtime.mt
         override def dispatch[U <: ActionType](action: U): F[Unit] = {
           println("Property dispatching")
+          println(action)
           mt.pure()
         }
       }
@@ -187,9 +189,8 @@ object RFObject {
             }
 
             mt.map(value_f)(v => new Property {
-              override type Id = String
-              override def id: String = field.ftype.name
-              override def name: String = id
+              override def id: ObjectId = field.instance
+              override def name: String = field.ftype.name
               override def descr: String = field.ftype.make_descr
               override def dtype: DataType = field.ftype.dtype
               override def value: Value = v
@@ -197,18 +198,18 @@ object RFObject {
           }
 
       override implicit val mt: MonadThrow[F] = obj.runtime.mt
-      override def dispatcher: Dispatcher[PropertyTypes, F] = _dispatcher
+      override def dispatcher: Dispatcher[F] = _dispatcher
     }
 
-    class OtherAsPropSource[F[+_]](val obj: RFObject[F]) extends PropertySource[PropertyTypes, F] {
+    class OtherAsPropSource[F[+_]](val obj: RFObject[F]) extends PropertySource[F] {
       override implicit val mt: MonadThrow[F] = obj.runtime.mt
       override def props: MonadicIterator[F, Property] = MonadicIterator.empty
-      override def dispatcher: Dispatcher[PropertyTypes, F] = new Dispatcher[PropertyTypes, F] {
+      override def dispatcher: Dispatcher[F] = new Dispatcher[F] {
         override def dispatch[U <: ActionType](action: U): F[Unit] = ???
       }
     }
 
-    def apply[F[+_]](obj: RFObject[F]): PropertySource[PropertyTypes, F] = obj match {
+    def apply[F[+_]](obj: RFObject[F]): PropertySource[F] = obj match {
       case atomicObject: AtomicObject[F] => new OtherAsPropSource(atomicObject)
       case recordObject: RecordObject[F] => new RecordObjectAsNode(recordObject)
       case arrayObject: ArrayObject[F] => new OtherAsPropSource(arrayObject)
