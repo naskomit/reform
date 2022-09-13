@@ -3,7 +3,7 @@ package sysmo.reform.shared.sources.property
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.runtime.FLocal
-import sysmo.reform.shared.sources.EditableSource
+import sysmo.reform.shared.sources.{SourceAction, Dispatcher, EditableSource}
 import sysmo.reform.shared.util.MonadicIterator
 
 trait PropertySource[F[+_]] extends EditableSource[F] {
@@ -11,12 +11,9 @@ trait PropertySource[F[+_]] extends EditableSource[F] {
   def props: MonadicIterator[F, Property]
   def cache: F[LocalPropertySource[F]] =
     props.traverse(prop_list => LocalPropertySource(prop_list, this))
-  def dispatcher: Dispatcher[F]
 }
 
-trait Dispatcher[F[+_]] {
-  def dispatch[U <: ActionType](action: U): F[Unit]
-}
+
 
 trait LocalPropertySource[F[+_]] extends PropertySource[F] {
   def props_sync: Iterator[Property]
@@ -38,6 +35,5 @@ object LocalPropertySource {
     new LocalPropertySourceImpl[F](prop_list, orig)
 }
 
-sealed trait ActionType
 
-case class SetFieldValue(id: ObjectId, value: Value) extends ActionType
+case class SetFieldValue(id: ObjectId, value: Value) extends SourceAction

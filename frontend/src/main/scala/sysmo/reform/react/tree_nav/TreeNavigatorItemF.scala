@@ -19,14 +19,14 @@ object TreeNavigatorItemF {
   }
 }
 
-class TreeNavigatorItemF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback[F])
+class TreeNavigatorItemF[F[+_]](implicit f2c: F2Callback[F])
   extends ReactComponent {
-  val ContextMenu = new ContextMenuF[TT, F]
+  object ContextMenu extends ContextMenuF[F, TreeNode[F]#ActionType]
   val Component = this
   type Settings = TreeNavigatorItemF.Settings
 
-  case class State(expanded: Boolean, children: Seq[T.TreeNode[TT, F]])
-  case class Props(node: T.TreeNode[TT, F], level: Int, settings: Settings)
+  case class State(expanded: Boolean, children: Seq[T.TreeNode[F]])
+  case class Props(node: T.TreeNode[F], level: Int, settings: Settings)
 
   final class Backend($: BackendScope[Props, State]) {
     def toggle_expanded(p: Props)(e: ReactEvent): AsyncCallback[Unit] = {
@@ -38,8 +38,8 @@ class TreeNavigatorItemF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback[F])
     def toggle_expanded2(p: Props)(initial_effect: => Unit): AsyncCallback[Unit] = {
         initial_effect
         p.node match {
-          case n: T.TreeBranch[TT, F] => f2c.async(n.children.traverse())
-          case n: T.TreeLeaf[TT, F] => f2c.async_pure(Seq())
+          case n: T.TreeBranch[F] => f2c.async(n.children.traverse())
+          case n: T.TreeLeaf[F] => f2c.async_pure(Seq())
         }
       }.flatMap(
         children => $.modStateAsync(s => s.copy(expanded = !s.expanded, children = children))
@@ -60,8 +60,8 @@ class TreeNavigatorItemF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback[F])
           <.div(
             ^.onClick ==> toggle_expanded(p),
             p.node match {
-              case n: T.TreeBranch[TT, F] => <.div(CSS.tree_nav.item_expand, if (s.expanded) "-" else "+")
-              case n: T.TreeLeaf[TT, F] => <.div(CSS.tree_nav.item_expand_leaf)
+              case n: T.TreeBranch[F] => <.div(CSS.tree_nav.item_expand, if (s.expanded) "-" else "+")
+              case n: T.TreeLeaf[F] => <.div(CSS.tree_nav.item_expand_leaf)
 
             },
           ),
@@ -108,7 +108,7 @@ class TreeNavigatorItemF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback[F])
       })
       .build
 
-  def apply(_node: T.TreeNode[TT, F], _level: Int, _settings: Settings): Unmounted =
+  def apply(_node: T.TreeNode[F], _level: Int, _settings: Settings): Unmounted =
     component(Props(_node, _level, _settings))
 
 }

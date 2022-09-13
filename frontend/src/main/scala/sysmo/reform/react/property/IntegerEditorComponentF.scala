@@ -3,7 +3,6 @@ package sysmo.reform.react.property
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.runtime.FLocal
-import sysmo.reform.shared.sources.property.Dispatcher
 
 class IntegerEditorComponentF[F[+_]]
 (implicit val f2c: F2Callback[F])

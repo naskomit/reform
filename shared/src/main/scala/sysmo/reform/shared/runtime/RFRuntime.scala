@@ -74,11 +74,6 @@ trait RFRuntime[_F[+_]] {
 object RFRuntime {
   import Value.implicits._
 
-  class TreeTypes extends tree.TreeTypes {
-    override type NodeId = ObjectId
-    override type ActionType = RuntimeAction
-  }
-
   class TableView[_F[+_]](runtime: RFRuntime[_F]) extends TableService[_F] {
     override val mt: MonadThrow[F] = runtime.mt
     override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))

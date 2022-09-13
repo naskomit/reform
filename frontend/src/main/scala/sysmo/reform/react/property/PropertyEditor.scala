@@ -3,7 +3,7 @@ package sysmo.reform.react.property
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.sources.property.{Dispatcher}
+import sysmo.reform.shared.{sources => S}
 
 trait PropertyEditor[F[+_]] extends ReactComponent {
   implicit val f2c: F2Callback[F]
@@ -13,6 +13,7 @@ trait PropertyEditor[F[+_]] extends ReactComponent {
     val dispatcher: Dispatcher[F]
   }
   type Props <: PropsBase
+  type Dispatcher[F[+_]]= S.Dispatcher[F]
 
 }
 

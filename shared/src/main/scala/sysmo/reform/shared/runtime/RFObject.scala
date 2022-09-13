@@ -2,8 +2,7 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.runtime.RFRuntime.{TreeTypes}
-import sysmo.reform.shared.sources.property.ActionType
+import sysmo.reform.shared.sources.SourceAction
 import sysmo.reform.shared.types.{AtomicDataType, DataType}
 import sysmo.reform.shared.util.{CirceTransport, MonadicIterator}
 import sysmo.reform.shared.{types => TPE}
@@ -60,34 +59,39 @@ object RFObject {
     implicit val enc_RecordFieldInstance: Encoder[RecordFieldInstance] = deriveEncoder
   }
 
-  import sysmo.reform.shared.sources.tree
-  class TreeView[F[+_]](rtobj: RFObject[F]) extends tree.TreeSource[TreeTypes, F] {
-    import tree.{Dispatcher, TreeBranch, TreeLeaf, TreeNode, TreeSource}
+  import sysmo.reform.shared.{sources => S}
+  import S.Dispatcher
+  import S.tree.{TreeSource, TreeBranch, TreeLeaf, TreeNode}
+  class TreeView[F[+_]](rtobj: RFObject[F]) extends TreeSource[F] {
     val runtime: RFRuntime[F] = rtobj.runtime
     val mt: MonadThrow[F] = runtime.mt
-    var _selection: Set[NodeId] = Set[NodeId]()
+    var _selection: Set[ObjectId] = Set[ObjectId]()
 
 
-    private var _dispatcher: Dispatcher[TreeTypes, F] = new Dispatcher[TreeTypes, F] {
+    private var _dispatcher: Dispatcher[F] = new Dispatcher[F] {
+
+      override implicit val mt: MonadThrow[F] = runtime.mt
+
       override def dispatch[U <: ActionType](action: U): F[Unit] = {
         println(s"Dispatch $action")
         runtime.dispatch(action)
         renderer.foreach(_.rerender())
-        runtime.mt.pure()
+        mt.pure()
       }
 
-      override def select(id: NodeId): Unit = {
+      override def select(id: ObjectId): F[Unit] = {
         _selection = Set(id)
         renderer.foreach(_.rerender())
+        mt.pure()
       }
     }
 
-    override def selection: Set[NodeId] = _selection
-    override val dispatcher: Dispatcher[TreeTypes, F] = _dispatcher
-    override def root: TreeNode[TreeTypes, F] = as_node(rtobj, None)
-    override def node_is_selected(id: NodeId): Boolean = selection.contains(id)
+    override def selection: Set[ObjectId] = _selection
+    override val dispatcher: Dispatcher[F] = _dispatcher
+    override def root: TreeNode[F] = as_node(rtobj, None)
+    override def node_is_selected(id: ObjectId): Boolean = selection.contains(id)
 
-    def as_node(obj: RFObject[F], name: Option[String]): TreeNode[TreeTypes, F] = {
+    def as_node(obj: RFObject[F], name: Option[String]): TreeNode[F] = {
       obj match {
         case v: AtomicObject[F] => new DebugNode(obj)
         case rec: RecordObject[F] => new RecordObjectAsNode(rec, name.getOrElse(rec.dtype.symbol))
@@ -97,27 +101,27 @@ object RFObject {
       }
     }
 
-    def as_nodeF(id: ObjectId, name: Option[String]): F[TreeNode[TreeTypes, F]] = {
+    def as_nodeF(id: ObjectId, name: Option[String]): F[TreeNode[F]] = {
       mt.map(runtime.get(id))(obj => as_node(obj, name))
     }
 
-    object EmptyNode extends TreeLeaf[TreeTypes, F] {
-      override def parent: F[Option[TreeNode[TreeTypes, F]]] = mt.pure(None)
-      override def id: Id = ObjectId.NoId
+    object EmptyNode extends TreeLeaf[F] {
+      override def parent: F[Option[TreeNode[F]]] = mt.pure(None)
+      override def id: ObjectId = ObjectId.NoId
       override def name: String = "Empty"
       override def icon: Option[String] = None
       override def actions: Seq[Action] = Seq()
-      override def dispatcher: Dispatcher[TreeTypes, F] = _dispatcher
+      override def dispatcher: Dispatcher[F] = _dispatcher
       override def is_selected: Boolean = false
     }
 
 
-    trait ObjectAsNode[U <: RFObject[F]] extends TreeBranch[TreeTypes, F] {
+    trait ObjectAsNode[U <: RFObject[F]] extends TreeBranch[F] {
       val obj: U
-      override def id: Id = obj.id
-      override def dispatcher: Dispatcher[TreeTypes, F] = _dispatcher
+      override def id: ObjectId = obj.id
+      override def dispatcher: Dispatcher[F] = _dispatcher
       override def is_selected: Boolean = node_is_selected(id)
-      override def parent: F[Option[TreeNode[TreeTypes, F]]] = {
+      override def parent: F[Option[TreeNode[F]]] = {
         obj.parent match {
           case Some(p) => mt.map(runtime.get(p))(x => Some(as_node(x, None)))
           case None => mt.pure(None)
@@ -133,7 +137,7 @@ object RFObject {
         case arrayObject: ArrayObject[_] => Value.empty
       }
 
-      override def children: MonadicIterator[F, TreeNode[TreeTypes, F]] =
+      override def children: MonadicIterator[F, TreeNode[F]] =
         MonadicIterator.empty(runtime.mt)
       override def name: String = s"${get_value.get[String]}"
       override def icon: Option[String] = Some("fa fa-bug")
@@ -143,7 +147,7 @@ object RFObject {
     class RecordObjectAsNode(val obj: RecordObject[F], val name: String) extends ObjectAsNode[RecordObject[F]] {
       override def icon: Option[String] = Some("fa fa-map")
       override def actions: Seq[Action] = Seq()
-      override def children: MonadicIterator[F, TreeNode[TreeTypes, F]] =
+      override def children: MonadicIterator[F, TreeNode[F]] =
         obj.fields
 //          .filterNot(x => x.target.isInstanceOf[AtomicValue])
           .flat_map(x => {
@@ -158,7 +162,7 @@ object RFObject {
     class ArrayObjectAsNode(val obj: ArrayObject[F], val name: String) extends ObjectAsNode[ArrayObject[F]] {
       override def icon: Option[String] = Some("fa fa-list")
       override def actions: Seq[Action] = Seq()
-      override def children: MonadicIterator[F, TreeNode[TreeTypes, F]] =
+      override def children: MonadicIterator[F, TreeNode[F]] =
         obj.elements
           .flat_map(x =>
             as_nodeF(x.instance, Some(x.index.toString)))
@@ -166,16 +170,18 @@ object RFObject {
   }
 
   object NamedPropertyView {
-    import sysmo.reform.shared.sources.property.{Property, PropertySource, Dispatcher}
+    import sysmo.reform.shared.sources.property.{Property, PropertySource}
     import Value.implicits._
     class RecordObjectAsNode[F[+_]](val obj: RecordObject[F]) extends PropertySource[F] {
       private var _dispatcher = new Dispatcher[F] {
-        val mt: MonadThrow[F] = obj.runtime.mt
-        override def dispatch[U <: ActionType](action: U): F[Unit] = {
+        implicit val mt: MonadThrow[F] = obj.runtime.mt
+        override def dispatch[U <: SourceAction](action: U): F[Unit] = {
           println("Property dispatching")
           println(action)
           mt.pure()
         }
+
+        override def select(id: ObjectId): F[Unit] = mt.pure()
       }
       override def props: MonadicIterator[F, Property] =
         obj.fields
@@ -205,7 +211,9 @@ object RFObject {
       override implicit val mt: MonadThrow[F] = obj.runtime.mt
       override def props: MonadicIterator[F, Property] = MonadicIterator.empty
       override def dispatcher: Dispatcher[F] = new Dispatcher[F] {
-        override def dispatch[U <: ActionType](action: U): F[Unit] = ???
+        override implicit val mt: MonadThrow[F] = obj.runtime.mt
+        override def select(id: ObjectId): F[Unit] = mt.pure()
+        override def dispatch[U <: SourceAction](action: U): F[Unit] = ???
       }
     }
 

@@ -14,7 +14,7 @@ import sysmo.reform.shared.sources.{tree => T}
 import scala.scalajs.js
 
 class ObjectTreeBrowserF[F[+_] : MonadThrow](implicit f2c: F2Callback[F]) extends ReactComponent {
-  object TreeNavigatorComponent extends TreeNavigatorComponentF[RFRuntime.TreeTypes, F]
+  object TreeNavigatorComponent extends TreeNavigatorComponentF[F]
   object PropertyGroupEditor extends PropertyGroupEditorF[F]
 
   case class Props(obj: RFObject[F], runtime: RFRuntime[F])

@@ -5,16 +5,17 @@ import japgolly.scalajs.react._
 import scalacss.ScalaCssReact._
 import org.scalajs.dom
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.shared.sources.{tree => T}
+import sysmo.reform.shared.sources.{Dispatcher, SourceAction, tree => T}
+
 import scala.scalajs.js
 import sysmo.reform.css.{ReFormCSS => CSS}
 
-class ContextMenuF[TT <: T.TreeTypes, F[+_]] extends ReactComponent {
+class ContextMenuF[F[+_], ActionType <: SourceAction] extends ReactComponent {
   type HandlerFn[T <: dom.Event] = js.Function1[T, _]
 
   case class State(expanded: Boolean)
 
-  case class Props(actions: Seq[T.NodeAction[TT#ActionType]], dispatcher: T.Dispatcher[TT, F])
+  case class Props(actions: Seq[T.NodeAction[ActionType]], dispatcher: Dispatcher[F])
 
   final class Backend($: BackendScope[Props, State]) {
     private val outer_ref = Ref[dom.html.Element]
@@ -46,11 +47,11 @@ class ContextMenuF[TT <: T.TreeTypes, F[+_]] extends ReactComponent {
         open(event)
     }
 
-    def fire_action(dispatcher: T.Dispatcher[TT, F], a: T.NodeAction[_])(event: ReactEvent): Callback = {
+    def fire_action(dispatcher: Dispatcher[F], a: T.NodeAction[ActionType])(event: ReactEvent): Callback = {
       Callback {
         event.stopPropagation()
       } >> $.modState(s => s.copy(expanded = false)) >> Callback {
-        dispatcher.dispatch(a.data.asInstanceOf[TT#ActionType])
+        dispatcher.dispatch(a.data)
       }
     }
 
@@ -79,6 +80,6 @@ class ContextMenuF[TT <: T.TreeTypes, F[+_]] extends ReactComponent {
       .renderBackend[Backend]
       .build
 
-  def apply(_actions: Seq[T.NodeAction[TT#ActionType]], _dispatcher: T.Dispatcher[TT, F]): Unmounted =
+  def apply(_actions: Seq[T.NodeAction[ActionType]], _dispatcher: Dispatcher[F]): Unmounted =
     component(Props(_actions, _dispatcher))
 }

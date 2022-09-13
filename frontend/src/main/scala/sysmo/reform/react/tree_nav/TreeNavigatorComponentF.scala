@@ -8,11 +8,11 @@ import sysmo.reform.shared.sources.{tree => T}
 import sysmo.reform.css.{ReFormCSS => CSS}
 import sysmo.reform.effects.implicits.F2Callback
 
-class TreeNavigatorComponentF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback[F])
+class TreeNavigatorComponentF[F[+_]](implicit f2c: F2Callback[F])
   extends ReactComponent {
-  val TreeNavigatorItem = new TreeNavigatorItemF[TT, F]
+  val TreeNavigatorItem = new TreeNavigatorItemF[F]
 
-  case class Props(data: T.TreeSource[TT, F])
+  case class Props(data: T.TreeSource[F])
   case class State()
 
   final class Backend($: BackendScope[Props, State]) {
@@ -34,7 +34,7 @@ class TreeNavigatorComponentF[TT <: T.TreeTypes, F[+_]](implicit f2c: F2Callback
 //      })
       .build
 
-  def apply(data: T.TreeSource[TT, F]): Unmounted =
+  def apply(data: T.TreeSource[F]): Unmounted =
     component(Props(data))
 
 }
