@@ -5,7 +5,8 @@ import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
 import cats.MonadThrow
-import sysmo.reform.shared.runtime.LocalRuntime.constructors
+import sysmo.reform.shared.sources.SourceAction
+import sysmo.reform.shared.util.containers.FLocal
 
 class LocalRuntime() extends RFRuntime[FLocal] {
   override protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
@@ -33,6 +34,20 @@ class LocalRuntime() extends RFRuntime[FLocal] {
   def count: F[Int] = FLocal(objects.size)
 
   override def dispatch(action: RuntimeAction): F[Unit] = {
+    logger.info(action.toString)
+    action match {
+      case SetValue(id, value) => {
+        for {
+          obj <- get(id)
+          _ <- obj match {
+            case atomic_object: AtomicObject[F] => atomic_object.update_value(value)
+            case recordObject: RecordObject[F] => ???
+            case arrayObject: ArrayObject[F] => ???
+          }
+        } yield ()
+      }
+      case _ => ???
+    }
     mt.pure()
   }
 }
@@ -41,8 +56,13 @@ object LocalRuntime {
   trait LocalMT {
     val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
   }
-  case class AtomicObjectImpl(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId])
-    extends AtomicObject[FLocal] with LocalMT
+  case class AtomicObjectImpl(dtype: AtomicDataType, id: ObjectId, var value: Value, parent: Option[ObjectId])
+    extends AtomicObject[FLocal] with LocalMT {
+    override def update_value(v: Value): F[Unit] = {
+      value = v
+      mt.pure()
+    }
+  }
 
   case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
     extends RecordObject[FLocal] with LocalMT {

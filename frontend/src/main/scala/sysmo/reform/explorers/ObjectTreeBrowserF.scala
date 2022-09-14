@@ -11,8 +11,6 @@ import sysmo.reform.react.property.PropertyGroupEditorF
 import sysmo.reform.shared.runtime.{RFObject, RFRuntime}
 import sysmo.reform.shared.sources.{tree => T}
 
-import scala.scalajs.js
-
 class ObjectTreeBrowserF[F[+_] : MonadThrow](implicit f2c: F2Callback[F]) extends ReactComponent {
   object TreeNavigatorComponent extends TreeNavigatorComponentF[F]
   object PropertyGroupEditor extends PropertyGroupEditorF[F]
@@ -54,10 +52,10 @@ class ObjectTreeBrowserF[F[+_] : MonadThrow](implicit f2c: F2Callback[F]) extend
     }
 
     def render (p: Props, s: State): VdomElement = {
-//      val tree_view = new RFObject.TreeView[F](p.obj)
       <.div(
         ^.display:= "flex", ^.columnGap:= 100.px,
-        <.div(^.maxWidth:= 300.px, ^.flexGrow:= "1",
+        <.div(^.minWidth:= 300.px, ^.maxWidth:= 400.px,
+          ^.flexGrow:= "1",
           s.tree_view match {
             case Some(tree_view) => TreeNavigatorComponent(tree_view)
             case None => <.div("Initializing")

@@ -2,9 +2,8 @@ package sysmo.reform.shared.sources.property
 
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.runtime.FLocal
-import sysmo.reform.shared.sources.{SourceAction, Dispatcher, EditableSource}
-import sysmo.reform.shared.util.MonadicIterator
+import sysmo.reform.shared.sources.{Dispatcher, EditableSource, SourceAction}
+import sysmo.reform.shared.util.{MonadicIterator, containers}
 
 trait PropertySource[F[+_]] extends EditableSource[F] {
   implicit val mt: MonadThrow[F]
@@ -35,5 +34,3 @@ object LocalPropertySource {
     new LocalPropertySourceImpl[F](prop_list, orig)
 }
 
-
-case class SetFieldValue(id: ObjectId, value: Value) extends SourceAction

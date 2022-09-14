@@ -3,7 +3,8 @@ package sysmo.demo1
 import sysmo.reform.app.{Configuration, Panel}
 import sysmo.reform.explorers.{ObjectTreeBrowserF, InstanceTableF}
 import sysmo.reform.shared.examples.MicroController
-import sysmo.reform.shared.runtime.{FLocal, RFRuntime, RFObject}
+import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.runtime.{RFRuntime, RFObject}
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
 import sysmo.reform.effects.implicits._

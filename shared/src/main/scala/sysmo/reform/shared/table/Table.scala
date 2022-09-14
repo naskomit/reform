@@ -2,7 +2,7 @@ package sysmo.reform.shared.table
 
 import cats.MonadThrow
 import sysmo.reform.shared.data.Value
-import sysmo.reform.shared.runtime.{FLocal, LocalRuntime}
+import sysmo.reform.shared.util.containers.FLocal
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.util.MonadicIterator

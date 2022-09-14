@@ -1,16 +1,18 @@
 package sysmo.reform.react.property
 
+import cats.MonadThrow
+import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.shared.sources.property.{LocalPropertySource, PropertySource}
-import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.layout.{FlexFormLayout, FormItem, FormLayout}
 import sysmo.reform.effects.implicits._
+import sysmo.reform.shared.runtime.{RuntimeAction, SetValue}
 import sysmo.reform.shared.types.{ArrayType, AtomicDataType, MultiReferenceType, RecordType, ReferenceType}
 
 case class PropertySourceView()
 case class PropertyView()
 
-class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
+class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F], mt: MonadThrow[F]) extends ReactComponent {
   object StringEditorComponent extends StringEditorComponentF[F]
   object IntegerEditorComponent extends IntegerEditorComponentF[F]
 
@@ -24,9 +26,15 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComp
           val editor: VdomElement = x.dtype match {
             case dataType: AtomicDataType => dataType match {
               case AtomicDataType.Real => ???
-              case AtomicDataType.Int => IntegerEditorComponent(x.id, x.value, props.ps.dispatcher)
-              case AtomicDataType.Long => IntegerEditorComponent(x.id, x.value, props.ps.dispatcher)
-              case AtomicDataType.Char => StringEditorComponent(x.id, x.value, props.ps.dispatcher)
+              case AtomicDataType.Int => IntegerEditorComponent(
+                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
+              )
+              case AtomicDataType.Long => IntegerEditorComponent(
+                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
+              )
+              case AtomicDataType.Char => StringEditorComponent(
+                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
+              )
               case AtomicDataType.Bool => ???
               case AtomicDataType.Date => ???
               case AtomicDataType.Id => ???
@@ -40,6 +48,14 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComp
         }.toSeq)
         case None => <.div("Loading properties")
       }
+    }
+
+    def on_prop_update(props: Props)(action: RuntimeAction): F[Unit] = {
+      action match {
+        case SetValue(_, _) => load_props(props).runNow()
+        case _ =>
+      }
+      mt.pure()
     }
 
     def load_props(props: Props): AsyncCallback[Unit] = {

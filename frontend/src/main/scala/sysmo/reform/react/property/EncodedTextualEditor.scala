@@ -3,8 +3,8 @@ package sysmo.reform.react.property
 import japgolly.scalajs.react.{ReactEventFromInput, ScalaComponent}
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.shared.data.Value
-import sysmo.reform.shared.runtime.FLocal
-import sysmo.reform.shared.sources.property.SetFieldValue
+import sysmo.reform.shared.runtime.SetValue
+import sysmo.reform.shared.util.containers.FLocal
 
 trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
   case class State(local_value: String, status: PropertyEditor.Status, focused: Boolean)
@@ -50,16 +50,20 @@ trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
     def on_blur(p: Props, s: State): AsyncCallback[Unit] = {
       val value: FLocal[Value] = parse(s.local_value)
       value match {
-        case Right(x) => f2c.async(p.dispatcher.dispatch(
-          SetFieldValue(p.id, x)
+        case Right(x) if (x != p.value) => f2c.async(p.dispatcher.dispatch(
+          SetValue(p.id, x)
         )) >> $.modStateAsync(s => s.copy(
           local_value = format(x),
           status = PropertyEditor.Valid, focused = false
         ))
-        case Left(e) => $.modStateAsync(s =>
-          s.copy(status = PropertyEditor.Error("Invalid value", s.local_value))
-        )
 
+        case Right(x) => $.modStateAsync(s => s.copy(
+          status = PropertyEditor.Valid, focused = false
+        ))
+
+        case Left(e) => $.modStateAsync(s => s.copy(
+          status = PropertyEditor.Error("Invalid value", s.local_value)
+        ))
       }
     }
   }

@@ -26,6 +26,7 @@ case class ObjectProxy(id: ObjectId, dtype: TPE.DataType, parent: Option[ObjectI
 trait AtomicObject[_F[+_]] extends RFObject[_F] {
   override type DType = TPE.AtomicDataType
   def value: Value
+  def update_value(v: Value): F[Unit]
   override def own_children: MIter =
     MonadicIterator.empty[F, RFObject[F]](mt)
 }
@@ -72,7 +73,7 @@ object RFObject {
 
       override implicit val mt: MonadThrow[F] = runtime.mt
 
-      override def dispatch[U <: ActionType](action: U): F[Unit] = {
+      override def dispatch(action: RuntimeAction): F[Unit] = {
         println(s"Dispatch $action")
         runtime.dispatch(action)
         renderer.foreach(_.rerender())
@@ -172,15 +173,11 @@ object RFObject {
   object NamedPropertyView {
     import sysmo.reform.shared.sources.property.{Property, PropertySource}
     import Value.implicits._
-    class RecordObjectAsNode[F[+_]](val obj: RecordObject[F]) extends PropertySource[F] {
+    class RecordObjectAsPropSource[F[+_]](val obj: RecordObject[F]) extends PropertySource[F] {
       private var _dispatcher = new Dispatcher[F] {
         implicit val mt: MonadThrow[F] = obj.runtime.mt
-        override def dispatch[U <: SourceAction](action: U): F[Unit] = {
-          println("Property dispatching")
-          println(action)
-          mt.pure()
-        }
-
+        override def dispatch(action: RuntimeAction): F[Unit] =
+          obj.runtime.dispatch(action)
         override def select(id: ObjectId): F[Unit] = mt.pure()
       }
       override def props: MonadicIterator[F, Property] =
@@ -213,13 +210,13 @@ object RFObject {
       override def dispatcher: Dispatcher[F] = new Dispatcher[F] {
         override implicit val mt: MonadThrow[F] = obj.runtime.mt
         override def select(id: ObjectId): F[Unit] = mt.pure()
-        override def dispatch[U <: SourceAction](action: U): F[Unit] = ???
+        override def dispatch(action: RuntimeAction): F[Unit] = ???
       }
     }
 
     def apply[F[+_]](obj: RFObject[F]): PropertySource[F] = obj match {
       case atomicObject: AtomicObject[F] => new OtherAsPropSource(atomicObject)
-      case recordObject: RecordObject[F] => new RecordObjectAsNode(recordObject)
+      case recordObject: RecordObject[F] => new RecordObjectAsPropSource(recordObject)
       case arrayObject: ArrayObject[F] => new OtherAsPropSource(arrayObject)
     }
   }

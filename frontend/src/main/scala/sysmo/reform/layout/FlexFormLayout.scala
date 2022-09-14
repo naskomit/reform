@@ -9,10 +9,12 @@ object FlexFormLayout extends FormLayout {
   case class State()
   class Backend($: BScope) {
     def render(p: Props, s: State): VdomNode = {
-      <.div(^.display:= "flex", ^.flexWrap:= "true",
-        ^.columnGap:= 50.px,
+      val rowGap = VdomStyle("rowGap")
+      <.div(^.display:= "flex", ^.flexWrap:= "wrap",
+        ^.columnGap:= 50.px, rowGap:= 50.px,
         p.items.map(item =>
-          <.div(^.className:= "form-group",
+          <.div(
+            ^.minWidth := 200.px,
             <.label(item.label),
             <.div(item.editor)
           )

@@ -5,7 +5,7 @@ import japgolly.scalajs.react.{BackendScope, CtorType}
 import japgolly.scalajs.react.callback.{Exports => cb_exports}
 import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.component.Scala.Component
-import sysmo.reform.util.log.Logging
+import sysmo.reform.shared.logging.Logging
 
 trait ReactAction
 

@@ -4,10 +4,9 @@ import cats.MonadThrow
 import cats.implicits._
 import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, Value}
+import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Query, Table, TableService}
-import sysmo.reform.shared.sources.tree
-import sysmo.reform.shared.sources.property
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.reflect.ClassTag
@@ -20,7 +19,7 @@ trait Constructors[_F[+_]] {
 
 }
 
-trait RFRuntime[_F[+_]] {
+trait RFRuntime[_F[+_]] extends Logging {
   type F[+X] = _F[X]
   implicit val mt: MonadThrow[F]
   protected val objectid_supplier: ObjectIdSupplier
@@ -53,9 +52,6 @@ trait RFRuntime[_F[+_]] {
       obj <- get(id)
       _ <- obj.own_children.map(child => remove_recursive(child.id)).traverse()
     } yield ()
-//    mt.flatMap(
-//      mt.flatMap(get(id))(obj => obj.own_children.fold_left(())((acc, child_id) => acc))
-//    )(_ => remove(id))
   }
 
   def create_object[T <: RTO](create_fn: ObjectId => F[T]): F[T] = {

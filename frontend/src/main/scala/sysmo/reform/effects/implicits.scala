@@ -3,7 +3,7 @@ package sysmo.reform.effects
 import cats.MonadThrow
 import japgolly.scalajs.react.callback.{AsyncCallback, CallbackTo}
 import org.scalajs.dom.console
-import sysmo.reform.shared.runtime.FLocal
+import sysmo.reform.shared.util.containers.FLocal
 
 import scala.scalajs.js
 import scala.scalajs.js.|

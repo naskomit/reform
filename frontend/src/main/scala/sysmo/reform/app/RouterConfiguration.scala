@@ -2,7 +2,7 @@ package sysmo.reform.app
 
 import japgolly.scalajs.react.extra.router.{Resolution, RouterConfigDsl, RouterCtl}
 import japgolly.scalajs.react.extra.router.SetRouteVia.HistoryReplace
-import sysmo.reform.util.log.Logging
+import sysmo.reform.shared.logging.Logging
 
 class RouterConfiguration(pages: PageCollection, app_config: Configuration, layout: Layout )
   extends Logging {

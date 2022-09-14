@@ -8,7 +8,7 @@ import org.scalajs.dom.HTMLElement
 import sysmo.reform.shared.{expr => E}
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.table.{LocalTable, SelectionHandler, Table}
-import sysmo.reform.util.log.Logging
+import sysmo.reform.shared.logging.Logging
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
