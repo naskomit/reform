@@ -18,6 +18,7 @@ object Application extends UIApplication {
   override def pages: PageCollection = PageCollection(
 //    HomePage,
     SimplePage("RuntimeExplorer", None, "fa fa-list-check", RuntimeExplorerPanel),
+    SimplePage("BioReactorController", None, "fa fa-list-check", BioReactorControllerPanel),
   )
 
   override def app_config: Configuration = new Configuration {

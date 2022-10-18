@@ -33,8 +33,10 @@ case class LogicalOr(expr_list: PredicateExpression*)
 case class LogicalNot(expr: PredicateExpression)
   extends PredicateExpression
 
+/** Predicates */
 sealed trait PredicateOp
 
+/** Common Predicates */
 sealed trait CommonPredicateOp extends PredicateOp
 case object Equal extends CommonPredicateOp
 case object NotEqual extends CommonPredicateOp
@@ -42,16 +44,17 @@ case object NotEqual extends CommonPredicateOp
 case class CommonPredicate(op: CommonPredicateOp, arg1: Expression, arg2: Expression)
   extends PredicateExpression
 
+/** Numerical Predicates */
 sealed trait NumericalPredicateOp extends PredicateOp
 case object NP_> extends NumericalPredicateOp
 case object NP_>= extends NumericalPredicateOp
 case object NP_< extends NumericalPredicateOp
 case object NP_<= extends NumericalPredicateOp
 
-
 case class NumericalPredicate(op: NumericalPredicateOp, arg1: Expression, arg2: Expression)
   extends PredicateExpression
 
+/** String Predicates */
 sealed trait StringPredicateOp extends PredicateOp
 case object StartingWith extends StringPredicateOp
 case object NonStartingWith extends StringPredicateOp
@@ -63,12 +66,36 @@ case object NotContaining extends StringPredicateOp
 case class StringPredicate(op: StringPredicateOp, arg1: Expression, arg2: Expression)
   extends PredicateExpression
 
+/** Containment Predicates */
 sealed trait ContainmentPredicateOp extends PredicateOp
 case object Within extends ContainmentPredicateOp
 case object Without extends ContainmentPredicateOp
 
 case class ContainmentPredicate(op: ContainmentPredicateOp, element: Expression, container: Seq[Constant])
   extends PredicateExpression
+
+/** DType predicates */
+//sealed trait DTypeExpression
+//
+//sealed trait AtomicType
+//
+//case object Real extends AtomicType
+//case object Int extends AtomicType
+//case object Long extends AtomicType
+//case object Char extends AtomicType
+//case object Bool extends AtomicType
+//case object Date extends AtomicType
+//case object Id extends AtomicType
+//
+//case class Atomic(atomic_type: Option[AtomicType] = None) extends DTypeExpression
+//
+//case class Record(symbol: Option[String] = None) extends DTypeExpression
+//case class Array(prototype: Option[String] = None) extends DTypeExpression
+//case class Reference(prototype: Option[String] = None) extends DTypeExpression
+//case class MultiReference(prototype: Option[String] = None) extends DTypeExpression
+
+//case class HasDType(dtype: DTypeExpression) extends TypePredicateExpression
+//sealed trait TypePredicateExpression extends PredicateExpression
 
 object Expression {
   def apply(v: Value): Constant = Constant(v)

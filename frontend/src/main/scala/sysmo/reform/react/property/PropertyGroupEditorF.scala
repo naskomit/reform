@@ -12,9 +12,10 @@ import sysmo.reform.shared.types.{ArrayType, AtomicDataType, MultiReferenceType,
 case class PropertySourceView()
 case class PropertyView()
 
-class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F], mt: MonadThrow[F]) extends ReactComponent {
+class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
   object StringEditorComponent extends StringEditorComponentF[F]
   object IntegerEditorComponent extends IntegerEditorComponentF[F]
+  object FloatEditorComponent extends FloatEditorComponentF[F]
 
   case class Props(ps: PropertySource[F], layout: FormLayout)
   case class State(ps_local: Option[LocalPropertySource[F]])
@@ -25,7 +26,9 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F], mt: MonadThrow[F]
         case Some(ps) => props.layout(ps.props_sync.map {x =>
           val editor: VdomElement = x.dtype match {
             case dataType: AtomicDataType => dataType match {
-              case AtomicDataType.Real => ???
+              case AtomicDataType.Real => FloatEditorComponent(
+                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
+              )
               case AtomicDataType.Int => IntegerEditorComponent(
                 x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
               )
@@ -55,7 +58,7 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F], mt: MonadThrow[F]
         case SetValue(_, _) => load_props(props).runNow()
         case _ =>
       }
-      mt.pure()
+      f2c.mt.pure()
     }
 
     def load_props(props: Props): AsyncCallback[Unit] = {

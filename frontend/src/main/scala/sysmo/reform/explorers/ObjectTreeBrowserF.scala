@@ -11,7 +11,7 @@ import sysmo.reform.react.property.PropertyGroupEditorF
 import sysmo.reform.shared.runtime.{RFObject, RFRuntime}
 import sysmo.reform.shared.sources.{tree => T}
 
-class ObjectTreeBrowserF[F[+_] : MonadThrow](implicit f2c: F2Callback[F]) extends ReactComponent {
+class ObjectTreeBrowserF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
   object TreeNavigatorComponent extends TreeNavigatorComponentF[F]
   object PropertyGroupEditor extends PropertyGroupEditorF[F]
 

@@ -18,6 +18,12 @@ trait RecordTypeAux {
       this
     }
 
+    def fields(field_list: RecordFieldType.FieldBuilder*): this.type = {
+      _fields = _fields ++ field_list.map(f => f)
+      _field_index = new SequenceIndex(_fields, _.name)
+      this
+    }
+
     protected[RecordTypeAux] var label_expr: Option[Expression] = None
     def label_expr(expr: Expression): this.type = {
       label_expr = Some(expr)

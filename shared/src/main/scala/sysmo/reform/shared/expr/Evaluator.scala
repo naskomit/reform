@@ -80,6 +80,14 @@ trait Evaluator[_F[+_]] {
           case NP_> => num_compare(arg1, arg2, Evaluator.compare_fns.>, ctx)
           case NP_>= => num_compare(arg1, arg2, Evaluator.compare_fns.>=, ctx)
         }
+
+//        case expr1: TypePredicateExpression => mt.raiseError(
+//          new IllegalArgumentException(s"Cannot handle type predicate expression $expr1")
+//        )
+//
+//        case expr1 => mt.raiseError(
+//          new IllegalArgumentException(s"Cannot handle expression $expr1")
+//        )
 //        case StringPredicate(op, arg1, arg2) => ???
 //        case ContainmentPredicate(op, element, container) => ???
         //      case ContainmentPredicate(op, element, container) => {
