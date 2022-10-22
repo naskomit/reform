@@ -1,7 +1,7 @@
 package sysmo.reform.shared.storage
 
 import cats.MonadThrow
-import sysmo.reform.shared.runtime.RecordObject
+import sysmo.reform.shared.runtime.RecordInstance
 import sysmo.reform.shared.types.RecordType
 
 trait Storage[F[+_]] {
@@ -11,7 +11,7 @@ trait Storage[F[+_]] {
 
 trait CRUDService[F[+_]] {
   implicit val mt: MonadThrow[F]
-  def insert(obj: RecordObject[F]): F[Unit]
+  def insert(obj: RecordInstance[F]): F[Unit]
 }
 
 trait StorageSession[F[+_]] {

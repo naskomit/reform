@@ -2,9 +2,9 @@
 //
 //import cats.MonadThrow
 //import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUIDSupplier, Value}
-//import sysmo.reform.shared.runtime.{ArrayElementInstance, ArrayObject, AtomicObject, Constructors, ObjectProxy, RFObject, RFRuntime, RecordFieldInstance, RecordObject, RuntimeAction}
+//import sysmo.reform.shared.runtime.{ArrayElementInstance, ArrayInstance, PrimitiveInstance, Constructors, ObjectProxy, RFObject, RFRuntime, RecordFieldInstance, RecordInstance, RuntimeAction}
 //import sysmo.reform.shared.table.Query
-//import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordType}
+//import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, RecordType}
 //import sysmo.reform.shared.util.MonadicIterator
 //import sysmo.reform.shared.util.containers.FLocal
 //
@@ -39,33 +39,33 @@
 //}
 //
 //class RuntimeObjectsF[F[+_]](implicit mt: MonadThrow[F]) {
-//  case class AtomicObjectImpl(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId])
-//  extends AtomicObject[F] {
+//  case class PrimitiveInstanceImpl(dtype: PrimitiveDataType, id: ObjectId, value: Value, parent: Option[ObjectId])
+//  extends PrimitiveInstance[F] {
 //    override implicit val mt: MonadThrow[F] = mt
 //    override def update_value(v: Value): F[Unit] = ???
 //  }
 //
-//  case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
-//  extends RecordObject[F] {
+//  case class RecordInstanceImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
+//  extends RecordInstance[F] {
 //    override implicit val mt: MonadThrow[F] = mt
 //    override def fields: MonadicIterator[F, RecordFieldInstance] = ???
 //    override def own_children: MIter = ???
 //  }
 //
-//  case class ArrayObjectImpl(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId])
-//  extends ArrayObject[F] {
+//  case class ArrayInstanceImpl(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId])
+//  extends ArrayInstance[F] {
 //    override implicit val mt: MonadThrow[F] = mt
 //    override def elements: MonadicIterator[F, ArrayElementInstance[F]] = ???
 //    override def own_children: MIter = ???
 //  }
 //
 //  object constructors extends Constructors[F] {
-//    override def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]] =
-//      mt.pure(AtomicObjectImpl(dtype, id, value, parent))
-//    override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]] =
-//      mt.pure(RecordObjectImpl(dtype, id, parent))
-//    override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayObject[F]] =
-//      mt.pure(ArrayObjectImpl(dtype, id, parent))
+//    override def primitive(dtype: PrimitiveDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[PrimitiveInstance[F]] =
+//      mt.pure(PrimitiveInstanceImpl(dtype, id, value, parent))
+//    override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]] =
+//      mt.pure(RecordInstanceImpl(dtype, id, parent))
+//    override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayInstance[F]] =
+//      mt.pure(ArrayInstanceImpl(dtype, id, parent))
 //  }
 //
 //}

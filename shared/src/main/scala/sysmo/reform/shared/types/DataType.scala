@@ -16,44 +16,44 @@ sealed trait DataType {
   override def hashCode(): Int = id.hashCode()
 }
 
-/** AtomicDataType */
-sealed trait AtomicDataType extends DataType {
+/** PrimitiveDataType */
+sealed trait PrimitiveDataType extends DataType {
   def default: Value = Value.empty
   val symbol: String
   def show: String = symbol
 }
 
-object AtomicDataType extends AtomicDataTypeAux {
-  case object Real extends AtomicDataType {
+object PrimitiveDataType extends PrimitiveDataTypeAux {
+  case object Real extends PrimitiveDataType {
     val symbol = "Real"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
-  case object Int extends AtomicDataType {
+  case object Int extends PrimitiveDataType {
     val symbol = "Int"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
-  case object Long extends AtomicDataType {
+  case object Long extends PrimitiveDataType {
     val symbol = "Long"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
-  case object Char extends AtomicDataType {
+  case object Char extends PrimitiveDataType {
     val symbol = "Char"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
-  case object Bool extends AtomicDataType {
+  case object Bool extends PrimitiveDataType {
     val symbol = "Bool"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
-  case object Date extends AtomicDataType {
+  case object Date extends PrimitiveDataType {
     val symbol = "Date"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
-  case object Id extends AtomicDataType {
+  case object Id extends PrimitiveDataType {
     val symbol = "Id"
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
 
-  def apply(name: String): AtomicDataType= {
+  def apply(name: String): PrimitiveDataType= {
     name match {
       case "Real" => Real
       case "Int" => Int

@@ -7,7 +7,7 @@ import sysmo.reform.shared.sources.property.{LocalPropertySource, PropertySource
 import sysmo.reform.layout.{FlexFormLayout, FormItem, FormLayout}
 import sysmo.reform.effects.implicits._
 import sysmo.reform.shared.runtime.{RuntimeAction, SetValue}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, MultiReferenceType, RecordType, ReferenceType}
+import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, MultiReferenceType, RecordType, ReferenceType}
 
 case class PropertySourceView()
 case class PropertyView()
@@ -25,22 +25,22 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComp
       state.ps_local match {
         case Some(ps) => props.layout(ps.props_sync.map {x =>
           val editor: VdomElement = x.dtype match {
-            case dataType: AtomicDataType => dataType match {
-              case AtomicDataType.Real => FloatEditorComponent(
+            case dataType: PrimitiveDataType => dataType match {
+              case PrimitiveDataType.Real => FloatEditorComponent(
                 x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
               )
-              case AtomicDataType.Int => IntegerEditorComponent(
+              case PrimitiveDataType.Int => IntegerEditorComponent(
                 x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
               )
-              case AtomicDataType.Long => IntegerEditorComponent(
+              case PrimitiveDataType.Long => IntegerEditorComponent(
                 x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
               )
-              case AtomicDataType.Char => StringEditorComponent(
+              case PrimitiveDataType.Char => StringEditorComponent(
                 x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
               )
-              case AtomicDataType.Bool => ???
-              case AtomicDataType.Date => ???
-              case AtomicDataType.Id => ???
+              case PrimitiveDataType.Bool => ???
+              case PrimitiveDataType.Date => ???
+              case PrimitiveDataType.Id => ???
             }
             case recordType: RecordType => <.div(s"Record[${recordType.symbol}]")
             case arrayType: ArrayType => <.div(s"Array[${arrayType.prototype.symbol}]")

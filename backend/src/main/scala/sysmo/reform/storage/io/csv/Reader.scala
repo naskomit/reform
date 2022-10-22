@@ -3,10 +3,10 @@ package sysmo.reform.storage.io.csv
 import cats.MonadThrow
 import kantan.csv.CsvConfiguration
 import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.runtime.{RecordFieldInstance, RecordObject}
+import sysmo.reform.shared.runtime.{RecordFieldInstance, RecordInstance}
 import sysmo.reform.shared.table.Table
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, CompoundDataType, MultiReferenceType, RecordType, ReferenceType}
+import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, CompoundDataType, MultiReferenceType, RecordType, ReferenceType}
 import sysmo.reform.shared.util.MonadicIterator
 import sysmo.reform.shared.util.containers.FLocal
 
@@ -44,20 +44,20 @@ class Reader(path: String, rec_type: RecordType, conf: CsvConfiguration) {
           val dtype = rec_type.fields(col).dtype
           val raw_value = e(field_indices(col))
           dtype match {
-            case dt: AtomicDataType => dt match {
-              case AtomicDataType.Real => parse_value[Double](raw_value)
-              case AtomicDataType.Int => parse_value[Int](raw_value)
-              case AtomicDataType.Long => parse_value[Long](raw_value)
-              case AtomicDataType.Char => {
+            case dt: PrimitiveDataType => dt match {
+              case PrimitiveDataType.Real => parse_value[Double](raw_value)
+              case PrimitiveDataType.Int => parse_value[Int](raw_value)
+              case PrimitiveDataType.Long => parse_value[Long](raw_value)
+              case PrimitiveDataType.Char => {
                 import Value.implicits._
                 val v = parse_value[String](raw_value)
                 if (v.get[String].contains("")) {
                   Value.empty
                 } else v
               }
-              case AtomicDataType.Bool => parse_value[Boolean](raw_value)
-              case AtomicDataType.Date => Value.empty
-              case AtomicDataType.Id => parse_value[Double](raw_value)
+              case PrimitiveDataType.Bool => parse_value[Boolean](raw_value)
+              case PrimitiveDataType.Date => Value.empty
+              case PrimitiveDataType.Id => parse_value[Double](raw_value)
             }
           }
         }

@@ -5,14 +5,14 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.react.table.TableViewerF
-import sysmo.reform.shared.runtime.{ArrayObject}
+import sysmo.reform.shared.runtime.ArrayInstance
 import sysmo.reform.shared.runtime.RFObject.TableView
 import sysmo.reform.shared.table.{QuerySource, SingleTable, Table, TableService}
 
 class ArrayTableViewerF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
 
 
-  case class Props(array: ArrayObject[F], source: QuerySource)
+  case class Props(array: ArrayInstance[F], source: QuerySource)
   case class State(schema: Option[Table.Schema])
   object TableViewer extends TableViewerF[F]
 
@@ -43,7 +43,7 @@ class ArrayTableViewerF[F[+_]](implicit f2c: F2Callback[F]) extends ReactCompone
     .build
 
   //
-  def apply(array: ArrayObject[F]): Unmounted = {
+  def apply(array: ArrayInstance[F]): Unmounted = {
     component(Props(array, SingleTable("")))
   }
 }

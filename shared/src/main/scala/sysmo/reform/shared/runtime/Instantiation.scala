@@ -3,7 +3,7 @@ package sysmo.reform.shared.runtime
 import cats.MonadThrow
 import cats.implicits._
 import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, DataType, RecordType, UnionType}
+import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, DataType, RecordType, UnionType}
 
 class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   implicit val mt: MonadThrow[F] = runtime.mt
@@ -14,12 +14,12 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
     def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]]
   }
 
-  case class AtomicBuilder(value: Value)
+  case class PrimitiveBuilder(value: Value)
     extends InstanceBuilder {
-    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[AtomicObject[F]] = {
+    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[PrimitiveInstance[F]] = {
       lbound match {
-        case lb: AtomicDataType => runtime.create_object(id => runtime.constructors.atomic(lb, id, value, parent))
-        case _ => runtime.mt.raiseError(new IllegalArgumentException("Lower bound for AtomicObject should be of type AtomicDataType"))
+        case lb: PrimitiveDataType => runtime.create_object(id => runtime.constructors.primitive(lb, id, value, parent))
+        case _ => runtime.mt.raiseError(new IllegalArgumentException("Lower bound for primitive instance should be of type PrimitiveDataType"))
       }
     }
   }
@@ -27,7 +27,7 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   case class RecordBuilder(dtype: RecordType, children: Seq[(String, InstanceBuilder)])
     extends InstanceBuilder {
 
-    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RecordObject[F]] = {
+    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RecordInstance[F]] = {
       lbound match {
         case lb: RecordType => {
           if (dtype != lb) {
@@ -103,9 +103,9 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   object Defaults {
     def create(dtype: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]] = {
       dtype match {
-        case lb: AtomicDataType =>
+        case lb: PrimitiveDataType =>
           runtime.create_object(id =>
-            runtime.constructors.atomic(lb, id, lb.default, parent)
+            runtime.constructors.primitive(lb, id, lb.default, parent)
           )
         case lb: RecordType =>
           runtime.create_object(id =>
@@ -127,7 +127,7 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
     }
   }
 
-  def apply(builder: RecordBuilder): F[RecordObject[F]] =
+  def apply(builder: RecordBuilder): F[RecordInstance[F]] =
     builder.build(builder.dtype, None, runtime)
 
 
@@ -138,10 +138,5 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   }
 
   implicit def seq2builder(x: Seq[InstanceBuilder]): ArrayBuilder = ArrayBuilder(x)
-
-//  implicit def value2builder(x: Value): AtomicBuilder = AtomicBuilder(x)
-  import Value.implicits._
-  implicit def any2atomic[T](x: T)(implicit vc: T => Value): AtomicBuilder = AtomicBuilder(x)
-//  implicit def str2ab(x: String): AtomicBuilder = AtomicBuilder(x)
-//  implicit def int2ab(x: Int): AtomicBuilder = AtomicBuilder(x)
+  implicit def any2primitive[T](x: T)(implicit vc: T => Value): PrimitiveBuilder = PrimitiveBuilder(x)
 }

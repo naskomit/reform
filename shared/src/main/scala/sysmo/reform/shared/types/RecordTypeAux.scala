@@ -73,43 +73,43 @@ trait RecordFieldTypeAux {
     def f_real(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Real
+        override val _dtype: DataType = PrimitiveDataType.Real
       }
 
     def f_int(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Int
+        override val _dtype: DataType = PrimitiveDataType.Int
       }
 
     def f_long(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Long
+        override val _dtype: DataType = PrimitiveDataType.Long
       }
 
     def f_char(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Char
+        override val _dtype: DataType = PrimitiveDataType.Char
       }
 
     def f_bool(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Bool
+        override val _dtype: DataType = PrimitiveDataType.Bool
       }
 
     def f_date(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Date
+        override val _dtype: DataType = PrimitiveDataType.Date
       }
 
     def f_id(name: String): FieldBuilder =
       new FieldBuilder {
         override val _name: String = name
-        override val _dtype: DataType = AtomicDataType.Id
+        override val _dtype: DataType = PrimitiveDataType.Id
       }
 
     def f_compound(name: String, cmp: CompoundDataType): FieldBuilder =

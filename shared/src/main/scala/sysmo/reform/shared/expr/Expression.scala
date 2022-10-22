@@ -76,19 +76,19 @@ case class ContainmentPredicate(op: ContainmentPredicateOp, element: Expression,
 
 /** DType predicates */
 sealed trait DTypeExpression
+
+//sealed trait PrimitiveType
 //
-//sealed trait AtomicType
-//
-//case object Real extends AtomicType
-//case object Int extends AtomicType
-//case object Long extends AtomicType
-//case object Char extends AtomicType
-//case object Bool extends AtomicType
-//case object Date extends AtomicType
-//case object Id extends AtomicType
-//
-//case class Atomic(atomic_type: Option[AtomicType] = None) extends DTypeExpression
-//
+//case object Real extends PrimitiveType
+//case object Int extends PrimitiveType
+//case object Long extends PrimitiveType
+//case object Char extends PrimitiveType
+//case object Bool extends PrimitiveType
+//case object Date extends PrimitiveType
+//case object Id extends PrimitiveType
+
+//case class Primitive(primitive_type: Option[PrimitiveType] = None) extends DTypeExpression
+
 case class Record(symbol: Option[String] = None) extends DTypeExpression
 case class Array(prototype: Option[String] = None) extends DTypeExpression
 //case class Reference(prototype: Option[String] = None) extends DTypeExpression

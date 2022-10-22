@@ -4,7 +4,7 @@ import cats.MonadThrow
 import com.orientechnologies.orient.core.db.{ODatabaseSession, OrientDB, OrientDBConfig}
 import com.orientechnologies.orient.core.metadata.schema.{OClass, OType}
 import sysmo.reform.shared.storage.{SchemaService, StorageSchema}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, CompoundDataType, MultiReferenceType, RecordFieldType, RecordType, ReferenceType}
+import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, CompoundDataType, MultiReferenceType, RecordFieldType, RecordType, ReferenceType}
 import sysmo.reform.shared.logging.Logging
 
 import scala.collection.immutable.Seq
@@ -25,14 +25,14 @@ class SchemaServiceImpl[F[+_]](sess: ODatabaseSession)(implicit mt: MonadThrow[F
   private def create_record_fields(klass: OClass, dtype: RecordType): F[Unit] = {
     dtype.fields.foreach {rec_field =>
       val otype = rec_field.dtype match {
-        case dtype: AtomicDataType => dtype match {
-          case AtomicDataType.Real => OType.DOUBLE
-          case AtomicDataType.Int => OType.INTEGER
-          case AtomicDataType.Long => OType.LONG
-          case AtomicDataType.Char => OType.STRING
-          case AtomicDataType.Bool => OType.BOOLEAN
-          case AtomicDataType.Date => OType.DATE
-          case AtomicDataType.Id => OType.STRING
+        case dtype: PrimitiveDataType => dtype match {
+          case PrimitiveDataType.Real => OType.DOUBLE
+          case PrimitiveDataType.Int => OType.INTEGER
+          case PrimitiveDataType.Long => OType.LONG
+          case PrimitiveDataType.Char => OType.STRING
+          case PrimitiveDataType.Bool => OType.BOOLEAN
+          case PrimitiveDataType.Date => OType.DATE
+          case PrimitiveDataType.Id => OType.STRING
         }
         case dtype: CompoundDataType => ???
         case dtype: ArrayType => ???

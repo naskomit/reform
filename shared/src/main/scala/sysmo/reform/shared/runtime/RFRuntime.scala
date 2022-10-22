@@ -2,7 +2,7 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import cats.implicits._
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordFieldType, RecordType}
+import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, Value}
 import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.table.Table.Schema
@@ -13,9 +13,9 @@ import scala.reflect.ClassTag
 
 trait Constructors[_F[+_]] {
   type F[+X] = _F[X]
-  def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]]
-  def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]]
-  def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayObject[F]]
+  def primitive(dtype: PrimitiveDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[PrimitiveInstance[F]]
+  def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]]
+  def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayInstance[F]]
 
 }
 
@@ -97,7 +97,7 @@ object RFRuntime {
             .flat_map{pr =>
               mt.map(
                 pr.dtype match {
-                  case _: AtomicDataType => mt.map(runtime.get(pr.id))(inst =>  inst.asInstanceOf[AtomicObject[F]].value)
+                  case _: PrimitiveDataType => mt.map(runtime.get(pr.id))(inst =>  inst.asInstanceOf[PrimitiveInstance[F]].value)
                   case _ => mt.pure(Value.empty)
                 }
               )(value => pr.copy(value = value))

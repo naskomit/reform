@@ -1,6 +1,6 @@
 package sysmo.reform.shared.runtime
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUIDSupplier, Value}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, DataType, RecordFieldType, RecordType}
+import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, DataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
@@ -23,7 +23,7 @@ class LocalRuntime() extends RFRuntime[FLocal] {
   override def put[T <: RTO](id: ObjectId, obj: T): F[T] = {
     objects.put(id, obj)
     obj.dtype match {
-      case _: AtomicDataType =>
+      case _: PrimitiveDataType =>
       case _ => dtype_index.getOrElse(obj.dtype, mutable.HashSet()).add(id)
     }
 
@@ -32,7 +32,7 @@ class LocalRuntime() extends RFRuntime[FLocal] {
   override def remove(id: ObjectId): F[Unit] = {
     objects.get(id) match {
       case Some(inst) => inst.dtype match {
-        case _: AtomicDataType =>
+        case _: PrimitiveDataType =>
         case _ => dtype_index.get(inst.dtype).foreach(ids => ids.remove(id))
       }
       case None =>
@@ -71,9 +71,9 @@ class LocalRuntime() extends RFRuntime[FLocal] {
         for {
           obj <- get(id)
           _ <- obj match {
-            case atomic_object: AtomicObject[F] => atomic_object.update_value(value)
-            case recordObject: RecordObject[F] => ???
-            case arrayObject: ArrayObject[F] => ???
+            case x: PrimitiveInstance[F] => x.update_value(value)
+            case x: RecordInstance[F] => ???
+            case x: ArrayInstance[F] => ???
           }
         } yield ()
       }
@@ -87,8 +87,8 @@ object LocalRuntime {
   trait LocalMT {
     val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
   }
-  case class AtomicObjectImpl(dtype: AtomicDataType, id: ObjectId, var value: Value, parent: Option[ObjectId])
-    extends AtomicObject[FLocal] with LocalMT {
+  case class PrimitiveInstanceImpl(dtype: PrimitiveDataType, id: ObjectId, var value: Value, parent: Option[ObjectId])
+    extends PrimitiveInstance[FLocal] with LocalMT {
     override def update_value(v: Value): F[Unit] = {
       value = v
       mt.pure()
@@ -96,7 +96,7 @@ object LocalRuntime {
   }
 
   case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
-    extends RecordObject[FLocal] with LocalMT {
+    extends RecordInstance[FLocal] with LocalMT {
     protected val children: mutable.HashMap[String, ObjectId] = new mutable.HashMap()
     override def own_children: MIter = {
       MonadicIterator.from_iterator[F, (String, ObjectId)](children.iterator)
@@ -117,7 +117,7 @@ object LocalRuntime {
   }
 
   case class ArrayObjectImpl(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId])
-    extends ArrayObject[FLocal] with LocalMT {
+    extends ArrayInstance[FLocal] with LocalMT {
     protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
     override def own_children: MIter = {
       MonadicIterator.from_iterator[F, ObjectId](children.iterator)
@@ -134,11 +134,11 @@ object LocalRuntime {
   }
 
   object constructors extends Constructors[FLocal] {
-    override def atomic(dtype: AtomicDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[AtomicObject[F]] =
-      FLocal(AtomicObjectImpl(dtype, id, value, parent))
-    override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordObject[F]] =
+    override def primitive(dtype: PrimitiveDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[PrimitiveInstance[F]] =
+      FLocal(PrimitiveInstanceImpl(dtype, id, value, parent))
+    override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]] =
       FLocal(RecordObjectImpl(dtype, id, parent))
-    override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayObject[F]] =
+    override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayInstance[F]] =
       FLocal(ArrayObjectImpl(dtype, id, parent))
   }
 

@@ -8,7 +8,7 @@ import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.react.tree_nav.TreeNavigatorComponentF
 import sysmo.reform.react.property.PropertyGroupEditorF
-import sysmo.reform.shared.runtime.{ArrayObject, RFObject, RFRuntime}
+import sysmo.reform.shared.runtime.{ArrayInstance, RFObject, RFRuntime}
 import sysmo.reform.shared.sources.{tree => T}
 
 class ObjectTreeBrowserF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
@@ -65,7 +65,7 @@ class ObjectTreeBrowserF[F[+_]](implicit f2c: F2Callback[F]) extends ReactCompon
         <.div( ^.flexGrow:= "3",
           <.h2("Properties"),
           s.prop_obj match {
-            case Some(obj: ArrayObject[F]) => ArrayTableViewer(obj)
+            case Some(obj: ArrayInstance[F]) => ArrayTableViewer(obj)
             case Some(prop_obj) => PropertyGroupEditor(RFObject.NamedPropertyView(prop_obj))
             case None => <.div("No properties")
           }

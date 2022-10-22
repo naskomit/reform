@@ -1,5 +1,5 @@
 package sysmo.reform.shared.types
 
-trait AtomicDataTypeAux {
+trait PrimitiveDataTypeAux {
 
 }

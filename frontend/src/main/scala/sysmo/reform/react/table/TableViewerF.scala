@@ -8,7 +8,7 @@ import sysmo.reform.shared.data.Value
 import Value.implicits._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.shared.table.{QuerySource, SelectionHandler, Table, TableService}
-import sysmo.reform.shared.types.AtomicDataType
+import sysmo.reform.shared.types.PrimitiveDataType
 
 class TableViewerF[F[+_]] extends ReactComponent {
   case class Props(ts: TableService[F], schema: Table.Schema, source: QuerySource,
@@ -20,9 +20,9 @@ class TableViewerF[F[+_]] extends ReactComponent {
     def schema2columns(schema: Table.Schema): Seq[AGF.ColumnProps] = {
       schema.fields.map(field => {
         val filter = field.dtype match {
-          case  AtomicDataType.Char => Some(AGF.Filters.text)
-          case AtomicDataType.Int => Some(AGF.Filters.number)
-          case AtomicDataType.Real => Some(AGF.Filters.number)
+          case  PrimitiveDataType.Char => Some(AGF.Filters.text)
+          case PrimitiveDataType.Int => Some(AGF.Filters.number)
+          case PrimitiveDataType.Real => Some(AGF.Filters.number)
           case _ => None
         }
 
@@ -34,8 +34,8 @@ class TableViewerF[F[+_]] extends ReactComponent {
         }
 
         val cell_renderer = field.dtype match {
-          case AtomicDataType.Date => DateCellRenderer
-          case AtomicDataType.Id => IdCellRenderer
+          case PrimitiveDataType.Date => DateCellRenderer
+          case PrimitiveDataType.Id => IdCellRenderer
           case _ => TextCellRenderer
         }
 

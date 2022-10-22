@@ -5,7 +5,7 @@ import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.sources.SourceAction
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.{LocalTable, Query, Table}
-import sysmo.reform.shared.types.{AtomicDataType, DataType, RecordType, UnionType}
+import sysmo.reform.shared.types.{PrimitiveDataType, DataType, RecordType, UnionType}
 import sysmo.reform.shared.util.{CirceTransport, MonadicIterator}
 import sysmo.reform.shared.{types => TPE}
 
@@ -25,8 +25,8 @@ sealed trait RFObject[_F[+_]] {
 
 case class ObjectProxy(id: ObjectId, dtype: TPE.DataType, parent: Option[ObjectId], value: Value)
 
-trait AtomicObject[_F[+_]] extends RFObject[_F] {
-  override type DType = TPE.AtomicDataType
+trait PrimitiveInstance[_F[+_]] extends RFObject[_F] {
+  override type DType = TPE.PrimitiveDataType
   def value: Value
   def update_value(v: Value): F[Unit]
   override def own_children: MIter =
@@ -35,7 +35,7 @@ trait AtomicObject[_F[+_]] extends RFObject[_F] {
 
 case class RecordFieldInstance(ftype: TPE.RecordFieldType, instance: ObjectId)
 
-trait RecordObject[_F[+_]] extends RFObject[_F] {
+trait RecordInstance[_F[+_]] extends RFObject[_F] {
   override type DType = TPE.RecordType
   def fields: MonadicIterator[F, RecordFieldInstance]
 
@@ -44,7 +44,7 @@ trait RecordObject[_F[+_]] extends RFObject[_F] {
 
 case class ArrayElementInstance[_F[+_]](index: Int, instance: ObjectId)
 
-trait ArrayObject[_F[+_]] extends RFObject[_F] {
+trait ArrayInstance[_F[+_]] extends RFObject[_F] {
   override type DType = TPE.ArrayType
   def elements: MonadicIterator[F, ArrayElementInstance[F]]
 
@@ -96,9 +96,9 @@ object RFObject {
 
     def as_node(obj: RFObject[F], name: Option[String]): TreeNode[F] = {
       obj match {
-        case v: AtomicObject[F] => new DebugNode(obj)
-        case rec: RecordObject[F] => new RecordObjectAsNode(rec, name.getOrElse(rec.dtype.symbol))
-        case array: ArrayObject[F] => new ArrayObjectAsNode(array, name.getOrElse(""))
+        case v: PrimitiveInstance[F] => new DebugNode(v)
+        case rec: RecordInstance[F] => new RecordObjectAsNode(rec, name.getOrElse(rec.dtype.symbol))
+        case array: ArrayInstance[F] => new ArrayObjectAsNode(array, name.getOrElse(""))
         //          new ArrayAsNode(array, name.getOrElse(array.prototype.symbol) + s"(${array.count})")
         //        case ref: Reference => EmptyNode
       }
@@ -135,9 +135,9 @@ object RFObject {
     class DebugNode(val obj: RFObject[F]) extends ObjectAsNode[RFObject[F]] {
       import Value.implicits._
       private def get_value: Value = obj match {
-        case atomicObject: AtomicObject[_] => atomicObject.value
-        case recordObject: RecordObject[_] => Value.empty
-        case arrayObject: ArrayObject[_] => Value.empty
+        case x: PrimitiveInstance[_] => x.value
+        case x: RecordInstance[_] => Value.empty
+        case x: ArrayInstance[_] => Value.empty
       }
 
       override def children: MonadicIterator[F, TreeNode[F]] =
@@ -147,7 +147,7 @@ object RFObject {
       override def actions: Seq[Action] = Seq()
     }
 
-    class RecordObjectAsNode(val obj: RecordObject[F], val name: String) extends ObjectAsNode[RecordObject[F]] {
+    class RecordObjectAsNode(val obj: RecordInstance[F], val name: String) extends ObjectAsNode[RecordInstance[F]] {
       override def icon: Option[String] = Some("fa fa-map")
       override def actions: Seq[Action] = Seq()
       override def children: MonadicIterator[F, TreeNode[F]] =
@@ -162,7 +162,7 @@ object RFObject {
 //          .toSeq
     }
 
-    class ArrayObjectAsNode(val obj: ArrayObject[F], val name: String) extends ObjectAsNode[ArrayObject[F]] {
+    class ArrayObjectAsNode(val obj: ArrayInstance[F], val name: String) extends ObjectAsNode[ArrayInstance[F]] {
       override def icon: Option[String] = Some("fa fa-list")
       override def actions: Seq[Action] = Seq()
       override def children: MonadicIterator[F, TreeNode[F]] =
@@ -175,7 +175,7 @@ object RFObject {
   object NamedPropertyView {
     import sysmo.reform.shared.sources.property.{Property, PropertySource}
     import Value.implicits._
-    class RecordObjectAsPropSource[F[+_]](val obj: RecordObject[F]) extends PropertySource[F] {
+    class RecordObjectAsPropSource[F[+_]](val obj: RecordInstance[F]) extends PropertySource[F] {
       private var _dispatcher = new Dispatcher[F] {
         implicit val mt: MonadThrow[F] = obj.runtime.mt
         override def dispatch(action: RuntimeAction): F[Unit] =
@@ -186,9 +186,9 @@ object RFObject {
         obj.fields
           .flat_map {field =>
             val value_f: F[Value] = field.ftype.dtype match {
-              case _: AtomicDataType =>
+              case _: PrimitiveDataType =>
                 mt.map(obj.runtime.get(field.instance))(inst =>
-                  inst.asInstanceOf[AtomicObject[F]].value
+                  inst.asInstanceOf[PrimitiveInstance[F]].value
                 )
               case _ => mt.pure(Value(field.instance))
             }
@@ -217,9 +217,9 @@ object RFObject {
     }
 
     def apply[F[+_]](obj: RFObject[F]): PropertySource[F] = obj match {
-      case atomicObject: AtomicObject[F] => new OtherAsPropSource(atomicObject)
-      case recordObject: RecordObject[F] => new RecordObjectAsPropSource(recordObject)
-      case arrayObject: ArrayObject[F] => new OtherAsPropSource(arrayObject)
+      case x: PrimitiveInstance[F] => new OtherAsPropSource(x)
+      case rec: RecordInstance[F] => new RecordObjectAsPropSource(rec)
+      case array: ArrayInstance[F] => new OtherAsPropSource(array)
     }
   }
 
@@ -229,7 +229,7 @@ object RFObject {
     import Value.implicits._
     import sysmo.reform.shared.table.TableService
 
-    class ArrayObjectAsTableView[_F[+_]](val array: ArrayObject[_F]) extends TableService[_F] {
+    class ArrayObjectAsTableView[_F[+_]](val array: ArrayInstance[_F]) extends TableService[_F] {
       private val runtime = array.runtime
       override implicit val mt: MonadThrow[F] = runtime.mt
 
@@ -265,11 +265,11 @@ object RFObject {
               array.elements
                 .flat_map(element => runtime.get(element.instance))
                 .flat_map {
-                  case rec: RecordObject[F] => rec.fields.flat_map(
+                  case rec: RecordInstance[F] => rec.fields.flat_map(
                     field => mt.map(runtime.get(field.instance)){
-                      case x: AtomicObject[_] => x.value
-                      case x: RecordObject[_] => Value(x.id)
-                      case x: ArrayObject[_] => Value(x.id)
+                      case x: PrimitiveInstance[_] => x.value
+                      case x: RecordInstance[_] => Value(x.id)
+                      case x: ArrayInstance[_] => Value(x.id)
                     }
                   ).traverse()
                   case x => mt.raiseError(new IllegalArgumentException(s"Expected array element to be record, found ${x.dtype}"))
@@ -290,7 +290,7 @@ object RFObject {
 
     }
 
-    def apply[F[+_]](obj: ArrayObject[F]): ArrayObjectAsTableView[F] =
+    def apply[F[+_]](obj: ArrayInstance[F]): ArrayObjectAsTableView[F] =
       new ArrayObjectAsTableView(obj)
   }
 }

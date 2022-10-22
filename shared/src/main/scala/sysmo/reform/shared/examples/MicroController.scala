@@ -15,7 +15,7 @@ object MicroController extends ModelBuilder {
     //      .keys(Seq("name"))
 
     /** Data structures */
-    val AtomicType = record("AtomicType")
+    val PrimitiveType = record("PrimitiveType")
       .label_expr(E.field("symbol")) +
       f_char("symbol")
 
@@ -25,7 +25,7 @@ object MicroController extends ModelBuilder {
       f_char("symbol") +
       f_array("fields", Field)
 
-    val Type = union("Type", AtomicType, StructureType)
+    val Type = union("Type", PrimitiveType, StructureType)
 
     Field + f_char("name") +
       f_char("descr")
@@ -73,9 +73,9 @@ object MicroController extends ModelBuilder {
       inst(
         Controller(
           "types" -> Seq(
-            AtomicType("symbol" -> "Integer"),
-            AtomicType("symbol" -> "Float"),
-            AtomicType("symbol" -> "Boolean"),
+            PrimitiveType("symbol" -> "Integer"),
+            PrimitiveType("symbol" -> "Float"),
+            PrimitiveType("symbol" -> "Boolean"),
             StructureType(
               "symbol" -> "TCState",
               "fields" -> Seq(
