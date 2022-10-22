@@ -137,6 +137,6 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
     }
   }
 
-  implicit def seq2builder(x: Seq[InstanceBuilder]): ArrayBuilder = ArrayBuilder(x)
-  implicit def any2primitive[T](x: T)(implicit vc: T => Value): PrimitiveBuilder = PrimitiveBuilder(x)
+  implicit class Seq2Builder(x: Seq[InstanceBuilder]) extends ArrayBuilder(x)
+  implicit class Any2Primitive[T](x: T)(implicit vc: T => Value) extends PrimitiveBuilder(x)
 }
