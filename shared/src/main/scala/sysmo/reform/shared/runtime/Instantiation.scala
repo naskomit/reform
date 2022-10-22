@@ -118,6 +118,11 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
             runtime.constructors.record(concrete, id, parent)
           )
         }
+
+        case lb: ArrayType =>
+          runtime.create_object(id =>
+            runtime.constructors.array(lb, id, parent)
+          )
       }
     }
   }

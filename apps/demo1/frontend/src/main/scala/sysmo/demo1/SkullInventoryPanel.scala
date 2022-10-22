@@ -4,13 +4,13 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.app.{Configuration, Panel}
 import sysmo.reform.effects.implicits._
 import sysmo.reform.explorers.FormExplorerF
-import sysmo.reform.shared.examples.{BioReactorController, MicroController}
+import sysmo.reform.shared.examples.SkullInventoryBuilder
 import sysmo.reform.shared.runtime.{LocalRuntime, RFObject}
 import sysmo.reform.shared.util.containers.FLocal
 
 
-object BioReactorControllerPanel extends Panel {
-  type F[+X] = FLocal[X]
+object SkullInventoryPanel extends Panel {
+  type F[+X] = FLocal[X];
   object FormExplorer extends FormExplorerF[F]
 
   case class Props(root_obj: F[RFObject[F]])
@@ -29,6 +29,7 @@ object BioReactorControllerPanel extends Panel {
     .build
 
   def apply(app_config: Configuration): Unmounted = {
-    component(Props(BioReactorController.initializer1(LocalRuntime()).root))
+    component(Props(SkullInventoryBuilder.initializer1(LocalRuntime()).root))
   }
+
 }

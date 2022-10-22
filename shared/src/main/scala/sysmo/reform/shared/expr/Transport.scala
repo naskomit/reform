@@ -82,6 +82,14 @@ object Transport extends CirceTransport {
 
   implicit val codec_ContainmentPredicate: Codec[ContainmentPredicate] = deriveCodec[ContainmentPredicate]
 
+
+  implicit val codec_DTypeExpression: Codec[DTypeExpression]  = deriveCodec[DTypeExpression]
+  implicit val codec_Record: Codec[Record]  = deriveCodec[Record]
+  implicit val codec_Array: Codec[Array]  = deriveCodec[Array]
+  implicit val codec_HasDType: Codec[HasDType]  = deriveCodec[HasDType]
+
+  implicit val codec_TypePredicateExpression: Codec[TypePredicateExpression] = deriveCodec[TypePredicateExpression]
+
   implicit val codec_PredicateExpression: Codec[PredicateExpression] = deriveCodec[PredicateExpression]
 
   implicit val codec_Expression: Codec[Expression] = deriveCodec[Expression]

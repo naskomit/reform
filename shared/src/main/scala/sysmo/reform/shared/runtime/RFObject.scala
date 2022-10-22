@@ -3,7 +3,9 @@ package sysmo.reform.shared.runtime
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.sources.SourceAction
-import sysmo.reform.shared.types.{AtomicDataType, DataType}
+import sysmo.reform.shared.table.Table.Schema
+import sysmo.reform.shared.table.{LocalTable, Query, Table}
+import sysmo.reform.shared.types.{AtomicDataType, DataType, RecordType, UnionType}
 import sysmo.reform.shared.util.{CirceTransport, MonadicIterator}
 import sysmo.reform.shared.{types => TPE}
 
@@ -11,7 +13,7 @@ import sysmo.reform.shared.{types => TPE}
 sealed trait RFObject[_F[+_]] {
   type F[+X] = _F[X]
   type MIter = MonadicIterator[F, RFObject[F]]
-  val mt: MonadThrow[_F]
+  implicit val mt: MonadThrow[_F]
   type DType <: TPE.DataType
   def dtype: DType
   val id: ObjectId
@@ -221,4 +223,74 @@ object RFObject {
     }
   }
 
+
+  object TableView {
+
+    import Value.implicits._
+    import sysmo.reform.shared.table.TableService
+
+    class ArrayObjectAsTableView[_F[+_]](val array: ArrayObject[_F]) extends TableService[_F] {
+      private val runtime = array.runtime
+      override implicit val mt: MonadThrow[F] = runtime.mt
+
+      override def list_tables(): F[Seq[Schema]] =
+        array.dtype.prototype match {
+        case recordType: RecordType => mt.pure(Seq(recordType))
+        case unionType: UnionType => mt.pure(unionType.subtypes)
+      }
+
+      override def table_schema(table_id: String): F[Schema] = {
+        array.dtype.prototype match {
+          case recordType: RecordType => mt.pure(recordType)
+          case unionType: UnionType => unionType.subtypes
+            .find(t => t.symbol == table_id) match {
+            case Some(t) => mt.pure(t)
+            case None => mt.raiseError(
+              new NoSuchElementException(
+                s"No such type $table_id in ${unionType.symbol} subtypes"
+              )
+            )
+          }
+        }
+      }
+
+      override def query_table(q: Query): F[Table[F]] = {
+        // TODO arbitrary argument
+        mt.map(table_schema(""))(sch => {
+          new Table[F] {
+            override implicit val mt: MonadThrow[F] = runtime.mt
+            override def schema: Schema = sch
+            override def nrow: F[Int] = runtime.count(q)
+            override def row_iter: MonadicIterator[F, Table.Row] = {
+              array.elements
+                .flat_map(element => runtime.get(element.instance))
+                .flat_map {
+                  case rec: RecordObject[F] => rec.fields.flat_map(
+                    field => mt.map(runtime.get(field.instance)){
+                      case x: AtomicObject[_] => x.value
+                      case x: RecordObject[_] => Value(x.id)
+                      case x: ArrayObject[_] => Value(x.id)
+                    }
+                  ).traverse()
+                  case x => mt.raiseError(new IllegalArgumentException(s"Expected array element to be record, found ${x.dtype}"))
+                }.map(values => {
+                  println(values)
+                  new Table.Row {
+                    override def schema: Schema = sch
+                    override protected def _get(col: Int): Value = values.lift(col) match {
+                      case Some(v) => Value(v)
+                      case None => Value.empty
+                    }
+                  }
+                })
+            }
+          }
+        })
+      }
+
+    }
+
+    def apply[F[+_]](obj: ArrayObject[F]): ArrayObjectAsTableView[F] =
+      new ArrayObjectAsTableView(obj)
+  }
 }

@@ -3,7 +3,7 @@ package sysmo.reform.shared.examples
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.expr.{Expression => E}
-import sysmo.reform.shared.runtime.RFObject
+import sysmo.reform.shared.runtime.{RFObject, RFRuntime}
 
 object MicroController extends ModelBuilder {
   object type_builder extends TypeBuilder {
@@ -64,11 +64,12 @@ object MicroController extends ModelBuilder {
       f_array("triggers", Trigger)
   }
 
-  object initializer1 extends Initializer {
+  class initializer1[F[+X]](runtime: RFRuntime[F])
+    extends Initializer(runtime) {
     import Value.implicits._
     import inst._
     import type_builder._
-    def apply(): F[RFObject[F]] =
+    val root: F[RFObject[F]] =
       inst(
         Controller(
           "types" -> Seq(
@@ -100,4 +101,9 @@ object MicroController extends ModelBuilder {
         )
       )
     }
+
+  object initializer1 {
+    def apply[F[+_]](runtime: RFRuntime[F]) =
+      new initializer1[F](runtime)
+  }
 }

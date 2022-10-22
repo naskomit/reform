@@ -50,6 +50,20 @@ class ValueImpl {
 
   def apply[T](x: T)(implicit f: T => Value): Value = x
 
+  def from_any(x: Any): Value = {
+    import implicits._
+    x match {
+      case x: Double => x
+      case x: Int => x
+      case x: Long => x
+      case x: Boolean => x
+      case x: String => x
+      case x: Date => x
+      case x: ObjectId => x
+      case _ => Value.empty
+    }
+  }
+
   object implicits {
     implicit val value2double: ValueExtractor[Double] = {
       case RealValue(Some(x)) => Some(x)

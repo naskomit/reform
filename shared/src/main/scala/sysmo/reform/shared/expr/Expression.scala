@@ -75,7 +75,7 @@ case class ContainmentPredicate(op: ContainmentPredicateOp, element: Expression,
   extends PredicateExpression
 
 /** DType predicates */
-//sealed trait DTypeExpression
+sealed trait DTypeExpression
 //
 //sealed trait AtomicType
 //
@@ -89,13 +89,13 @@ case class ContainmentPredicate(op: ContainmentPredicateOp, element: Expression,
 //
 //case class Atomic(atomic_type: Option[AtomicType] = None) extends DTypeExpression
 //
-//case class Record(symbol: Option[String] = None) extends DTypeExpression
-//case class Array(prototype: Option[String] = None) extends DTypeExpression
+case class Record(symbol: Option[String] = None) extends DTypeExpression
+case class Array(prototype: Option[String] = None) extends DTypeExpression
 //case class Reference(prototype: Option[String] = None) extends DTypeExpression
 //case class MultiReference(prototype: Option[String] = None) extends DTypeExpression
 
-//case class HasDType(dtype: DTypeExpression) extends TypePredicateExpression
-//sealed trait TypePredicateExpression extends PredicateExpression
+case class HasDType(dtype: DTypeExpression) extends TypePredicateExpression
+sealed trait TypePredicateExpression extends PredicateExpression
 
 object Expression {
   def apply(v: Value): Constant = Constant(v)

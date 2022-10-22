@@ -1,16 +1,14 @@
 package sysmo.reform.shared.examples
 
-import sysmo.reform.shared.runtime.{LocalRuntime, RFObject}
+import sysmo.reform.shared.runtime.{LocalRuntime, RFObject, RFRuntime}
 import sysmo.reform.shared.types.TypeSystemBuilder
 
 trait ModelBuilder {
   type TypeBuilder = TypeSystemBuilder
 
-  trait Initializer {
-    val runtime: LocalRuntime = LocalRuntime()
-    type F[+X] = runtime.F[X]
+  abstract class Initializer[_F[+X]](runtime: RFRuntime[_F]) {
     import sysmo.reform.shared.runtime.Instantiation
     val inst = new Instantiation(runtime)
-    def apply(): F[RFObject[F]]
+    val root: _F[RFObject[_F]]
   }
 }

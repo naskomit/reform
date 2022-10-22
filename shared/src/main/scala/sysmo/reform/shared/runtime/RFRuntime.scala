@@ -30,6 +30,8 @@ trait RFRuntime[_F[+_]] extends Logging {
   def remove(id: ObjectId): F[Unit]
   def list: MonadicIterator[F, ObjectProxy]
   def count: F[Int]
+  def count(q: Query): F[Int]
+  def run_query(q: Query): MonadicIterator[F, RFObject[F]]
   def dispatch(action: RuntimeAction): F[Unit]
   val constructors: Constructors[F]
 
@@ -64,6 +66,7 @@ trait RFRuntime[_F[+_]] extends Logging {
       }
     } yield res
   }
+
 
 }
 
@@ -111,12 +114,6 @@ object RFRuntime {
               }
           )
         }
-      )
-    }
-
-    override def cache_locally(table: Table[F]): F[LocalTable] = {
-      table.row_iter.traverse(rows =>
-        LocalRowBasedTable(table.schema, rows)
       )
     }
   }

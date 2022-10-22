@@ -9,7 +9,7 @@ import sysmo.reform.shared.util.MonadicIterator
 
 
 trait Table[F[+_]] {
-  val mt: MonadThrow[F]
+  implicit val mt: MonadThrow[F]
   def schema: RecordType
   def nrow: F[Int]
 //  def get(row_id: Int, col_id: Int): F[Value]

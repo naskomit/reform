@@ -1,17 +1,20 @@
 package sysmo.reform.shared.runtime
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUIDSupplier, Value}
-import sysmo.reform.shared.types.{ArrayType, AtomicDataType, RecordFieldType, RecordType}
+import sysmo.reform.shared.types.{ArrayType, AtomicDataType, DataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
 import cats.MonadThrow
+import sysmo.reform.shared.expr.{CommonPredicate, ContainmentPredicate, LogicalAnd, LogicalNot, LogicalOr, NumericalPredicate, StringPredicate, TypePredicateExpression}
 import sysmo.reform.shared.sources.SourceAction
+import sysmo.reform.shared.table.{BasicQuery, Query, QueryFilter}
 import sysmo.reform.shared.util.containers.FLocal
 
 class LocalRuntime() extends RFRuntime[FLocal] {
   override protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
   val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
-  val objects: mutable.Map[ObjectId, RTO] = mutable.HashMap()
+  private val objects: mutable.Map[ObjectId, RTO] = mutable.HashMap()
+  private val dtype_index: mutable.Map[DataType, mutable.HashSet[ObjectId]] = mutable.HashMap()
   val constructors: Constructors[F] = LocalRuntime.constructors
   override def get(id: ObjectId): F[RTO] = objects.get(id) match {
     case Some(x) => mt.pure(x)
@@ -19,9 +22,21 @@ class LocalRuntime() extends RFRuntime[FLocal] {
   }
   override def put[T <: RTO](id: ObjectId, obj: T): F[T] = {
     objects.put(id, obj)
+    obj.dtype match {
+      case _: AtomicDataType =>
+      case _ => dtype_index.getOrElse(obj.dtype, mutable.HashSet()).add(id)
+    }
+
     mt.pure(obj)
   }
   override def remove(id: ObjectId): F[Unit] = {
+    objects.get(id) match {
+      case Some(inst) => inst.dtype match {
+        case _: AtomicDataType =>
+        case _ => dtype_index.get(inst.dtype).foreach(ids => ids.remove(id))
+      }
+      case None =>
+    }
     objects.remove(id)
     mt.pure()
   }
@@ -32,6 +47,22 @@ class LocalRuntime() extends RFRuntime[FLocal] {
     )
 
   def count: F[Int] = FLocal(objects.size)
+
+  // TODO Implement query !!!!!!!!!!!!!!!!!!!!!!!!!!
+  override def count(q: Query): F[Int] = FLocal(objects.size)
+  override def run_query(q: Query): MonadicIterator[F, RFObject[F]] = {
+    throw new NotImplementedError
+//    q match {
+//      case BasicQuery(source, columns, filter, sort, range) => filter match {
+//        case Some(QueryFilter(expr)) => expr match {
+//          case expression: TypePredicateExpression => ???
+//          case _ => throw new NotImplementedError(s"Cannot handle filter expression $expr")
+//        }
+//        case None => MonadicIterator.from_iterator(objects.values.iterator)
+//      }
+//    }
+
+  }
 
   override def dispatch(action: RuntimeAction): F[Unit] = {
     logger.info(action.toString)

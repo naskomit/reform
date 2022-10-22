@@ -42,6 +42,13 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
 lazy val backend = project
    .settings(
      libraryDependencies ++= test_libs,
+     //Config
+     libraryDependencies += "com.typesafe" % "config" % "1.4.2",
+     // OrientDB
+     libraryDependencies += "com.orientechnologies" % "orientdb-client" % "3.2.5",
+      // CSV
+     libraryDependencies += "com.nrinaudo" %% "kantan.csv" % "0.6.1",
+     libraryDependencies += "com.nrinaudo" %% "kantan.csv-generic" % "0.6.1",
      Test / unmanagedSourceDirectories += baseDirectory.value / "../shared/src/test/scala"
    ).dependsOn(shared.jvm)
 //     // Logging
