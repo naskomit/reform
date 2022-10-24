@@ -84,4 +84,13 @@ object MonadicIterator {
       override def next: F[V] = mt.pure(it.next())
     }
   }
+
+  def from_fiterator[F[+_], V](it: F[Iterator[V]])(implicit _mt: MonadThrow[F]): MonadicIterator[F, V] = {
+    new MonadicIterator[F, V] {
+      val mt = _mt
+      override def has_next: F[Boolean] = mt.map(it)(x => x.hasNext)
+      override def next: F[V] = mt.map(it)(x => x.next())
+    }
+  }
+
 }

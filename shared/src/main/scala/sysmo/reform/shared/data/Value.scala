@@ -8,6 +8,10 @@ case object NoValue extends Value {
   override def _get: Option[Nothing] = None
 }
 
+trait ValueConstructor[T] {
+  def toValue(raw: T): Value
+}
+
 trait ValueExtractor[T] {
   def extract(in: Value): Option[T]
 }
@@ -48,18 +52,19 @@ class ValueImpl {
     override def _get: Option[ObjectId] = v
   }
 
-  def apply[T](x: T)(implicit f: T => Value): Value = x
+  def apply[T](x: T)(implicit vc: ValueConstructor[T]): Value =
+    vc.toValue(x)
 
   def from_any(x: Any): Value = {
     import implicits._
     x match {
-      case x: Double => x
-      case x: Int => x
-      case x: Long => x
-      case x: Boolean => x
-      case x: String => x
-      case x: Date => x
-      case x: ObjectId => x
+      case x: Double => Value(x)
+      case x: Int => Value(x)
+      case x: Long => Value(x)
+      case x: Boolean => Value(x)
+      case x: String => Value(x)
+      case x: Date => Value(x)
+      case x: ObjectId => Value(x)
       case _ => Value.empty
     }
   }
@@ -115,12 +120,12 @@ class ValueImpl {
       case _ => None
     }
 
-    implicit def double2value(x: Double): RealValue = RealValue(Some(x))
-    implicit def int2value(x: Int): IntValue = IntValue(Some(x))
-    implicit def long2value(x: Long): LongValue = LongValue(Some(x))
-    implicit def bool2value(x: Boolean): BoolValue = BoolValue(Some(x))
-    implicit def char2value(x: String): CharValue = CharValue(Some(x))
-    implicit def date2value(x: Date): DateValue = DateValue(Some(x))
-    implicit def id2value(x: ObjectId): IdValue = IdValue(Some(x))
+    implicit val double2value: ValueConstructor[Double] = x => RealValue(Some(x))
+    implicit val int2value: ValueConstructor[Int] = x => IntValue(Some(x))
+    implicit val long2value: ValueConstructor[Long] = x => LongValue(Some(x))
+    implicit val bool2value: ValueConstructor[Boolean] = x => BoolValue(Some(x))
+    implicit val char2value: ValueConstructor[String] = x => CharValue(Some(x))
+    implicit val date2value: ValueConstructor[Date] = x => DateValue(Some(x))
+    implicit val id2value: ValueConstructor[ObjectId] = x => IdValue(Some(x))
   }
 }

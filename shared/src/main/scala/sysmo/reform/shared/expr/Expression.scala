@@ -1,6 +1,6 @@
 package sysmo.reform.shared.expr
 
-import sysmo.reform.shared.data.Value
+import sysmo.reform.shared.data.{Value, ValueConstructor}
 
 /** # Expression subclasses */
 sealed trait Expression
@@ -99,6 +99,8 @@ sealed trait TypePredicateExpression extends PredicateExpression
 
 object Expression {
   def apply(v: Value): Constant = Constant(v)
+  def apply[T](x: T)(implicit vc: ValueConstructor[T]): Constant =
+    Constant(vc.toValue(x))
   def col(id: String): ColumnRef = ColumnRef(id)
   def field(id: String): FieldRef = FieldRef(id)
 

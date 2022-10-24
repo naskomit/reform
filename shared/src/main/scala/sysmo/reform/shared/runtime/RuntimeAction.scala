@@ -4,4 +4,4 @@ import sysmo.reform.shared.data.{ObjectId, Value}
 
 trait RuntimeAction
 
-case class SetValue(id: ObjectId, value: Value) extends RuntimeAction
+case class SetFieldValue(id: ObjectId, new_value: RecordFieldInstance) extends RuntimeAction

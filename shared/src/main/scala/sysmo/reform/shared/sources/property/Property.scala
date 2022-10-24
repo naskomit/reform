@@ -1,14 +1,21 @@
 package sysmo.reform.shared.sources.property
 
 import sysmo.reform.shared.data.{ObjectId, Value}
+import sysmo.reform.shared.runtime.RecordFieldInstance
 import sysmo.reform.shared.types.DataType
 
-trait Property {
-  def id: ObjectId
+sealed trait Property {
   def name: String
   def descr: String
   def dtype: DataType
   def value: Value
+}
+
+case class FieldProperty(field: RecordFieldInstance) extends Property {
+  override def name: String = field.ftype.name
+  override def descr: String = field.ftype.make_descr
+  override def dtype: DataType = field.ftype.dtype
+  override def value: Value = field.value
 }
 
 object Property {

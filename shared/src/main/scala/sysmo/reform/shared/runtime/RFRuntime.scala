@@ -13,7 +13,6 @@ import scala.reflect.ClassTag
 
 trait Constructors[_F[+_]] {
   type F[+X] = _F[X]
-  def primitive(dtype: PrimitiveDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[PrimitiveInstance[F]]
   def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]]
   def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayInstance[F]]
 
@@ -52,7 +51,7 @@ trait RFRuntime[_F[+_]] extends Logging {
   def remove_recursive(id: ObjectId): F[Unit] = {
     for {
       obj <- get(id)
-      _ <- obj.own_children.map(child => remove_recursive(child.id)).traverse()
+      _ <- obj.own_children.map(remove_recursive).traverse()
     } yield ()
   }
 
@@ -81,7 +80,7 @@ object RFRuntime {
       import RecordFieldType.constr._
       val schema = RecordType("Runtime") +
         f_id("id") + f_char("data_type") +
-        f_id("parent") + f_char("value")
+        f_id("parent")
       mt.pure(schema)
     }
 
@@ -94,22 +93,13 @@ object RFRuntime {
           override def nrow: F[Int] = runtime.count
 
           override def row_iter: MonadicIterator[F, Table.Row] = object_list_it
-            .flat_map{pr =>
-              mt.map(
-                pr.dtype match {
-                  case _: PrimitiveDataType => mt.map(runtime.get(pr.id))(inst =>  inst.asInstanceOf[PrimitiveInstance[F]].value)
-                  case _ => mt.pure(Value.empty)
-                }
-              )(value => pr.copy(value = value))
-            }
             .map(pr =>
               new Table.Row {
                 override def schema: Schema = sch
                 override protected def _get(col: Int): Value = col match {
-                  case 0 => pr.id
-                  case 1 => pr.dtype.show
-                  case 2 => pr.parent.map(Value(_)).getOrElse(Value.empty)
-                  case 3 => pr.value
+                  case 0 => Value(pr.id)
+                  case 1 => Value(pr.dtype.show)
+                  case 2 => pr.parent.map(p => Value(p)).getOrElse(Value.empty)
                 }
               }
           )

@@ -3,16 +3,17 @@ package sysmo.reform.shared.runtime
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.sources.SourceAction
+import sysmo.reform.shared.sources.property.FieldProperty
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.{LocalTable, Query, Table}
-import sysmo.reform.shared.types.{PrimitiveDataType, DataType, RecordType, UnionType}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType, UnionType}
 import sysmo.reform.shared.util.{CirceTransport, MonadicIterator}
 import sysmo.reform.shared.{types => TPE}
 
 
 sealed trait RFObject[_F[+_]] {
   type F[+X] = _F[X]
-  type MIter = MonadicIterator[F, RFObject[F]]
+  type MIter = MonadicIterator[F, ObjectId]
   implicit val mt: MonadThrow[_F]
   type DType <: TPE.DataType
   def dtype: DType
@@ -23,23 +24,23 @@ sealed trait RFObject[_F[+_]] {
   def get_runtime: RFRuntime[F] = runtime
 }
 
-case class ObjectProxy(id: ObjectId, dtype: TPE.DataType, parent: Option[ObjectId], value: Value)
+case class ObjectProxy(id: ObjectId, dtype: TPE.DataType, parent: Option[ObjectId])
 
-trait PrimitiveInstance[_F[+_]] extends RFObject[_F] {
-  override type DType = TPE.PrimitiveDataType
-  def value: Value
-  def update_value(v: Value): F[Unit]
-  override def own_children: MIter =
-    MonadicIterator.empty[F, RFObject[F]](mt)
-}
+//trait PrimitiveInstance[_F[+_]] extends RFObject[_F] {
+//  override type DType = TPE.PrimitiveDataType
+//  def value: Value
+//  def update_value(v: Value): F[Unit]
+//  override def own_children: MIter =
+//    MonadicIterator.empty[F, RFObject[F]](mt)
+//}
 
-case class RecordFieldInstance(ftype: TPE.RecordFieldType, instance: ObjectId)
+case class RecordFieldInstance(ftype: TPE.RecordFieldType, value: Value)
 
 trait RecordInstance[_F[+_]] extends RFObject[_F] {
   override type DType = TPE.RecordType
   def fields: MonadicIterator[F, RecordFieldInstance]
 
-  private[runtime] def set_field(name: String, instance: ObjectId): F[Unit]
+  private[runtime] def set_field(name: String, value: Value): F[Unit]
 }
 
 case class ArrayElementInstance[_F[+_]](index: Int, instance: ObjectId)
@@ -67,7 +68,7 @@ object RFObject {
   import S.tree.{TreeSource, TreeBranch, TreeLeaf, TreeNode}
   class TreeView[F[+_]](rtobj: RFObject[F]) extends TreeSource[F] {
     val runtime: RFRuntime[F] = rtobj.runtime
-    val mt: MonadThrow[F] = runtime.mt
+    implicit val mt: MonadThrow[F] = runtime.mt
     var _selection: Set[ObjectId] = Set[ObjectId]()
 
 
@@ -96,7 +97,7 @@ object RFObject {
 
     def as_node(obj: RFObject[F], name: Option[String]): TreeNode[F] = {
       obj match {
-        case v: PrimitiveInstance[F] => new DebugNode(v)
+//        case v: PrimitiveInstance[F] => new DebugNode(v)
         case rec: RecordInstance[F] => new RecordObjectAsNode(rec, name.getOrElse(rec.dtype.symbol))
         case array: ArrayInstance[F] => new ArrayObjectAsNode(array, name.getOrElse(""))
         //          new ArrayAsNode(array, name.getOrElse(array.prototype.symbol) + s"(${array.count})")
@@ -135,7 +136,7 @@ object RFObject {
     class DebugNode(val obj: RFObject[F]) extends ObjectAsNode[RFObject[F]] {
       import Value.implicits._
       private def get_value: Value = obj match {
-        case x: PrimitiveInstance[_] => x.value
+//        case x: PrimitiveInstance[_] => x.value
         case x: RecordInstance[_] => Value.empty
         case x: ArrayInstance[_] => Value.empty
       }
@@ -148,18 +149,20 @@ object RFObject {
     }
 
     class RecordObjectAsNode(val obj: RecordInstance[F], val name: String) extends ObjectAsNode[RecordInstance[F]] {
+      import Value.implicits._
       override def icon: Option[String] = Some("fa fa-map")
       override def actions: Seq[Action] = Seq()
       override def children: MonadicIterator[F, TreeNode[F]] =
-        obj.fields
-//          .filterNot(x => x.target.isInstanceOf[AtomicValue])
-          .flat_map(x => {
-            import io.circe.syntax._
-            import Encoders._
-            as_nodeF(x.instance, Some(x.ftype.make_descr))
-          })
-//          .filterNot(x => x == EmptyNode)
-//          .toSeq
+        MonadicIterator.from_fiterator(obj.fields.traverse(flist =>
+          flist.filter(fi => fi.ftype.dtype match {
+            case x: CompoundDataType => true
+            case x: ArrayType => true
+            case _ => false
+          }).map(x => (x.ftype, x.value.get[ObjectId].get)).iterator
+        ))
+        .flat_map(x => {
+            as_nodeF(x._2, Some(x._1.make_descr))
+        })
     }
 
     class ArrayObjectAsNode(val obj: ArrayInstance[F], val name: String) extends ObjectAsNode[ArrayInstance[F]] {
@@ -176,6 +179,7 @@ object RFObject {
     import sysmo.reform.shared.sources.property.{Property, PropertySource}
     import Value.implicits._
     class RecordObjectAsPropSource[F[+_]](val obj: RecordInstance[F]) extends PropertySource[F] {
+      override val id: ObjectId = obj.id
       private var _dispatcher = new Dispatcher[F] {
         implicit val mt: MonadThrow[F] = obj.runtime.mt
         override def dispatch(action: RuntimeAction): F[Unit] =
@@ -184,22 +188,16 @@ object RFObject {
       }
       override def props: MonadicIterator[F, Property] =
         obj.fields
-          .flat_map {field =>
-            val value_f: F[Value] = field.ftype.dtype match {
-              case _: PrimitiveDataType =>
-                mt.map(obj.runtime.get(field.instance))(inst =>
-                  inst.asInstanceOf[PrimitiveInstance[F]].value
-                )
-              case _ => mt.pure(Value(field.instance))
-            }
+          .map {field => FieldProperty(field)
+//            val value_f: F[Value] = mt.pure(field.value)
 
-            mt.map(value_f)(v => new Property {
-              override def id: ObjectId = field.instance
-              override def name: String = field.ftype.name
-              override def descr: String = field.ftype.make_descr
-              override def dtype: DataType = field.ftype.dtype
-              override def value: Value = v
-            })
+//            mt.map(value_f)(v => new Property {
+////              override def id: ObjectId = field.value
+//              override def name: String = field.ftype.name
+//              override def descr: String = field.ftype.make_descr
+//              override def dtype: DataType = field.ftype.dtype
+//              override def value: Value = v
+//            })
           }
 
       override implicit val mt: MonadThrow[F] = obj.runtime.mt
@@ -207,6 +205,7 @@ object RFObject {
     }
 
     class OtherAsPropSource[F[+_]](val obj: RFObject[F]) extends PropertySource[F] {
+      override val id: ObjectId = obj.id
       override implicit val mt: MonadThrow[F] = obj.runtime.mt
       override def props: MonadicIterator[F, Property] = MonadicIterator.empty
       override def dispatcher: Dispatcher[F] = new Dispatcher[F] {
@@ -217,7 +216,7 @@ object RFObject {
     }
 
     def apply[F[+_]](obj: RFObject[F]): PropertySource[F] = obj match {
-      case x: PrimitiveInstance[F] => new OtherAsPropSource(x)
+//      case x: PrimitiveInstance[F] => new OtherAsPropSource(x)
       case rec: RecordInstance[F] => new RecordObjectAsPropSource(rec)
       case array: ArrayInstance[F] => new OtherAsPropSource(array)
     }
@@ -265,22 +264,14 @@ object RFObject {
               array.elements
                 .flat_map(element => runtime.get(element.instance))
                 .flat_map {
-                  case rec: RecordInstance[F] => rec.fields.flat_map(
-                    field => mt.map(runtime.get(field.instance)){
-                      case x: PrimitiveInstance[_] => x.value
-                      case x: RecordInstance[_] => Value(x.id)
-                      case x: ArrayInstance[_] => Value(x.id)
-                    }
+                  case rec: RecordInstance[F] => rec.fields.map(
+                    field => field.value
                   ).traverse()
                   case x => mt.raiseError(new IllegalArgumentException(s"Expected array element to be record, found ${x.dtype}"))
                 }.map(values => {
-                  println(values)
                   new Table.Row {
                     override def schema: Schema = sch
-                    override protected def _get(col: Int): Value = values.lift(col) match {
-                      case Some(v) => Value(v)
-                      case None => Value.empty
-                    }
+                    override protected def _get(col: Int): Value = values(col)
                   }
                 })
             }

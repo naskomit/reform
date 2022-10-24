@@ -1,6 +1,6 @@
 package sysmo.reform.shared.runtime
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUIDSupplier, Value}
-import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, DataType, RecordFieldType, RecordType}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, PrimitiveDataType, RecordFieldType, RecordType}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
@@ -9,6 +9,8 @@ import sysmo.reform.shared.expr.{CommonPredicate, ContainmentPredicate, LogicalA
 import sysmo.reform.shared.sources.SourceAction
 import sysmo.reform.shared.table.{BasicQuery, Query, QueryFilter}
 import sysmo.reform.shared.util.containers.FLocal
+
+import scala.collection.mutable.ArrayBuffer
 
 class LocalRuntime() extends RFRuntime[FLocal] {
   override protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
@@ -43,7 +45,7 @@ class LocalRuntime() extends RFRuntime[FLocal] {
 
   override def list: MonadicIterator[F, ObjectProxy] =
     MonadicIterator.from_iterator(
-      objects.values.map(x => ObjectProxy(x.id, x.dtype, x.parent, Value.empty)).iterator
+      objects.values.map(x => ObjectProxy(x.id, x.dtype, x.parent)).iterator
     )
 
   def count: F[Int] = FLocal(objects.size)
@@ -67,12 +69,11 @@ class LocalRuntime() extends RFRuntime[FLocal] {
   override def dispatch(action: RuntimeAction): F[Unit] = {
     logger.info(action.toString)
     action match {
-      case SetValue(id, value) => {
+      case SetFieldValue(id, new_value) => {
         for {
           obj <- get(id)
           _ <- obj match {
-            case x: PrimitiveInstance[F] => x.update_value(value)
-            case x: RecordInstance[F] => ???
+            case x: RecordInstance[F] => x.set_field(new_value.ftype.name, new_value.value)
             case x: ArrayInstance[F] => ???
           }
         } yield ()
@@ -87,29 +88,26 @@ object LocalRuntime {
   trait LocalMT {
     val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
   }
-  case class PrimitiveInstanceImpl(dtype: PrimitiveDataType, id: ObjectId, var value: Value, parent: Option[ObjectId])
-    extends PrimitiveInstance[FLocal] with LocalMT {
-    override def update_value(v: Value): F[Unit] = {
-      value = v
-      mt.pure()
-    }
-  }
-
   case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
     extends RecordInstance[FLocal] with LocalMT {
-    protected val children: mutable.HashMap[String, ObjectId] = new mutable.HashMap()
+    import Value.implicits._
+    protected val children: ArrayBuffer[Value] = ArrayBuffer.fill(dtype.fields.size)(Value.empty)
+    println(s"Allocated ${dtype.fields.size} children for ${dtype.symbol}")
     override def own_children: MIter = {
-      MonadicIterator.from_iterator[F, (String, ObjectId)](children.iterator)
-        .flat_map(c => runtime.get(c._2))
+      val child_fields = children.iterator.zipWithIndex.collect {
+        case (value, i) if dtype.fields(i).isInstanceOf[CompoundDataType] =>
+          value.get[ObjectId].get
+      }
+      MonadicIterator.from_iterator[F, ObjectId](child_fields)
     }
     override def fields: MonadicIterator[F, RecordFieldInstance] =
-      MonadicIterator.from_iterator[F, RecordFieldType](dtype.fields.iterator)
-        .map(ftype => RecordFieldInstance(ftype, children(ftype.name)))
+      MonadicIterator.from_iterator[F, (RecordFieldType, Value)](dtype.fields.iterator.zip(children))
+        .map{case(ftype, child) => RecordFieldInstance(ftype, child)}
 
-    override private[runtime] def set_field(name: String, instance: ObjectId): F[Unit] =
+    override private[runtime] def set_field(name: String, value: Value): F[Unit] =
       dtype.field_index(name) match {
         case Some(i) => {
-          children(name) = instance
+          children(i) = value
           mt.pure()
         }
         case None => mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))
@@ -121,7 +119,6 @@ object LocalRuntime {
     protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
     override def own_children: MIter = {
       MonadicIterator.from_iterator[F, ObjectId](children.iterator)
-        .flat_map(id => runtime.get(id))
     }
 
     def elements: MonadicIterator[F, ArrayElementInstance[F]] =
@@ -134,8 +131,6 @@ object LocalRuntime {
   }
 
   object constructors extends Constructors[FLocal] {
-    override def primitive(dtype: PrimitiveDataType, id: ObjectId, value: Value, parent: Option[ObjectId]): F[PrimitiveInstance[F]] =
-      FLocal(PrimitiveInstanceImpl(dtype, id, value, parent))
     override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]] =
       FLocal(RecordObjectImpl(dtype, id, parent))
     override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayInstance[F]] =

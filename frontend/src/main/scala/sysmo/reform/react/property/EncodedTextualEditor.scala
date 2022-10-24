@@ -3,7 +3,7 @@ package sysmo.reform.react.property
 import japgolly.scalajs.react.{ReactEventFromInput, ScalaComponent}
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.shared.data.Value
-import sysmo.reform.shared.runtime.SetValue
+import sysmo.reform.shared.runtime.SetFieldValue
 import sysmo.reform.shared.util.containers.FLocal
 
 trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
@@ -25,7 +25,7 @@ trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
         <.input(^.`type` := "text", ^.className := "form-control",
           ^.autoFocus := false,
           ^.value := ((s.focused, s.status) match {
-            case (false, PropertyEditor.Valid | PropertyEditor.Warning(_, _)) => format(p.value)
+            case (false, PropertyEditor.Valid | PropertyEditor.Warning(_, _)) => format(p.field.value)
             case _ => s.local_value
           })
           ,
@@ -50,8 +50,8 @@ trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
     def on_blur(p: Props, s: State): AsyncCallback[Unit] = {
       val value: FLocal[Value] = parse(s.local_value)
       value match {
-        case Right(x) if (x != p.value) => f2c.async(p.dispatcher.dispatch(
-          SetValue(p.id, x)
+        case Right(x) if (x != p.field.value) => f2c.async(p.dispatcher.dispatch(
+          SetFieldValue(p.id, p.field.copy(value = x))
         )) >> $.modStateAsync(s => s.copy(
           local_value = format(x),
           status = PropertyEditor.Valid, focused = false
@@ -70,7 +70,7 @@ trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
 
   val component =
     ScalaComponent.builder[Props](display_name)
-      .initialStateFromProps(p => State(format(p.value), PropertyEditor.Valid, focused = false))
+      .initialStateFromProps(p => State(format(p.field.value), PropertyEditor.Valid, focused = false))
       .renderBackend[Backend]
       .build
 }

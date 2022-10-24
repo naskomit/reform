@@ -3,11 +3,11 @@ package sysmo.reform.react.property
 import cats.MonadThrow
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.shared.sources.property.{LocalPropertySource, PropertySource}
+import sysmo.reform.shared.sources.property.{FieldProperty, LocalPropertySource, PropertySource}
 import sysmo.reform.layout.{FlexFormLayout, FormItem, FormLayout}
 import sysmo.reform.effects.implicits._
-import sysmo.reform.shared.runtime.{RuntimeAction, SetValue}
-import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, MultiReferenceType, RecordType, ReferenceType}
+import sysmo.reform.shared.runtime.{RecordFieldInstance, RuntimeAction, SetFieldValue}
+import sysmo.reform.shared.types.{ArrayType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType}
 
 case class PropertySourceView()
 case class PropertyView()
@@ -23,31 +23,36 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComp
     def render(props: Props, state: State): VdomElement = {
 
       state.ps_local match {
-        case Some(ps) => props.layout(ps.props_sync.map {x =>
-          val editor: VdomElement = x.dtype match {
-            case dataType: PrimitiveDataType => dataType match {
-              case PrimitiveDataType.Real => FloatEditorComponent(
-                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
-              )
-              case PrimitiveDataType.Int => IntegerEditorComponent(
-                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
-              )
-              case PrimitiveDataType.Long => IntegerEditorComponent(
-                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
-              )
-              case PrimitiveDataType.Char => StringEditorComponent(
-                x.id, x.value, props.ps.dispatcher.tap(on_prop_update(props))
-              )
-              case PrimitiveDataType.Bool => ???
-              case PrimitiveDataType.Date => ???
-              case PrimitiveDataType.Id => ???
+        case Some(ps) => props.layout(ps.props_sync.map {
+          case prop@FieldProperty(field) => {
+            val editor: VdomElement = field.ftype.dtype match {
+              case dt: PrimitiveDataType => {
+                dt match {
+                  case PrimitiveDataType.Real => FloatEditorComponent(
+                    ps.id, field, props.ps.dispatcher.tap(on_prop_update(props))
+                  )
+                  case PrimitiveDataType.Int => IntegerEditorComponent(
+                    ps.id, field, props.ps.dispatcher.tap(on_prop_update(props))
+                  )
+                  case PrimitiveDataType.Long => IntegerEditorComponent(
+                    ps.id, field, props.ps.dispatcher.tap(on_prop_update(props))
+                  )
+                  case PrimitiveDataType.Char => StringEditorComponent(
+                    ps.id, field, props.ps.dispatcher.tap(on_prop_update(props))
+                  )
+                  case PrimitiveDataType.Bool => ???
+                  case PrimitiveDataType.Date => ???
+                  case PrimitiveDataType.Id => ???
+                }
+              }
+              case recordType: RecordType => <.div(s"Record[${recordType.symbol}]")
+              case arrayType: ArrayType => <.div(s"Array[${arrayType.prototype.symbol}]")
+              case referenceType: ReferenceType => ???
+              case referenceType: MultiReferenceType => ???
             }
-            case recordType: RecordType => <.div(s"Record[${recordType.symbol}]")
-            case arrayType: ArrayType => <.div(s"Array[${arrayType.prototype.symbol}]")
-            case referenceType: ReferenceType => ???
-            case referenceType: MultiReferenceType => ???
+            FormItem(prop.descr, editor)
           }
-          FormItem(x.descr, editor)
+
         }.toSeq)
         case None => <.div("Loading properties")
       }
@@ -55,7 +60,7 @@ class PropertyGroupEditorF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComp
 
     def on_prop_update(props: Props)(action: RuntimeAction): F[Unit] = {
       action match {
-        case SetValue(_, _) => load_props(props).runNow()
+        case SetFieldValue(_, _) => load_props(props).runNow()
         case _ =>
       }
       f2c.mt.pure()

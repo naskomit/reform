@@ -2,29 +2,24 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import cats.implicits._
-import sysmo.reform.shared.data.{ObjectId, Value}
-import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, DataType, RecordType, UnionType}
+import sysmo.reform.shared.data.{ObjectId, Value, ValueConstructor}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType, UnionType}
 
 class Instantiation[F[+_]](runtime: RFRuntime[F]) {
+  import Value.implicits._
   implicit val mt: MonadThrow[F] = runtime.mt
-//  implicit class DefaultMonadicFor[A](fa: F[A]) {
-//    def withFilter(f: A => Boolean): F[A] = fa
-//  }
-  trait InstanceBuilder {
+
+  sealed trait Builder
+
+  trait ValueBuilder extends Builder {
+    def value: Value
+  }
+
+  trait InstanceBuilder extends Builder {
     def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]]
   }
 
-  case class PrimitiveBuilder(value: Value)
-    extends InstanceBuilder {
-    override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[PrimitiveInstance[F]] = {
-      lbound match {
-        case lb: PrimitiveDataType => runtime.create_object(id => runtime.constructors.primitive(lb, id, value, parent))
-        case _ => runtime.mt.raiseError(new IllegalArgumentException("Lower bound for primitive instance should be of type PrimitiveDataType"))
-      }
-    }
-  }
-
-  case class RecordBuilder(dtype: RecordType, children: Seq[(String, InstanceBuilder)])
+  case class RecordBuilder(dtype: RecordType, children: Seq[(String, Builder)])
     extends InstanceBuilder {
 
     override def build(lbound: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RecordInstance[F]] = {
@@ -61,19 +56,36 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
       for {
         empty_instance <- runtime.create_object(id => runtime.constructors.record(dtype, id, parent))
 
-        field_instances <- {
-          dtype.fields.traverse { field =>
+        instance <- {
+          val field_instances_f = dtype.fields.traverse { field =>
             val child_instance = child_map.get(field.name) match {
-              case Some(v) => v.build(field.dtype, Some(empty_instance.id), runtime)
-              case None => Defaults.create(field.dtype, Some(empty_instance.id), runtime)
+              case Some(ib: InstanceBuilder) => {
+                val child_f = ib.build(field.dtype, Some(empty_instance.id), runtime)
+                mt.flatMap(child_f)(child => empty_instance.set_field(field.name, Value(child.id)))
+              }
+              case Some(vb: ValueBuilder) =>
+                empty_instance.set_field(field.name, vb.value)
+              case None => {
+                field.dtype match {
+                  case dt: CompoundDataType => {
+                    val child_f = Defaults.create(dt, Some(empty_instance.id), runtime)
+                    mt.flatMap(child_f)(child => empty_instance.set_field(field.name, Value(child.id)))
+                  }
+                  case dt: ArrayType => {
+                    val child_f = Defaults.create(dt, Some(empty_instance.id), runtime)
+                    mt.flatMap(child_f)(child => empty_instance.set_field(field.name, Value(child.id)))
+
+                  }
+                  case _ => mt.pure()
+                }
+              }
             }
-            child_instance.map(inst => (field.name, inst))
+            child_instance
           }
+
+          field_instances_f.map(_ => empty_instance)
         }
 
-        instance <- field_instances.traverse {finst =>
-            empty_instance.set_field(finst._1, finst._2.id)
-        }.map(_ => empty_instance)
       } yield instance
     }
 
@@ -103,10 +115,6 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   object Defaults {
     def create(dtype: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]] = {
       dtype match {
-        case lb: PrimitiveDataType =>
-          runtime.create_object(id =>
-            runtime.constructors.primitive(lb, id, lb.default, parent)
-          )
         case lb: RecordType =>
           runtime.create_object(id =>
             runtime.constructors.record(lb, id, parent)
@@ -132,11 +140,14 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
 
 
   implicit class Record2Builder(dtype: RecordType.Builder) {
-    def apply(children: (String, InstanceBuilder)*): RecordBuilder = {
+    def apply(children: (String, Builder)*): RecordBuilder = {
       RecordBuilder(dtype, children)
     }
   }
 
+  implicit class ValueBuilderImpl[T](raw: T)(implicit vc: ValueConstructor[T] ) extends ValueBuilder {
+    override def value: Value = vc.toValue(raw)
+  }
+
   implicit class Seq2Builder(x: Seq[InstanceBuilder]) extends ArrayBuilder(x)
-  implicit class Any2Primitive[T](x: T)(implicit vc: T => Value) extends PrimitiveBuilder(x)
 }
