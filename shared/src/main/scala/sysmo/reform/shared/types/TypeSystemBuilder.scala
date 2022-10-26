@@ -14,4 +14,10 @@ trait TypeSystemBuilder extends RecordFieldType.Constr {
     type_map = type_map + (symbol -> new_type)
     new_type
   }
+
+  def build: TypeSystem = TypeSystem(type_map)
+}
+
+case class TypeSystem(type_map: Map[String, DataType]) {
+  def get(symbol: String): Option[DataType] = type_map.get(symbol)
 }

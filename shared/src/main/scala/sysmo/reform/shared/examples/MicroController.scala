@@ -1,9 +1,10 @@
 package sysmo.reform.shared.examples
 
 import sysmo.reform.shared.data.Value
+import sysmo.reform.shared.examples.SkullInventoryBuilder.type_builder
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.expr.{Expression => E}
-import sysmo.reform.shared.runtime.{RFObject, RFRuntime}
+import sysmo.reform.shared.runtime.{RFObject, RFRuntime, RuntimeConstructor}
 
 object MicroController extends ModelBuilder {
   object type_builder extends TypeBuilder {
@@ -64,8 +65,8 @@ object MicroController extends ModelBuilder {
       f_array("triggers", Trigger)
   }
 
-  class initializer1[F[+X]](runtime: RFRuntime[F])
-    extends Initializer(runtime) {
+  class initializer1[F[+X]](runtime_builder: RuntimeConstructor[F])
+    extends Initializer(runtime_builder, type_builder.build) {
     import Value.implicits._
     import inst._
     import type_builder._
@@ -103,7 +104,7 @@ object MicroController extends ModelBuilder {
     }
 
   object initializer1 {
-    def apply[F[+_]](runtime: RFRuntime[F]) =
-      new initializer1[F](runtime)
+    def apply[F[+_]](runtime_constructor: RuntimeConstructor[F]) =
+      new initializer1[F](runtime_constructor)
   }
 }

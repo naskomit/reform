@@ -1,41 +1,101 @@
 package sysmo.reform.shared.runtime
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUIDSupplier, Value}
-import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, PrimitiveDataType, RecordFieldType, RecordType}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordFieldType, RecordType, ReferenceType, TypeSystem}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
 import cats.MonadThrow
-import sysmo.reform.shared.expr.{CommonPredicate, ContainmentPredicate, LogicalAnd, LogicalNot, LogicalOr, NumericalPredicate, StringPredicate, TypePredicateExpression}
-import sysmo.reform.shared.sources.SourceAction
+import cats.implicits._
 import sysmo.reform.shared.table.{BasicQuery, Query, QueryFilter}
 import sysmo.reform.shared.util.containers.FLocal
 
-import scala.collection.mutable.ArrayBuffer
+class CategorialIndex[K, V] {
+  private val index_map: mutable.Map[K, mutable.HashSet[V]] = mutable.HashMap()
+  def add_entry(key: K, value: V): Boolean = {
+    index_map.getOrElseUpdate(key, mutable.HashSet()).add(value)
+  }
 
-class LocalRuntime() extends RFRuntime[FLocal] {
-  override protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
+  def remove_entry(key: K, value: V): Boolean = {
+    index_map.getOrElseUpdate(key, mutable.HashSet()).remove(value)
+  }
+}
+
+object CategoricalIndex {
+  def apply[K, V](): CategorialIndex[K, V] = new CategorialIndex[K, V]
+}
+
+
+class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
+  protected val objectid_supplier: ObjectIdSupplier = new UUIDSupplier()
   val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
   private val objects: mutable.Map[ObjectId, RTO] = mutable.HashMap()
-  private val dtype_index: mutable.Map[DataType, mutable.HashSet[ObjectId]] = mutable.HashMap()
-  val constructors: Constructors[F] = LocalRuntime.constructors
+  private val dtype_index: CategorialIndex[DataType, ObjectId] = CategoricalIndex()
+  val constructors: Constructors[F] = LocalRuntimeConstructor.constructors
+
   override def get(id: ObjectId): F[RTO] = objects.get(id) match {
     case Some(x) => mt.pure(x)
     case None => mt.raiseError(new NoSuchElementException(s"$id"))
   }
-  override def put[T <: RTO](id: ObjectId, obj: T): F[T] = {
-    objects.put(id, obj)
-    obj.dtype match {
-      case _: PrimitiveDataType =>
-      case _ => dtype_index.getOrElse(obj.dtype, mutable.HashSet()).add(id)
-    }
 
-    mt.pure(obj)
+  def create_record(dtype: RecordType, parent: Option[ObjectId]): F[RecordInstance[F]] = {
+    val oid = objectid_supplier.new_id
+    for {
+      instance <- constructors.record(dtype, oid, parent)
+        .map(inst => {
+          inst.runtime = this;
+          objects.addOne(oid, inst)
+          dtype_index.add_entry(dtype, oid)
+          inst
+        })
+    } yield instance
   }
+
+  def create_array(dtype: ArrayType, parent: Option[ObjectId]): F[ArrayInstance[F]] = {
+    val oid = objectid_supplier.new_id
+    for {
+          instance <- constructors.array(dtype, oid, parent)
+            .map(inst => {
+              inst.runtime = this; inst
+              objects.addOne(oid, inst)
+              dtype_index.add_entry(dtype, oid)
+              inst
+            })
+    } yield instance
+  }
+
+
+//  override def create(dtype: DataType): F[ObjectId] = {
+//    dtype match {
+//      case dt: RecordType => {
+//        val oid = objectid_supplier.new_id
+//        val instance =
+//        objects.addOne()
+//        mt.pure(oid)
+//      }
+//      case dt: ArrayType => {
+//        mt.pure(objectid_supplier.new_id)
+//      }
+//      case _ => mt.raiseError(
+//        new IllegalArgumentException(s"Can not create instance of type ${dtype}")
+//      )
+//    }
+//
+//  }
+
+  override def update_record(id: ObjectId, field_values: Seq[(String, Value)]): F[RecordInstance[F]] = {
+    objects.get(id) match {
+      case Some(rec: RecordInstance[F]) => (field_values.map {
+        case (field, value) => rec.set_field(field, value)
+      }).traverse(identity).map(_ => rec)
+      case None => mt.raiseError(new IllegalArgumentException(s"Failed updating record ${id}"))
+    }
+  }
+
   override def remove(id: ObjectId): F[Unit] = {
     objects.get(id) match {
       case Some(inst) => inst.dtype match {
         case _: PrimitiveDataType =>
-        case _ => dtype_index.get(inst.dtype).foreach(ids => ids.remove(id))
+        case _ => dtype_index.remove_entry(inst.dtype, id)
       }
       case None =>
     }
@@ -84,59 +144,15 @@ class LocalRuntime() extends RFRuntime[FLocal] {
   }
 }
 
-object LocalRuntime {
-  trait LocalMT {
-    val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
-  }
-  case class RecordObjectImpl(dtype: RecordType, id: ObjectId, parent: Option[ObjectId])
-    extends RecordInstance[FLocal] with LocalMT {
-    import Value.implicits._
-    protected val children: ArrayBuffer[Value] = ArrayBuffer.fill(dtype.fields.size)(Value.empty)
-    println(s"Allocated ${dtype.fields.size} children for ${dtype.symbol}")
-    override def own_children: MIter = {
-      val child_fields = children.iterator.zipWithIndex.collect {
-        case (value, i) if dtype.fields(i).isInstanceOf[CompoundDataType] =>
-          value.get[ObjectId].get
-      }
-      MonadicIterator.from_iterator[F, ObjectId](child_fields)
-    }
-    override def fields: MonadicIterator[F, RecordFieldInstance] =
-      MonadicIterator.from_iterator[F, (RecordFieldType, Value)](dtype.fields.iterator.zip(children))
-        .map{case(ftype, child) => RecordFieldInstance(ftype, child)}
-
-    override private[runtime] def set_field(name: String, value: Value): F[Unit] =
-      dtype.field_index(name) match {
-        case Some(i) => {
-          children(i) = value
-          mt.pure()
-        }
-        case None => mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))
-      }
-  }
-
-  case class ArrayObjectImpl(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId])
-    extends ArrayInstance[FLocal] with LocalMT {
-    protected val children: mutable.ArrayBuffer[ObjectId] = new mutable.ArrayBuffer()
-    override def own_children: MIter = {
-      MonadicIterator.from_iterator[F, ObjectId](children.iterator)
-    }
-
-    def elements: MonadicIterator[F, ArrayElementInstance[F]] =
-      MonadicIterator.from_iterator[F, ArrayElementInstance[F]](
-        children.zipWithIndex.map(x => ArrayElementInstance[F](x._2, x._1)).iterator
-      )
-
-    private[runtime] def add_element(instance: ObjectId): F[Unit] =
-      mt.pure(children.append(instance))
-  }
+object LocalRuntimeConstructor extends RuntimeConstructor[FLocal] {
 
   object constructors extends Constructors[FLocal] {
     override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]] =
-      FLocal(RecordObjectImpl(dtype, id, parent))
+      FLocal(LocalObjects.record(dtype, id, parent))
     override def array(dtype: ArrayType, id: ObjectId, parent: Option[ObjectId]): F[ArrayInstance[F]] =
-      FLocal(ArrayObjectImpl(dtype, id, parent))
+      FLocal(LocalObjects.array(dtype, id, parent))
   }
 
-  def apply(): LocalRuntime = new LocalRuntime()
+  def apply(ts: TypeSystem): RFRuntime[FLocal] = new LocalRuntime(ts)
 
 }

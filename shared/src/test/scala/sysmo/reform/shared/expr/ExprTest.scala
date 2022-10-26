@@ -13,8 +13,8 @@ class ExprTest extends AnyFunSpec with Matchers {
 
   describe("Expression evaluation") {
     val ctx = Context.fromMap_Either(Map[String, Value](
-      "x" -> 2, "y" -> 3, "x1" -> "x1", "x10" -> "x10",
-      "s1" -> "Hello", "s2" -> "World")
+      "x" -> Value(2), "y" -> Value(3), "x1" -> Value("x1"), "x10" -> Value("x10"),
+      "s1" -> Value("Hello"), "s2" -> Value("World"))
     )
 
     type F[+T] = Either[Throwable, T]

@@ -2,11 +2,11 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import cats.implicits._
-import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, RecordFieldType, RecordType}
-import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, Value}
+import sysmo.reform.shared.types.{ArrayType, DataType, RecordFieldType, RecordType, TypeSystem}
+import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Query, Table, TableService}
+import sysmo.reform.shared.table.{Query, Table, TableService}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.reflect.ClassTag
@@ -18,35 +18,32 @@ trait Constructors[_F[+_]] {
 
 }
 
-trait RFRuntime[_F[+_]] extends Logging {
+trait ObjectStorage[_F[+_]] extends Logging {
   type F[+X] = _F[X]
   implicit val mt: MonadThrow[F]
-  protected val objectid_supplier: ObjectIdSupplier
   type RTO = RFObject[F]
 
   def get(id: ObjectId): F[RTO]
-  def put[T <: RTO](id: ObjectId, obj: T): F[T]
-  def remove(id: ObjectId): F[Unit]
-  def list: MonadicIterator[F, ObjectProxy]
-  def count: F[Int]
-  def count(q: Query): F[Int]
-  def run_query(q: Query): MonadicIterator[F, RFObject[F]]
-  def dispatch(action: RuntimeAction): F[Unit]
-  val constructors: Constructors[F]
-
   def get_typed[T <: RTO](id: ObjectId)(implicit tag: ClassTag[T]): F[T] =
     mt.flatMap(get(id)) {
       case x: T => mt.pure(x)
       case x => mt.raiseError(new IllegalArgumentException(s"Incorrect object type, expected ${tag.getClass.getName}, found ${x.getClass.getName}"))
-    }
+  }
 
-  def update[T <: RTO](id: ObjectId, f: T => T)(implicit tag: ClassTag[T]): F[T] = {
-    mt.flatMap(get_typed[T](id)) {obj =>
+  def create_record(dtype: RecordType, parent: Option[ObjectId]): F[RecordInstance[F]]
+  def create_array(dtype: ArrayType, parent: Option[ObjectId]): F[ArrayInstance[F]]
+
+  def update_record(id: ObjectId, field_values: Seq[(String, Value)]): F[RecordInstance[F]]
+  def update_record(id: ObjectId, f: RecordInstance[F] => RecordInstance[F]): F[RecordInstance[F]] = {
+    mt.flatMap(get_typed[RecordInstance[F]](id)) {obj =>
       val new_obj = f(obj)
-      new_obj.runtime = this
-      put(id, new_obj)
+      new_obj.runtime = obj.runtime
+      new_obj.fields.map(f => (f.ftype.name, f.value)).traverse().flatMap(
+        fv => update_record(id, fv)
+      )
     }
   }
+  def remove(id: ObjectId): F[Unit]
 
   def remove_recursive(id: ObjectId): F[Unit] = {
     for {
@@ -55,18 +52,16 @@ trait RFRuntime[_F[+_]] extends Logging {
     } yield ()
   }
 
-  def create_object[T <: RTO](create_fn: ObjectId => F[T]): F[T] = {
-    val rt = this
-    for {
-      obj <- create_fn(objectid_supplier.new_id)
-      res <- {
-        obj.runtime = rt
-        put(obj.id, obj)
-      }
-    } yield res
-  }
+}
 
-
+trait RFRuntime[_F[+_]] extends ObjectStorage[_F] {
+  val constructors: Constructors[F]
+  val type_system: TypeSystem
+  def list: MonadicIterator[F, ObjectProxy]
+  def count: F[Int]
+  def count(q: Query): F[Int]
+  def run_query(q: Query): MonadicIterator[F, RFObject[F]]
+  def dispatch(action: RuntimeAction): F[Unit]
 }
 
 object RFRuntime {
@@ -112,4 +107,8 @@ object RFRuntime {
 
     implicit class runtime2table[F[+_]](runtime: RFRuntime[F]) extends TableView[F](runtime)
   }
+}
+
+trait RuntimeConstructor[_F[+_]] {
+  def apply(ts: TypeSystem): RFRuntime[_F]
 }

@@ -5,7 +5,7 @@ import sysmo.reform.app.{Configuration, Panel}
 import sysmo.reform.effects.implicits._
 import sysmo.reform.explorers.FormExplorerF
 import sysmo.reform.shared.examples.SkullInventoryBuilder
-import sysmo.reform.shared.runtime.{LocalRuntime, RFObject}
+import sysmo.reform.shared.runtime.{LocalRuntime, LocalRuntimeConstructor, RFObject}
 import sysmo.reform.shared.util.containers.FLocal
 
 
@@ -29,7 +29,7 @@ object SkullInventoryPanel extends Panel {
     .build
 
   def apply(app_config: Configuration): Unmounted = {
-    component(Props(SkullInventoryBuilder.initializer1(LocalRuntime()).root))
+    component(Props(SkullInventoryBuilder.initializer1(LocalRuntimeConstructor).root))
   }
 
 }

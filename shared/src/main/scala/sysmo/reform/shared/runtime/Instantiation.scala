@@ -3,7 +3,7 @@ package sysmo.reform.shared.runtime
 import cats.MonadThrow
 import cats.implicits._
 import sysmo.reform.shared.data.{ObjectId, Value, ValueConstructor}
-import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType, UnionType}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType, TypeSystem, UnionType}
 
 class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   import Value.implicits._
@@ -54,8 +54,7 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
       }
 
       for {
-        empty_instance <- runtime.create_object(id => runtime.constructors.record(dtype, id, parent))
-
+        empty_instance <- runtime.create_record(dtype, parent)
         instance <- {
           val field_instances_f = dtype.fields.traverse { field =>
             val child_instance = child_map.get(field.name) match {
@@ -97,7 +96,7 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
       lbound match {
         case lb: ArrayType => {
           for {
-            empty_instance <- runtime.create_object(id => runtime.constructors.array(lb, id, parent))
+            empty_instance <- runtime.create_array(lb, parent)
 
             element_instances <- children.traverse(child =>
               child.build(lb.prototype, Some(empty_instance.id), runtime)
@@ -115,22 +114,14 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
   object Defaults {
     def create(dtype: DataType, parent: Option[ObjectId], runtime: RFRuntime[F]): F[RFObject[F]] = {
       dtype match {
-        case lb: RecordType =>
-          runtime.create_object(id =>
-            runtime.constructors.record(lb, id, parent)
-          )
+        case lb: RecordType => runtime.create_record(lb, parent)
 
         case lb: UnionType => {
           val concrete: RecordType = lb.subtypes.head
-          runtime.create_object(id =>
-            runtime.constructors.record(concrete, id, parent)
-          )
+          runtime.create_record(concrete, parent)
         }
 
-        case lb: ArrayType =>
-          runtime.create_object(id =>
-            runtime.constructors.array(lb, id, parent)
-          )
+        case lb: ArrayType => runtime.create_array(lb, parent)
       }
     }
   }
