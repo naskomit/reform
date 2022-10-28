@@ -1,6 +1,15 @@
 package sysmo.reform.shared.table
 
-import sysmo.reform.shared.expr.{ColumnRef, Expression, PredicateExpression}
+import sysmo.reform.shared.expr.{ColumnRef, Expression, FieldRef, PredicateExpression}
+
+/** # Filter */
+sealed trait Projection
+object Projection {
+  case object All extends Projection
+}
+case class Columns(columns: Seq[ColumnRef]) extends Projection
+case class Fields(fields: Seq[FieldRef]) extends Projection
+
 
 /** # Filter */
 case class QueryFilter(expr: PredicateExpression)
@@ -23,7 +32,7 @@ sealed trait Query
 
 case class BasicQuery(
    source: QuerySource,
-   columns: Option[Seq[ColumnRef]] = None,
+   projection: Projection = Projection.All,
    filter: Option[QueryFilter] = None,
    sort: Option[QuerySort] = None,
    range: Option[QueryRange] = None

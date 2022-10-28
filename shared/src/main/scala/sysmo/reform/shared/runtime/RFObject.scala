@@ -40,7 +40,7 @@ trait RecordInstance[_F[+_]] extends RFObject[_F] {
   override type DType = TPE.RecordType
   def fields: MonadicIterator[F, RecordFieldInstance]
 
-  private[runtime] def set_field(name: String, value: Value): F[Unit]
+  def set_field(name: String, value: Value): F[Unit]
 }
 
 case class ArrayElementInstance[_F[+_]](index: Int, instance: ObjectId)
@@ -49,7 +49,7 @@ trait ArrayInstance[_F[+_]] extends RFObject[_F] {
   override type DType = TPE.ArrayType
   def elements: MonadicIterator[F, ArrayElementInstance[F]]
 
-  private[runtime] def add_element(instance: ObjectId): F[Unit]
+  def add_element(instance: ObjectId): F[Unit]
 }
 
 

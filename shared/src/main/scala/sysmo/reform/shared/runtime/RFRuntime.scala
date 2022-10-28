@@ -1,7 +1,7 @@
 package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
-import cats.implicits._
+import cats.syntax.all._
 import sysmo.reform.shared.types.{ArrayType, DataType, RecordFieldType, RecordType, TypeSystem}
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.logging.Logging
@@ -61,6 +61,7 @@ trait RFRuntime[_F[+_]] extends ObjectStorage[_F] {
   def count: F[Int]
   def count(q: Query): F[Int]
   def run_query(q: Query): MonadicIterator[F, RFObject[F]]
+  def run_table_query(q: Query): F[Table[F]]
   def dispatch(action: RuntimeAction): F[Unit]
 }
 

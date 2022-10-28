@@ -5,8 +5,8 @@ import sysmo.reform.shared.util.MonadicIterator
 
 import scala.collection.mutable
 import cats.MonadThrow
-import cats.implicits._
-import sysmo.reform.shared.table.{BasicQuery, Query, QueryFilter}
+import cats.syntax.all._
+import sysmo.reform.shared.table.{BasicQuery, Query, QueryFilter, Table}
 import sysmo.reform.shared.util.containers.FLocal
 
 class CategorialIndex[K, V] {
@@ -64,24 +64,6 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
   }
 
 
-//  override def create(dtype: DataType): F[ObjectId] = {
-//    dtype match {
-//      case dt: RecordType => {
-//        val oid = objectid_supplier.new_id
-//        val instance =
-//        objects.addOne()
-//        mt.pure(oid)
-//      }
-//      case dt: ArrayType => {
-//        mt.pure(objectid_supplier.new_id)
-//      }
-//      case _ => mt.raiseError(
-//        new IllegalArgumentException(s"Can not create instance of type ${dtype}")
-//      )
-//    }
-//
-//  }
-
   override def update_record(id: ObjectId, field_values: Seq[(String, Value)]): F[RecordInstance[F]] = {
     objects.get(id) match {
       case Some(rec: RecordInstance[F]) => (field_values.map {
@@ -112,19 +94,24 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
 
   // TODO Implement query !!!!!!!!!!!!!!!!!!!!!!!!!!
   override def count(q: Query): F[Int] = FLocal(objects.size)
-  override def run_query(q: Query): MonadicIterator[F, RFObject[F]] = {
-    throw new NotImplementedError
-//    q match {
-//      case BasicQuery(source, columns, filter, sort, range) => filter match {
-//        case Some(QueryFilter(expr)) => expr match {
-//          case expression: TypePredicateExpression => ???
-//          case _ => throw new NotImplementedError(s"Cannot handle filter expression $expr")
-//        }
-//        case None => MonadicIterator.from_iterator(objects.values.iterator)
-//      }
-//    }
+  override def run_query(q: Query): MonadicIterator[F, RFObject[F]] = ???
 
-  }
+//  {
+//    throw new NotImplementedError
+////    q match {
+////      case BasicQuery(source, columns, filter, sort, range) => filter match {
+////        case Some(QueryFilter(expr)) => expr match {
+////          case expression: TypePredicateExpression => ???
+////          case _ => throw new NotImplementedError(s"Cannot handle filter expression $expr")
+////        }
+////        case None => MonadicIterator.from_iterator(objects.values.iterator)
+////      }
+////    }
+//
+//  }
+
+  override def run_table_query(q: Query): F[Table[F]] =
+    mt.raiseError(new NotImplementedError("LocalRuntime.run_table_query()"))
 
   override def dispatch(action: RuntimeAction): F[Unit] = {
     logger.info(action.toString)

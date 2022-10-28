@@ -1,7 +1,7 @@
 package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
-import cats.implicits._
+import cats.syntax.all._
 import sysmo.reform.shared.data.{ObjectId, Value, ValueConstructor}
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType, TypeSystem, UnionType}
 

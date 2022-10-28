@@ -24,7 +24,7 @@ object LocalObjects {
       MonadicIterator.from_iterator[F, (RecordFieldType, Value)](dtype.fields.iterator.zip(children))
         .map{case(ftype, child) => RecordFieldInstance(ftype, child)}
 
-    override private[runtime] def set_field(name: String, value: Value): F[Unit] =
+    def set_field(name: String, value: Value): F[Unit] =
       dtype.field_index(name) match {
         case Some(i) => {
           children(i) = value
@@ -46,7 +46,7 @@ object LocalObjects {
         children.zipWithIndex.map(x => ArrayElementInstance[F](x._2, x._1)).iterator
       )
 
-    private[runtime] def add_element(instance: ObjectId): F[Unit] =
+    def add_element(instance: ObjectId): F[Unit] =
       mt.pure(children.append(instance))
   }
 

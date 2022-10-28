@@ -35,6 +35,7 @@ object Table {
     }
 
   }
+
 }
 
 trait LocalTable extends Table[FLocal] with RandomAccessTable[FLocal] {

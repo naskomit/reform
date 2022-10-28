@@ -1,17 +1,18 @@
 package sysmo.reform.storage.io.csv
 
 import cats.MonadThrow
+import cats.syntax.all._
 import kantan.csv.CsvConfiguration
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.runtime.{RecordFieldInstance, RecordInstance}
 import sysmo.reform.shared.table.Table
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.types.{ArrayType, PrimitiveDataType, CompoundDataType, MultiReferenceType, RecordType, ReferenceType}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType}
 import sysmo.reform.shared.util.MonadicIterator
 import sysmo.reform.shared.util.containers.FLocal
 
 import java.io.File
-import scala.util.Using
+import scala.util.{Failure, Success, Using}
 
 class Reader(path: String, rec_type: RecordType, conf: CsvConfiguration) {
   import kantan.csv._ // All kantan.csv types.
@@ -87,12 +88,23 @@ class Reader(path: String, rec_type: RecordType, conf: CsvConfiguration) {
 
 
   def read(f: RowObj => FLocal[Unit]): FLocal[Unit] = {
-    Using(new File(path).asCsvReader[RowObj](conf)) {
-      reader => reader.map {
-        case Left(e) => throw new RuntimeException("Failed creating a reader", e)
-        case Right (x) => x
-      }.foreach(row => f(row))
-    }.toEither
+    def process_rows(reader: CsvReader[ReadResult[RowObj]]): F[Unit] = {
+      for (row_res <- reader) {
+        row_res.flatMap(row => f(row)) match {
+          case err@Left(value) => return err
+          case Right(_) =>
+        }
+      }
+      FLocal()
+    }
+
+
+    Using(new File(path).asCsvReader[RowObj](conf)) { reader =>
+      process_rows(reader)
+    } match {
+      case Failure(exception) => FLocal.error(exception)
+      case Success(value) => value
+    }
   }
 
 }

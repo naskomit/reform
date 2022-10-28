@@ -8,7 +8,7 @@ case object NoValue extends Value {
   override def _get: Option[Nothing] = None
 }
 
-trait ValueConstructor[T] {
+trait ValueConstructor[-T] {
   def toValue(raw: T): Value
 }
 
@@ -52,8 +52,12 @@ class ValueImpl {
     override def _get: Option[ObjectId] = v
   }
 
-  def apply[T](x: T)(implicit vc: ValueConstructor[T]): Value =
-    vc.toValue(x)
+  def apply[T](x: T)(implicit vc: ValueConstructor[T]): Value = {
+    if (x == null)
+      Value.empty
+    else
+      vc.toValue(x)
+  }
 
   def from_any(x: Any): Value = {
     import implicits._

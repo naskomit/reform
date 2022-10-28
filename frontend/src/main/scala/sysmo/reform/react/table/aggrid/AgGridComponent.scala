@@ -5,7 +5,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 import sysmo.reform.shared.{table => T}
 import sysmo.reform.shared.{expr => E}
-import cats.implicits._
+import cats.syntax.all._
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.shared.table.{LocalTable, SelectionHandler}
 
@@ -35,7 +35,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: T.QuerySource, s
       ))
   }
 
-  val columns = schema.fields.map(field => E.ColumnRef(field.name))
+  val columns = T.Columns(schema.fields.map(field => E.ColumnRef(field.name)))
 
   val native : AgGridFacades.TableDatasource = {
     val ag_ds = (new js.Object).asInstanceOf[AgGridFacades.TableDatasource]
@@ -46,7 +46,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: T.QuerySource, s
       val sort = process_sort(params.sortModel)
       val range = T.QueryRange(params.startRow, params.endRow - params.startRow)
       val query = T.BasicQuery(
-        source = source, columns = Some(columns), filter = filter, sort = sort, range = Some(range)
+        source = source, projection = columns, filter = filter, sort = sort, range = Some(range)
       )
 
       val f_data: ds.F[LocalTable] = ds.query_table(query).flatMap(ds.cache_locally)

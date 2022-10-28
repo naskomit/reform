@@ -19,5 +19,11 @@ trait TypeSystemBuilder extends RecordFieldType.Constr {
 }
 
 case class TypeSystem(type_map: Map[String, DataType]) {
+  def records: Iterable[RecordType] = type_map.values.collect {
+    case x: RecordType => x
+  }
+  def arrays: Iterable[ArrayType] = type_map.values.collect {
+    case x: ArrayType => x
+  }
   def get(symbol: String): Option[DataType] = type_map.get(symbol)
 }

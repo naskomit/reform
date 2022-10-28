@@ -1,8 +1,5 @@
 package sysmo.reform.shared.util
 
-import cats.{Monad, MonadThrow}
-import cats.implicits._
-
 import scala.concurrent.Future
 
 object containers {
