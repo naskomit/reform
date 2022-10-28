@@ -12,10 +12,14 @@ trait RecordTypeAux {
     protected[RecordTypeAux] var _fields: Seq[RecordFieldType] = Seq()
     protected[RecordTypeAux] var _field_index: SequenceIndex[String, RecordFieldType] = new SequenceIndex(_fields, _.name)
 
-    def +(field: RecordFieldType.FieldBuilder): this.type = {
+    def +(field: RecordFieldType): this.type = {
       _fields = _fields :+ field
       _field_index = new SequenceIndex(_fields, _.name)
       this
+    }
+
+    def +(field: RecordFieldType.FieldBuilder): this.type = {
+      this + (field: RecordFieldType)
     }
 
     def fields(field_list: RecordFieldType.FieldBuilder*): this.type = {

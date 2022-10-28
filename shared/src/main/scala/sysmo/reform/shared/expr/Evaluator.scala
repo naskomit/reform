@@ -60,7 +60,7 @@ trait Evaluator[_F[+_]] {
     expr match {
       case Constant(v) => mt.pure(v)
       case ColumnRef(id, alias, table) => ???
-      case FieldRef(id) => ctx.get(id)
+      case FieldRef(id, ftype) => ctx.get(id)
       case pred_expr: PredicateExpression => pred_expr match {
         case LogicalAnd(expr_list@_*) => bool_eval_until(expr_list.toList, until = false, ctx)
         case LogicalOr(expr_list@_*) => bool_eval_until(expr_list.toList, until = true, ctx)

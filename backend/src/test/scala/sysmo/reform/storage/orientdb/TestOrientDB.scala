@@ -70,12 +70,20 @@ object TestOrientDB extends App {
     // select @rid, code, sex, age, image_type, BMI, `Filter 1`, `Filter 2` from `SkullEntry`
     // ORDER BY BMI DESC
     // delete from `SkullEntry`
+
+    val fields = Seq("code", "sex", "age", "image_type")
+      .map(name => Expression.field(name, SkullEntry.field(name)))
+
+    //Expression.field(f)
+
     val query = BasicQuery(
       source = SingleTable("SkullEntry"),
-      projection = Fields(Seq("@rid", "code", "sex", "age", "image_type").map(f => Expression.field(f)))
+      projection = Fields(fields)
     )
 
-    val out = runtime.run_table_query(query)
+    val out = runtime.run_table_query(query).map(x => println(x)).onError {
+      case e: Throwable => throw(e)
+    }
 
   }
 

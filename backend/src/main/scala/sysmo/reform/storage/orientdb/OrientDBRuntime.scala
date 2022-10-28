@@ -14,6 +14,7 @@ import sysmo.reform.shared.util.MonadicIterator
 import Value.implicits._
 import com.orientechnologies.orient.core.sql.OSQLEngine
 import sysmo.reform.shared.query.{BasicQuery, Query}
+import sysmo.reform.shared.table.Table.Schema
 
 import java.util.Date
 import scala.jdk.CollectionConverters._
@@ -39,19 +40,11 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
       mt.pure(LocalObjects.array(dtype, id, parent))
   }
 
-  private object Aux {
-    def ensure_orientid(id: ObjectId): F[OrientId] = {
-      id match {
-        case oid: OrientId => mt.pure(oid)
-        case _ => mt.raiseError(new IllegalArgumentException(s"Not an OrientId: ${id}"))
-      }
-    }
+  val db_codec: DBCodec[F] = new DBCodec[F]
+  val query_service = new OrientDBQueryService[F](session)
 
-    def value2orid(value: Value): F[Option[ORID]] =
-      value.get[ObjectId] match {
-        case Some(x) => ensure_orientid(x).map(oid => Some(oid.v))
-        case None => mt.pure(None)
-      }
+  private object Aux {
+
 
     def ensure_not_null[T](x: T, msg: String): F[T] = {
       if (x == null) {
@@ -84,82 +77,19 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
       }
     }
 
-    def read_value(field: RecordFieldType, element: OElement): Value = {
-      field.dtype match {
-        case fdtype: PrimitiveDataType => fdtype match {
-          case PrimitiveDataType.Real =>
-            Value(element.getProperty[Double](field.name))
-          case PrimitiveDataType.Int =>
-            Value(element.getProperty[Int](field.name))
-          case PrimitiveDataType.Long =>
-            Value(element.getProperty[Long](field.name))
-          case PrimitiveDataType.Char =>
-            Value(element.getProperty[String](field.name))
-          case PrimitiveDataType.Bool =>
-            Value(element.getProperty[Boolean](field.name))
-          case PrimitiveDataType.Date =>
-            Value(element.getProperty[Date](field.name))
-          case PrimitiveDataType.Id =>
-            Value(OrientId(element.getProperty[ORID](field.name)))
-        }
-        case fdtype: CompoundDataType =>
-          Value(OrientId(element.getProperty[ORID](field.name)))
-        case fdtype: ArrayType =>
-          Value(OrientId(element.getProperty[ORID](field.name)))
-        case fdtype: ReferenceType =>
-          Value(OrientId(element.getProperty[ORID](field.name)))
-        case fdtype: MultiReferenceType =>
-          Value(OrientId(element.getProperty[ORID](field.name)))
-      }
-    }
 
-    def write_value(element: OElement, field: RecordFieldType, value: Value): Unit = {
-      val name = field.name
-      def set[T: ValueExtractor](v: Option[T]): Unit = {
-        value.get[T] match {
-          case Some(v) => element.setProperty(name, v)
-          case None => element.removeProperty(name)
-        }
-      }
-      field.dtype match {
-        case fdtype: PrimitiveDataType => fdtype match {
-          case PrimitiveDataType.Real =>
-            set(value.get[Double])
-          case PrimitiveDataType.Int =>
-            set(value.get[Int])
-          case PrimitiveDataType.Long =>
-            set(value.get[Long])
-          case PrimitiveDataType.Char =>
-            set(value.get[String])
-          case PrimitiveDataType.Bool =>
-            set(value.get[Boolean])
-          case PrimitiveDataType.Date =>
-            set(value.get[Date])
-          case PrimitiveDataType.Id =>
-            element.setProperty(name, value2orid(value).map(_.orNull))
-        }
-        case fdtype: CompoundDataType =>
-          element.setProperty(name, value2orid(value).map(_.orNull))
-        case fdtype: ArrayType =>
-          element.setProperty(name, value2orid(value).map(_.orNull))
-        case fdtype: ReferenceType =>
-          element.setProperty(name, value2orid(value).map(_.orNull))
-        case fdtype: MultiReferenceType =>
-          element.setProperty(name, value2orid(value).map(_.orNull))
-      }
-    }
   }
 
   override def get(id: ObjectId): F[RTO] = {
     for {
-      oid <- Aux.ensure_orientid(id)
+      oid <- db_codec.ensure_orientid(id)
       element <- Aux.load_element(oid)
       dtype <- Aux.get_record_type(element)
       instance <- Util.catch_exception {
         val parent_id = Aux.get_parent_id(element)
         val inst = LocalObjects.record(dtype, id, parent_id)(mt)
         for (field <- dtype.fields) {
-          val value = Aux.read_value(field, element)
+          val value = db_codec.read_value(field, element)
           inst.set_field(field.name, value)
         }
         inst
@@ -191,7 +121,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
   override def update_record(id: ObjectId, field_values: Seq[(String, Value)]): F[RecordInstance[F]] = {
     for {
-      oid <- Aux.ensure_orientid(id)
+      oid <- db_codec.ensure_orientid(id)
       element <- Aux.load_element(oid)
       rec_type <- Aux.get_record_type(element)
       _ <- field_values.traverse { fv: (String, Value) =>
@@ -200,7 +130,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
         field_type match {
           case Some(ftype) => {
             Util.catch_exception(
-              Aux.write_value(element, ftype, value)
+              db_codec.write_value(element, ftype, value)
             )
           }
           case None => mt.raiseError(new IllegalArgumentException(
@@ -217,7 +147,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
   override def remove(id: ObjectId): F[Unit] = {
     for {
-      oid <- Aux.ensure_orientid(id)
+      oid <- db_codec.ensure_orientid(id)
       res <- Util.catch_exception(
         session.delete(oid.v)
       )
@@ -233,28 +163,10 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
 
   override def run_table_query(q: Query): F[Table[F]] = {
-//    q match {
-//      case BasicQuery(SingleTable(id, alias, schema), projection, filter, sort, range) => ???
-//    }
-
-    val sql_query = "select @rid, code, sex, age, image_type, BMI, `Filter 1`, `Filter 2` from `SkullEntry`"
-    val arguments = Seq()
-    val result_set = session.query(sql_query, arguments:_*)
-
-    val stmt = OSQLEngine.parse(sql_query, null)
-    println(stmt)
-
-
-
-    //    result_set.asScala.map(item => item)
-//    val runtime = this
-//    new Table[F] {
-//      override implicit val mt: MonadThrow[F] = runtime.mt
-//      override def schema: RecordType = ???
-//      override def nrow: F[Int] = ???
-//      override def row_iter: MonadicIterator[F, Table.Row] = ???
-//    }
-    mt.raiseError(new IllegalStateException())
+    for {
+      sql <- query_service.generate_sql(q)
+      table <- query_service.run_query(sql, db_codec)
+    } yield table
   }
 
   override def dispatch(action: RuntimeAction): F[Unit] = ???

@@ -1,13 +1,13 @@
 package sysmo.reform.shared.expr
 
 import sysmo.reform.shared.data.{Value, ValueConstructor}
+import sysmo.reform.shared.types.RecordFieldType
 
 /** # Expression subclasses */
 sealed trait Expression
 
 case class ColumnRef(id: String, alias: Option[String] = None, table: Option[String] = None) extends Expression
-case class FieldRef(id: String) extends Expression
-
+case class FieldRef(id: String, ftype: Option[RecordFieldType] = None) extends Expression
 case class Constant(v: Value) extends Expression
 
 sealed trait PredicateExpression extends Expression {
@@ -102,7 +102,7 @@ object Expression {
   def apply[T](x: T)(implicit vc: ValueConstructor[T]): Constant =
     Constant(vc.toValue(x))
   def col(id: String): ColumnRef = ColumnRef(id)
-  def field(id: String): FieldRef = FieldRef(id)
+  def field(id: String, ftype: Option[RecordFieldType] = None): FieldRef = FieldRef(id, ftype)
 
   object implicits {
     /** # Expression */
