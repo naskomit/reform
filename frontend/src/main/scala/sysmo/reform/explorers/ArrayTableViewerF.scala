@@ -5,9 +5,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.react.table.TableViewerF
+import sysmo.reform.shared.query.{QuerySource, SingleTable}
 import sysmo.reform.shared.runtime.ArrayInstance
 import sysmo.reform.shared.runtime.RFObject.TableView
-import sysmo.reform.shared.table.{QuerySource, SingleTable, Table, TableService}
+import sysmo.reform.shared.table.{Table, TableService}
 
 class ArrayTableViewerF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
 

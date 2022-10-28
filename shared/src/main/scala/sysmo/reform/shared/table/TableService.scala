@@ -1,6 +1,7 @@
 package sysmo.reform.shared.table
 
 import cats.MonadThrow
+import sysmo.reform.shared.query.Query
 import sysmo.reform.shared.types.RecordType
 
 trait TableService[_F[+_]] {

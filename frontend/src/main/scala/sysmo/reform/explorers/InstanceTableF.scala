@@ -7,7 +7,8 @@ import sysmo.reform.shared.runtime.RFRuntime
 import RFRuntime.implicits._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.table.TableViewerF
-import sysmo.reform.shared.table.{QuerySource, SingleTable, Table, TableService}
+import sysmo.reform.shared.query.{QuerySource, SingleTable}
+import sysmo.reform.shared.table.{Table, TableService}
 
 class InstanceTableF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {
 

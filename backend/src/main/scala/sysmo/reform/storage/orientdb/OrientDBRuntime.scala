@@ -8,10 +8,12 @@ import com.orientechnologies.orient.core.metadata.schema.OProperty
 import com.orientechnologies.orient.core.record.{OElement, ORecord}
 import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUObjectId, Value, ValueConstructor, ValueExtractor}
 import sysmo.reform.shared.runtime.{ArrayInstance, Constructors, LocalObjects, LocalRuntime, ObjectProxy, RFObject, RFRuntime, RecordInstance, RuntimeAction}
-import sysmo.reform.shared.table.{BasicQuery, Query, Table}
+import sysmo.reform.shared.table.Table
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordFieldType, RecordType, ReferenceType, TypeSystem}
 import sysmo.reform.shared.util.MonadicIterator
 import Value.implicits._
+import com.orientechnologies.orient.core.sql.OSQLEngine
+import sysmo.reform.shared.query.{BasicQuery, Query}
 
 import java.util.Date
 import scala.jdk.CollectionConverters._
@@ -230,16 +232,21 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
   override def run_query(q: Query): MonadicIterator[F, RFObject[F]] = ???
 
 
-  override def run_table_query(q: Query): F[Table[F]] = ???
-//  {
-////    q match {
-////      case BasicQuery(SingleTable(id, alias, schema), projection, filter, sort, range) => ???
-////    }
-//
-//    val statement = "select @rid, code, sex, age, image_type, BMI, `Filter 1`, `Filter 2` from `SkullEntry`"
-//    val arguments = Seq()
-//    val result_set = session.query(statement, arguments:_*)
-//    result_set.asScala.map(item => item)
+  override def run_table_query(q: Query): F[Table[F]] = {
+//    q match {
+//      case BasicQuery(SingleTable(id, alias, schema), projection, filter, sort, range) => ???
+//    }
+
+    val sql_query = "select @rid, code, sex, age, image_type, BMI, `Filter 1`, `Filter 2` from `SkullEntry`"
+    val arguments = Seq()
+    val result_set = session.query(sql_query, arguments:_*)
+
+    val stmt = OSQLEngine.parse(sql_query, null)
+    println(stmt)
+
+
+
+    //    result_set.asScala.map(item => item)
 //    val runtime = this
 //    new Table[F] {
 //      override implicit val mt: MonadThrow[F] = runtime.mt
@@ -247,7 +254,8 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 //      override def nrow: F[Int] = ???
 //      override def row_iter: MonadicIterator[F, Table.Row] = ???
 //    }
-//  }
+    mt.raiseError(new IllegalStateException())
+  }
 
   override def dispatch(action: RuntimeAction): F[Unit] = ???
 

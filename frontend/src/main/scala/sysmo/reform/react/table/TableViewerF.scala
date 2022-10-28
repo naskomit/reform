@@ -7,7 +7,8 @@ import sysmo.reform.react.table.aggrid.{AgGridComponent, CellRenderer, DateCellR
 import sysmo.reform.shared.data.Value
 import Value.implicits._
 import sysmo.reform.effects.implicits.F2Callback
-import sysmo.reform.shared.table.{QuerySource, SelectionHandler, Table, TableService}
+import sysmo.reform.shared.query.QuerySource
+import sysmo.reform.shared.table.{SelectionHandler, Table, TableService}
 import sysmo.reform.shared.types.PrimitiveDataType
 
 class TableViewerF[F[+_]] extends ReactComponent {

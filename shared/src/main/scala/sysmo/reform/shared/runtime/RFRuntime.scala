@@ -5,8 +5,9 @@ import cats.syntax.all._
 import sysmo.reform.shared.types.{ArrayType, DataType, RecordFieldType, RecordType, TypeSystem}
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.logging.Logging
+import sysmo.reform.shared.query.Query
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.table.{Query, Table, TableService}
+import sysmo.reform.shared.table.{Table, TableService}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.reflect.ClassTag

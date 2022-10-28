@@ -1,6 +1,6 @@
-package sysmo.reform.shared.table
+package sysmo.reform.shared.query
 
-import sysmo.reform.shared.expr.{ColumnRef, Expression, FieldRef, PredicateExpression}
+import sysmo.reform.shared.expr.{ColumnRef, FieldRef, PredicateExpression}
 
 /** # Filter */
 sealed trait Projection

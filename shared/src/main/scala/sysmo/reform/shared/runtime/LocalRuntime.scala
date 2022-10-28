@@ -6,7 +6,8 @@ import sysmo.reform.shared.util.MonadicIterator
 import scala.collection.mutable
 import cats.MonadThrow
 import cats.syntax.all._
-import sysmo.reform.shared.table.{BasicQuery, Query, QueryFilter, Table}
+import sysmo.reform.shared.query.{BasicQuery, Query, QueryFilter}
+import sysmo.reform.shared.table.Table
 import sysmo.reform.shared.util.containers.FLocal
 
 class CategorialIndex[K, V] {

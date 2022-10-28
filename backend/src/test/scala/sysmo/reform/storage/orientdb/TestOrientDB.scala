@@ -7,8 +7,8 @@ import kantan.csv.{DecodeError, rfc}
 import sysmo.reform.shared.examples.SkullInventoryBuilder
 import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.logging.Printer
+import sysmo.reform.shared.query.{BasicQuery, Fields, SingleTable}
 import sysmo.reform.shared.runtime.LocalRuntime
-import sysmo.reform.shared.table.{BasicQuery, Fields, SingleTable}
 import sysmo.reform.shared.types.{RecordType, TypeSystem}
 import sysmo.reform.shared.util.Injector
 import sysmo.reform.shared.util.containers.FLocal
@@ -75,8 +75,10 @@ object TestOrientDB extends App {
       projection = Fields(Seq("@rid", "code", "sex", "age", "image_type").map(f => Expression.field(f)))
     )
 
+    val out = runtime.run_table_query(query)
+
   }
 
-  import_data()
-//  query_data()
+//  import_data()
+  query_data()
 }

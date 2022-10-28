@@ -2,10 +2,11 @@ package sysmo.reform.shared.runtime
 
 import cats.MonadThrow
 import sysmo.reform.shared.data.{ObjectId, Value}
+import sysmo.reform.shared.query.Query
 import sysmo.reform.shared.sources.SourceAction
 import sysmo.reform.shared.sources.property.FieldProperty
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.table.{LocalTable, Query, Table}
+import sysmo.reform.shared.table.{LocalTable, Table}
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType, UnionType}
 import sysmo.reform.shared.util.{CirceTransport, MonadicIterator}
 import sysmo.reform.shared.{types => TPE}
