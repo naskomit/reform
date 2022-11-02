@@ -6,6 +6,7 @@ case object NoValue extends Value {
   override def is_set: Boolean = false
   override def not_set: Boolean = true
   override def _get: Option[Nothing] = None
+  override def show(formatter: Option[ValueFormatter]): String = "N/A"
 }
 
 trait ValueConstructor[-T] {
@@ -26,30 +27,44 @@ class ValueImpl {
   }
   case class RealValue(v: Option[Double]) extends ValueFromOption {
     override def _get: Option[Double] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%.3f".format(_)).getOrElse(NoValue.show(None))
   }
 
   case class IntValue(v: Option[Int]) extends ValueFromOption {
     override def _get: Option[Int] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%d".format(_)).getOrElse(NoValue.show(None))
   }
 
   case class LongValue(v: Option[Long]) extends ValueFromOption {
     override def _get: Option[Long] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%d".format(_)).getOrElse(NoValue.show(None))
   }
 
   case class CharValue(v: Option[String]) extends ValueFromOption {
     override def _get: Option[String] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%s".format(_)).getOrElse(NoValue.show(None))
   }
 
   case class BoolValue(v: Option[Boolean]) extends ValueFromOption {
     override def _get: Option[Boolean] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%s".format(_)).getOrElse(NoValue.show(None))
   }
 
   case class DateValue(v: Option[Date]) extends ValueFromOption {
     override def _get: Option[Date] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%s".format(_)).getOrElse(NoValue.show(None))
   }
 
   case class IdValue(v: Option[ObjectId]) extends ValueFromOption {
     override def _get: Option[ObjectId] = v
+    def show(formatter: Option[ValueFormatter]): String =
+      v.map("%s".format(_)).getOrElse(NoValue.show(None))
   }
 
   def apply[T](x: T)(implicit vc: ValueConstructor[T]): Value = {

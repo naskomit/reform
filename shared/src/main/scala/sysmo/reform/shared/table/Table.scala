@@ -12,8 +12,6 @@ trait Table[F[+_]] {
   implicit val mt: MonadThrow[F]
   def schema: RecordType
   def nrow: F[Int]
-//  def get(row_id: Int, col_id: Int): F[Value]
-//  def row(row_id: Int): F[Table.Row]
   def row_iter: MonadicIterator[F, Table.Row]
 }
 
@@ -38,7 +36,9 @@ object Table {
 
 }
 
-trait LocalTable extends Table[FLocal] with RandomAccessTable[FLocal] {
+trait LocalTable extends Table[FLocal]
+  with RandomAccessTable[FLocal]
+  with Iterable [Table.Row] {
   val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
 }
 
@@ -55,4 +55,14 @@ case class LocalRowBasedTable(_schema: Schema, rows: Seq[Table.Row]) extends Loc
   override def nrow: FLocal[Int] = FLocal(rows.length)
   override def row_iter: MonadicIterator[FLocal, Table.Row] =
     MonadicIterator.from_iterator(rows.iterator)
+
+  override def iterator: Iterator[Table.Row] = new Iterator[Table.Row] {
+    var row_number = 0
+    override def hasNext: Boolean = row_number < rows.size
+    override def next(): Table.Row = {
+      val item = rows(row_number)
+      row_number += 1
+      item
+    }
+  }
 }

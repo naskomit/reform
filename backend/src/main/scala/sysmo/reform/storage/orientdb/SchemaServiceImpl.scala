@@ -20,20 +20,22 @@ abstract class SchemaServiceError(msg: String = "", cause: Throwable)
 class EntityDuplicationError(msg: String, cause: Throwable = None.orNull)
   extends SchemaServiceError(msg, cause)
 
-class SchemaServiceImpl[F[+_]](sess: ODatabaseSession)(implicit mt: MonadThrow[F])
+class SchemaServiceImpl[F[+_]](session: SessionImpl[F])(implicit mt: MonadThrow[F])
   extends SchemaService[F] with Logging {
-  private val oschema = sess.getMetadata.getSchema
+  private val oschema = session.db_session.getMetadata.getSchema
   private def klasses: Iterable[OClass] = oschema.getClasses.asScala
 
   def list_schemas: F[Iterable[StorageSchema]] = {
     Util.catch_exception(
-      klasses
+      mt.pure(klasses
         .map(klass => new SchemaImpl(klass))
-    )
+    ))
   }
 
   override def has_schema(name: String): F[Boolean] = {
-    Util.catch_exception(oschema.existsClass(name))
+    Util.catch_exception {
+      mt.pure(oschema.existsClass(name))
+    }
   }
 
   override def ensure_schema(name: String): F[Unit] =
@@ -45,6 +47,7 @@ class SchemaServiceImpl[F[+_]](sess: ODatabaseSession)(implicit mt: MonadThrow[F
       case false => Util.catch_exception {
         logger.info(s"Creating schema ${name}")
         oschema.createClass(name)
+        mt.pure()
       }
     }
 
@@ -76,6 +79,7 @@ class SchemaServiceImpl[F[+_]](sess: ODatabaseSession)(implicit mt: MonadThrow[F
         }
         klass.createProperty(rec_field.name, otype)
       }
+      mt.pure()
     }
   }
 

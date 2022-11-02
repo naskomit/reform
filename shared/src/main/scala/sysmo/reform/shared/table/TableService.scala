@@ -10,9 +10,9 @@ trait TableService[_F[+_]] {
   def list_tables(): F[Seq[Table.Schema]]
   def table_schema(table_id: String): F[Table.Schema]
   def query_table(q : Query): F[Table[F]]
-  def cache_locally(table: Table[F]): F[LocalTable] = {
-    table.row_iter.traverse(rows =>
-      LocalRowBasedTable(table.schema, rows)
+  def materialize_result(result: Table[F]): F[LocalTable] = {
+    result.row_iter.traverse(rows =>
+      LocalRowBasedTable(result.schema, rows)
     )
   }
 }

@@ -31,7 +31,7 @@ object OrientId {
   def apply(db_rec: ORecord): OrientId = OrientId(db_rec.getIdentity)
 }
 
-class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSession)(implicit val mt: MonadThrow[_F])
+class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: SessionImpl[_F])(implicit val mt: MonadThrow[_F])
   extends RFRuntime[_F] {
   override val constructors: Constructors[F] = new Constructors[F] {
     override def record(dtype: RecordType, id: ObjectId, parent: Option[ObjectId]): F[RecordInstance[F]] =
@@ -40,8 +40,6 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
       mt.pure(LocalObjects.array(dtype, id, parent))
   }
 
-  val db_codec: DBCodec[F] = new DBCodec[F]
-  val query_service = new OrientDBQueryService[F](session)
 
   private object Aux {
 
@@ -55,7 +53,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
     }
 
     def load_element(oid: OrientId): F[OElement] = {
-      ensure_not_null(session.load(oid.v): OElement,
+      ensure_not_null(session.db_session.load(oid.v): OElement,
         s"Object ${oid} not found in the database")
     }
 
@@ -82,23 +80,24 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
   override def get(id: ObjectId): F[RTO] = {
     for {
-      oid <- db_codec.ensure_orientid(id)
+      oid <- Util.ensure_orientid(id)
       element <- Aux.load_element(oid)
       dtype <- Aux.get_record_type(element)
       instance <- Util.catch_exception {
         val parent_id = Aux.get_parent_id(element)
         val inst = LocalObjects.record(dtype, id, parent_id)(mt)
-        for (field <- dtype.fields) {
-          val value = db_codec.read_value(field, element)
-          inst.set_field(field.name, value)
-        }
-        inst
+        dtype.fields
+          .traverse(field =>
+            session.rec_field_codec.read_value(field, element).map(value =>
+              inst.set_field(field.name, value)
+            )
+          ).map(_ => inst)
       }
     } yield instance
   }
 
   override def create_record(dtype: RecordType, parent: Option[ObjectId]): F[RecordInstance[F]] = {
-    val element: OElement = session.newInstance(dtype.symbol)
+    val element: OElement = session.db_session.newInstance(dtype.symbol)
     def insert(el: OElement): F[RecordInstance[F]] = {
       val orec: ORecord = el.save()
       constructors.record(dtype, OrientId(orec.getIdentity), parent)
@@ -121,7 +120,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
   override def update_record(id: ObjectId, field_values: Seq[(String, Value)]): F[RecordInstance[F]] = {
     for {
-      oid <- db_codec.ensure_orientid(id)
+      oid <- Util.ensure_orientid(id)
       element <- Aux.load_element(oid)
       rec_type <- Aux.get_record_type(element)
       _ <- field_values.traverse { fv: (String, Value) =>
@@ -130,7 +129,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
         field_type match {
           case Some(ftype) => {
             Util.catch_exception(
-              db_codec.write_value(element, ftype, value)
+              session.rec_field_codec.write_value(ftype, element, value)
             )
           }
           case None => mt.raiseError(new IllegalArgumentException(
@@ -147,10 +146,11 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
   override def remove(id: ObjectId): F[Unit] = {
     for {
-      oid <- db_codec.ensure_orientid(id)
-      res <- Util.catch_exception(
-        session.delete(oid.v)
-      )
+      oid <- Util.ensure_orientid(id)
+      res <- Util.catch_exception{
+        session.db_session.delete(oid.v)
+        mt.pure()
+      }
     } yield res
   }
 
@@ -164,8 +164,8 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: ODatabaseSes
 
   override def run_table_query(q: Query): F[Table[F]] = {
     for {
-      sql <- query_service.generate_sql(q)
-      table <- query_service.run_query(sql, db_codec)
+      sql <- session.query_service.generate_sql(q)
+      table <- session.query_service.run_query(sql)
     } yield table
   }
 

@@ -3,9 +3,10 @@ package sysmo.reform.storage.orientdb
 import cats.MonadThrow
 import cats.syntax.all._
 import com.orientechnologies.orient.core.db.ODatabaseSession
-import sysmo.reform.shared.data.Value
+import sysmo.reform.shared.data.{RecordFieldCodec, Value}
 import sysmo.reform.shared.expr.FieldRef
 import sysmo.reform.shared.query.{BasicQuery, Columns, Fields, Projection, Query, QueryService, SQLQuery, SingleTable}
+import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Table}
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.util.MonadicIterator
@@ -14,9 +15,18 @@ import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class OrientDBQueryService[_F[+_]](session: ODatabaseSession)(implicit val mt: MonadThrow[_F])
-  extends QueryService[_F] {
+class OrientDBQueryService[_F[+_]](session: SessionImpl[_F])(
+  implicit val mt: MonadThrow[_F]) extends QueryService[_F] {
   private def quote(s: String): String = "`" + s + "`"
+
+//  override type FieldCodec = DBCodec[F]
+//  val rec_field_codec: DBCodec[F] = new DBCodec[F]()
+
+
+  override def list_tables(): F[Seq[Schema]] = mt.pure(Seq())
+
+  // TODO
+  override def table_schema(table_id: String): F[Schema] = ???
 
   override def generate_sql(q: Query): F[SQLQuery] = {
     val builder = new mutable.StringBuilder
@@ -55,7 +65,7 @@ class OrientDBQueryService[_F[+_]](session: ODatabaseSession)(implicit val mt: M
     } yield SQLQuery(builder.toString(), arguments.toSeq, ftypes)
   }
 
-  def run_query(sql: SQLQuery, db_codec: DBCodec[F]): F[Table[F]] = {
+  override def run_query(sql: SQLQuery): F[Table[F]] = {
     for {
       result_schema <- {
         sql.ftypes.zipWithIndex.traverse {
@@ -69,29 +79,31 @@ class OrientDBQueryService[_F[+_]](session: ODatabaseSession)(implicit val mt: M
           rec_type: RecordType
         }
       }
-      result_set <- {
-        Util.catch_exception(
-          session.query(sql.q, sql.args:_*).asScala
-            .map { row =>
-              val row_values = result_schema.fields.map { ftype =>
-                db_codec.read_value(ftype, row.toElement)
-              }.toVector
+//      result_set <- {
+//        Util.catch_exception(
+//        )
+//      }
+
+      table <- {
+        val _mt = mt
+        val result_set: Iterator[F[Table.Row]]  = session.db_session.query(sql.q, sql.args:_*).asScala
+          .map { row =>
+            result_schema.fields.traverse { ftype =>
+              session.rec_field_codec.read_value(ftype, row.toElement)
+            }.map(row_values =>
               new Table.Row {
                 override def schema: Table.Schema = result_schema
                 override protected def _get(col: Int): Value = row_values(col)
               }
-            }
-        )
-      }
+            )
+          }
 
-      table <- {
-        val _mt = mt
         mt.pure(new Table[F] {
-          override implicit val mt: MonadThrow[F] = mt
+          override implicit val mt: MonadThrow[F] = _mt
           override def schema: RecordType = result_schema
           override def nrow: F[Int] = mt.pure(result_set.size)
           override def row_iter: MonadicIterator[F, Table.Row] =
-            MonadicIterator.from_iterator(result_set)
+            MonadicIterator.from_iteratorf(result_set)
         })
       }
 
@@ -99,9 +111,4 @@ class OrientDBQueryService[_F[+_]](session: ODatabaseSession)(implicit val mt: M
 
   }
 
-  def materialize_result_set(rs: Table[F]): F[LocalTable] = {
-    rs.row_iter.traverse(rows =>
-      LocalRowBasedTable(rs.schema, rows)
-    )
-  }
 }

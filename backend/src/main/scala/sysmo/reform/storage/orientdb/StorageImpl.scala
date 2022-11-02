@@ -21,20 +21,27 @@ class StorageImpl[F[+_]](config: Config)(implicit val mt: MonadThrow[F])
     }
 }
 
-class SessionImpl[F[+_]](session: ODatabaseSession)(implicit val mt: MonadThrow[F])
+class SessionImpl[F[+_]](val db_session: ODatabaseSession)(implicit val mt: MonadThrow[F])
   extends StorageSession[F] with Logging {
-  override def schema: SchemaService[F] = new SchemaServiceImpl[F](session)
+
+  override type FieldCodec = DBCodec[F]
+  override lazy val rec_field_codec: DBCodec[F] = new DBCodec[F]
+
+  override type QService = OrientDBQueryService[F]
+  override lazy val query_service = new OrientDBQueryService[F](this)
+
+  override lazy val schema: SchemaService[F] = new SchemaServiceImpl[F](this)
 
   override def runtime(type_system: TypeSystem): RFRuntime[F] =
-    new OrientDBRuntime[F](type_system, session)
+    new OrientDBRuntime[F](type_system, this)
 
   def with_transaction(f: => F[Unit]): F[Unit] = {
-    session.begin()
+    db_session.begin()
     val res = f
-    mt.map(res)(_ => session.commit())
+    mt.map(res)(_ => db_session.commit())
     mt.onError(res){
       case e: Throwable => {
-        session.rollback()
+        db_session.rollback()
         logger.error("Aborting transaction!!!")
         mt.raiseError(e)
       }
