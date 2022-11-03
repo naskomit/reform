@@ -39,6 +39,7 @@ trait RecordTypeAux {
       this
     }
 
+    def build: RecordType = this
   }
 
   implicit class RecordTypeImpl(builder: Builder) extends RecordType {

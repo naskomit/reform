@@ -22,7 +22,6 @@ import scala.jdk.CollectionConverters._
 class OrientId(orid: ORID) extends ObjectId {
   override type Id = ORID
   override val v: ORID = orid
-  override def next: ObjectId = ???
   override def show: String = orid.toString
 }
 

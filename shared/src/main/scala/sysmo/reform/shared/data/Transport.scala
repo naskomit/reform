@@ -1,38 +1,39 @@
 package sysmo.reform.shared.data
 
+import io.circe.Decoder.Result
 import io.circe.JsonObject
 import sysmo.reform.shared.util.CirceTransport
 import sysmo.reform.shared.data.Value._
+
+import java.util.Date
 
 object Transport extends CirceTransport {
   import io.circe.syntax._
 
   implicit val enc_Id: Encoder[ObjectId] =
-    Encoder.instance{
-      case UUObjectId(v) => Map(
-        "$type" -> "UUID".asJson,
-        "value" -> v.toString.asJson
-      ).asJson
-      case _ => null
-    }
+    Encoder.instance(_.serialize.asJson)
+
+  implicit val enc_Date: Encoder[Date] =
+    Encoder.instance(date => date.getTime.asJson)
+
+  def opt_v_asJson[T : Encoder](opt_v: Option[T]): Json =
+    opt_v.map(_.asJson).getOrElse(Json.Null)
+
 
   implicit val enc_Value: Encoder[Value] =
     Encoder.instance{
-      case RealValue(Some(v)) => v.asJson
-      case IntValue(Some(v)) => v.asJson
-      case LongValue(Some(v)) => v.asJson
-      case BoolValue(Some(v)) => v.asJson
-      case CharValue(Some(v)) => v.asJson
-      case DateValue(Some(v)) =>
-        Map(
-          "$type" -> "DateValue".asJson,
-          "value" -> v.toString.asJson
-        ).asJson
-      case IdValue(Some(v)) => v.asJson
+      case NoValue => Json.Null
+      case RealValue(opt_v) => opt_v_asJson(opt_v)
+      case IntValue(opt_v) => opt_v_asJson(opt_v)
+      case LongValue(opt_v) => opt_v_asJson(opt_v)
+      case BoolValue(opt_v) => opt_v_asJson(opt_v)
+      case CharValue(opt_v) => opt_v_asJson(opt_v)
+      case DateValue(opt_v) => opt_v_asJson(opt_v)
+      case IdValue(opt_v) => opt_v_asJson(opt_v)
     }
 
-  // TODO
-  implicit val dec_Value: Decoder[Value] =
-    (x : HCursor) => x.as[Json].map(x => NoValue)
+  implicit object ValueDecoder extends Decoder[Value] {
+    override def apply(c: HCursor): Result[Value] = ???
+  }
 
 }

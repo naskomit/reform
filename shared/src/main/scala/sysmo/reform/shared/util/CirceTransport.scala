@@ -11,9 +11,9 @@ trait CirceTransport {
   type Codec[A] = circe.Codec[A]
   type Encoder[A] = circe.Encoder[A]
   type Decoder[A] = circe.Decoder[A]
-  val Encoder = circe.Encoder
-  val Decoder = circe.Decoder
+  protected val Encoder = circe.Encoder
+  protected val Decoder = circe.Decoder
   type HCursor = circe.HCursor
   type Json = circe.Json
-  val Json = circe.Json
+  protected val Json = circe.Json
 }

@@ -4,6 +4,7 @@ import cats.Show
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.util.CirceTransport
+import sysmo.reform.shared.util.containers.FLocal
 
 sealed trait DataType {
   def id: ObjectId
@@ -53,15 +54,16 @@ object PrimitiveDataType extends PrimitiveDataTypeAux {
     val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
 
-  def apply(name: String): PrimitiveDataType= {
+  def apply(name: String): FLocal[PrimitiveDataType] = {
     name match {
-      case "Real" => Real
-      case "Int" => Int
-      case "Long" => Long
-      case "Char" => Char
-      case "Bool" => Bool
-      case "Date" => Date
-      case "Id" => Id
+      case "Real" => FLocal(Real)
+      case "Int" => FLocal(Int)
+      case "Long" => FLocal(Long)
+      case "Char" => FLocal(Char)
+      case "Bool" => FLocal(Bool)
+      case "Date" => FLocal(Date)
+      case "Id" => FLocal(Id)
+      case x => FLocal.error(new IllegalArgumentException(s"Not a valid primitive type ${x}"))
     }
   }
 }
