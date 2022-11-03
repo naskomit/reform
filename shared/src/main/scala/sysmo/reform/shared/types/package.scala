@@ -10,26 +10,13 @@ package object types {
   }
 
   trait HasSymbol {
-    def symbol: String
-    def descr: Option[String]
+    val symbol: String
+    val descr: Option[String]
     def make_descr: String = descr.getOrElse(symbol)
   }
 
   trait HasLabelExpr {
-    def label_expr: Option[Expression]
+    val label_expr: Option[Expression]
   }
 
-
-  trait HasSymbolBuilder {
-    val symbol: String
-    protected[types] var _descr: Option[String] = None
-    def descr(v: String): this.type = {
-      _descr = Some(v)
-      this
-    }
-  }
-
-  object instances {
-    val x = RecordType
-  }
 }

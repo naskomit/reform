@@ -6,140 +6,93 @@ import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.types
 import sysmo.reform.shared.util.SequenceIndex
 
-trait RecordTypeAux {
-  class Builder(val symbol: String) extends DataTypeBuilder[RecordType]
-    with HasSymbolBuilder {
-    protected[RecordTypeAux] var _fields: Seq[RecordFieldType] = Seq()
-    protected[RecordTypeAux] var _field_index: SequenceIndex[String, RecordFieldType] = new SequenceIndex(_fields, _.name)
+trait RecordTypeAux  extends DataTypeAux[RecordType] {
+  class Builder(val obj: RecordType) extends DataTypeBuilder[RecordType] {
 
-    def +(field: RecordFieldType): this.type = {
-      _fields = _fields :+ field
-      _field_index = new SequenceIndex(_fields, _.name)
-      this
+    def +(field: RecordFieldType): Builder = {
+      new Builder(obj.copy(fields = obj.fields :+ field))
     }
 
-    def +(field: RecordFieldType.FieldBuilder): this.type = {
-      this + (field: RecordFieldType)
+    def +(field: RecordFieldType.Builder): Builder = {
+      this + field.build
     }
 
-    def fields(field_list: RecordFieldType.FieldBuilder*): this.type = {
-      _fields = _fields ++ field_list.map(f => f)
-      _field_index = new SequenceIndex(_fields, _.name)
-      this
+    def descr(v: String): Builder = {
+      new Builder(obj.copy(descr = Some(v)))
     }
 
-    protected[RecordTypeAux] var label_expr: Option[Expression] = None
-    def label_expr(expr: Expression): this.type = {
-      label_expr = Some(expr)
-      this
+    def fields(field_list: RecordFieldType.Builder*): Builder = {
+      new Builder(obj.copy(fields = obj.fields ++ field_list.map(f => f)))
     }
 
-    def extend(f: Builder => Builder): this.type = {
+    def label_expr(expr: Expression): Builder = {
+      new Builder(obj.copy(label_expr = Some(expr)))
+    }
+
+    def extend(f: Builder => Builder): Builder = {
       f(this)
-      this
     }
 
-    def build: RecordType = this
   }
 
-  implicit class RecordTypeImpl(builder: Builder) extends RecordType {
-    override def id: ObjectId = builder._id
-    override def symbol: String = builder.symbol
-    override def descr: Option[String] = builder._descr
-    override def fields: Seq[RecordFieldType] = builder._fields
-    override def field(name: String): Option[RecordFieldType] = builder._field_index.get(name)
-    override def field_index(name: String): Option[Int] = builder._field_index.get_index(name)
-    override def label_expr: Option[Expression] = builder.label_expr
-    override def show: String = s"Record[${builder.symbol}]"
-  }
+  implicit def builder2type(builder: Builder): RecordType = builder.build
 
-  def apply(symbol: String): Builder = new Builder(symbol)
+  def apply(symbol: String): Builder =
+    new Builder(new RecordType(symbol, None, Seq(), None))
 }
 
 trait RecordFieldTypeAux {
-  sealed trait FieldBuilder extends HasNameBuilder with HasLabelExprBuilder {
-    val _dtype: DataType
-    protected[types] var _optional: Boolean = true
-    def optional(v: Boolean): this.type = {
-      _optional = v
-      this
+//  sealed trait FieldBuilder extends HasNameBuilder with HasLabelExprBuilder {
+//    val _dtype: DataType
+//    protected[types] var _optional: Boolean = true
+//    def optional(v: Boolean): this.type = {
+//      _optional = v
+//      this
+//    }
+//  }
+//
+//  implicit class FieldImpl(builder: FieldBuilder) extends RecordFieldType {
+//    override def name: String = builder._name
+//    override def descr: Option[String] = builder._descr
+//    override def optional: Boolean = builder._optional
+//    override def label_expr: Option[Expression] = builder._label_expr
+//    override def dtype: DataType = builder._dtype
+//  }
+
+  class Builder(obj: RecordFieldType) {
+    def optional(v: Boolean = true): Builder = {
+      new Builder(obj.copy(optional = v))
     }
+    def label_expr(expr: Expression): Builder = {
+      new Builder(obj.copy(label_expr = Some(expr)))
+    }
+    def build: RecordFieldType = obj
   }
 
-  implicit class FieldImpl(builder: FieldBuilder) extends RecordFieldType {
-    override def name: String = builder._name
-    override def descr: Option[String] = builder._descr
-    override def optional: Boolean = builder._optional
-    override def label_expr: Option[Expression] = builder._label_expr
-    override def dtype: DataType = builder._dtype
+  private def builder(name: String, dtype: DataType): Builder = {
+    new Builder(new RecordFieldType(name, None, dtype, false, None))
   }
+
+  implicit def builder2type(builder: Builder): RecordFieldType = builder.build
 
   trait Constr {
-    def f_real(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Real
-      }
+    def f_real(name: String): Builder = builder(name, PrimitiveDataType.Real)
+    def f_int(name: String): Builder = builder(name, PrimitiveDataType.Int)
+    def f_long(name: String): Builder = builder(name, PrimitiveDataType.Long)
+    def f_char(name: String): Builder = builder(name, PrimitiveDataType.Char)
+    def f_bool(name: String): Builder = builder(name, PrimitiveDataType.Bool)
+    def f_date(name: String): Builder = builder(name, PrimitiveDataType.Date)
+    def f_id(name: String): Builder = builder(name, PrimitiveDataType.Id)
+    def f_compound(name: String, cmp: CompoundDataType): Builder =
+      builder(name, cmp)
+    def f_array(name: String, prototype: CompoundDataType): Builder =
+      builder(name, ArrayType(prototype))
 
-    def f_int(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Int
-      }
+    def f_ref(name: String, prototype: CompoundDataType): Builder =
+      builder(name, ReferenceType(prototype))
 
-    def f_long(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Long
-      }
-
-    def f_char(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Char
-      }
-
-    def f_bool(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Bool
-      }
-
-    def f_date(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Date
-      }
-
-    def f_id(name: String): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = PrimitiveDataType.Id
-      }
-
-    def f_compound(name: String, cmp: CompoundDataType): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = cmp
-      }
-
-    def f_array(name: String, prototype: CompoundDataType): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = new ArrayType.Builder(prototype)
-      }
-
-    def f_ref(name: String, prototype: CompoundDataType): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = new ReferenceType.Builder(prototype)
-      }
-
-    def f_multi_ref(name: String, prototype: CompoundDataType): FieldBuilder =
-      new FieldBuilder {
-        override val _name: String = name
-        override val _dtype: DataType = new MultiReferenceType.Builder(prototype)
-      }
+    def f_multi_ref(name: String, prototype: CompoundDataType): Builder =
+      builder(name, MultiReferenceType(prototype))
   }
 
   object constr extends Constr

@@ -3,18 +3,18 @@ package sysmo.reform.shared.types
 import cats.Show
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.expr.Expression
-import sysmo.reform.shared.util.CirceTransport
+import sysmo.reform.shared.util.{CirceTransport, SequenceIndex}
 import sysmo.reform.shared.util.containers.FLocal
 
-sealed trait DataType {
-  def id: ObjectId
+sealed trait DataType extends Product with Serializable {
+//  def id: ObjectId
   def show: String
-  override def equals(obj: Any): Boolean = obj match {
-    case other: DataType => other.id == id
-    case _ => false
-  }
-
-  override def hashCode(): Int = id.hashCode()
+//  override def equals(obj: Any): Boolean = obj match {
+//    case other: DataType => other.id == id
+//    case _ => false
+//  }
+//
+//  override def hashCode(): Int = id.hashCode()
 }
 
 /** PrimitiveDataType */
@@ -27,31 +27,24 @@ sealed trait PrimitiveDataType extends DataType {
 object PrimitiveDataType extends PrimitiveDataTypeAux {
   case object Real extends PrimitiveDataType {
     val symbol = "Real"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Int extends PrimitiveDataType {
     val symbol = "Int"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Long extends PrimitiveDataType {
     val symbol = "Long"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Char extends PrimitiveDataType {
     val symbol = "Char"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Bool extends PrimitiveDataType {
     val symbol = "Bool"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Date extends PrimitiveDataType {
     val symbol = "Date"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
   case object Id extends PrimitiveDataType {
     val symbol = "Id"
-    val id: ObjectId = DataTypeAux.IdSupplier.new_id
   }
 
   def apply(name: String): FLocal[PrimitiveDataType] = {
@@ -70,55 +63,47 @@ object PrimitiveDataType extends PrimitiveDataTypeAux {
 
 sealed trait CompoundDataType extends DataType with HasSymbol
 
-trait RecordType extends CompoundDataType with HasLabelExpr {
-  def fields: Seq[RecordFieldType]
-  def field(name: String): Option[RecordFieldType]
-  def field_index(name: String): Option[Int]
+case class RecordType(symbol: String, descr: Option[String], fields: Seq[RecordFieldType], label_expr: Option[Expression])
+  extends CompoundDataType with HasLabelExpr {
+  private lazy val _field_index: SequenceIndex[String, RecordFieldType] =
+    new SequenceIndex(fields, _.name)
+  def field_index(name: String): Option[Int] = _field_index.get_index(name)
+  def field(name: String): Option[RecordFieldType] = _field_index.get(name)
+  override def show: String = s"Record[${symbol}]"
 }
 
 object RecordType extends RecordTypeAux
 
-trait RecordFieldType extends HasName with HasLabelExpr {
-  def dtype: DataType
-  def optional: Boolean
+case class RecordFieldType(val name: String, val descr: Option[String],
+                           val dtype: DataType, val optional: Boolean,
+                           val label_expr: Option[Expression])
+  extends HasName with HasLabelExpr {
 }
 
 object RecordFieldType extends RecordFieldTypeAux
 
-trait UnionType extends CompoundDataType {
-  def subtypes: Seq[RecordType]
-  def supertype_of(r: RecordType): Boolean
+case class UnionType(symbol: String, descr: Option[String], subtypes: Seq[RecordType])
+  extends CompoundDataType {
+  def supertype_of(r: RecordType): Boolean = subtypes.contains(r)
+  override def show: String = s"Union[${symbol}]"
 }
 
 object UnionType extends UnionTypeAux
 
-trait ArrayType extends DataType with HasLabelExpr {
-  def prototype: CompoundDataType
+case class ArrayType(prototype: CompoundDataType, label_expr: Option[Expression]) extends DataType with HasLabelExpr {
+  override def show: String = s"Array[${prototype.symbol}]"
 }
 
 object ArrayType extends ArrayTypeAux
 
-trait ReferenceType extends DataType {
-  def prototype: CompoundDataType
+case class ReferenceType(prototype: CompoundDataType) extends DataType {
+  override def show: String = s"Ref[${prototype.symbol}]"
 }
 
 object ReferenceType extends ReferenceTypeAux
 
-trait MultiReferenceType extends DataType {
-  def prototype: CompoundDataType
+case class MultiReferenceType(prototype: CompoundDataType) extends DataType {
+  override def show: String = s"MultiRef[${prototype.symbol}]"
 }
 
 object MultiReferenceType extends MultiReferenceTypeAux
-
-
-object DataType {
-  object Encoders extends CirceTransport {
-    import io.circe.syntax._
-    implicit val enc_RecordFieldType: Encoder[RecordFieldType] = Encoder.instance(v =>
-      Map(
-        "name" -> v.name.asJson,
-        "optional" -> v.optional.asJson
-      ).asJson
-    )
-  }
-}

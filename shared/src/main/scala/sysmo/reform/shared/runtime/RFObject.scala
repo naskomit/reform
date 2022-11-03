@@ -59,9 +59,8 @@ object RFObject {
     import io.circe.syntax._
     import io.circe.generic.semiauto.deriveEncoder
     import sysmo.reform.shared.data.Transport._
-    import sysmo.reform.shared.types.DataType.Encoders._
 
-    implicit val enc_RecordFieldInstance: Encoder[RecordFieldInstance] = deriveEncoder
+//    implicit val enc_RecordFieldInstance: Encoder[RecordFieldInstance] = deriveEncoder
   }
 
   import sysmo.reform.shared.{sources => S}
