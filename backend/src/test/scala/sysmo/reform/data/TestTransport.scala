@@ -56,13 +56,13 @@ class TestTransport extends AnyFunSpec with Matchers {
       ).build
 
     it("Serialize/Deserialize schema") {
-      println(schema.fields.map(f => f.dtype.asJson))
+      println(schema.asJson.as[RecordType].getOrElse(null))
     }
 
     val row: Row = Table.Row.SeqRow(schema, Seq(
       v_real, v_int, v_long, v_bool1, v_char, v_date, v_id
     ))
-    val table: LocalTable = new LocalRowBasedTable(schema, Seq(row))
+    val table: LocalTable = LocalRowBasedTable(schema, Seq(row))
 
     it("Serialize row") {
       val row_data = Seq(
