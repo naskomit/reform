@@ -7,7 +7,7 @@ import sysmo.reform.shared.expr.{Expression => E}
 import sysmo.reform.shared.runtime.{RFObject, RFRuntime, RuntimeConstructor}
 
 object MicroController extends ModelBuilder {
-  object type_builder extends TypeBuilder {
+  object type_builder extends TypeSystemBuilder {
     def io_common(gb: RecordType.Builder): RecordType.Builder =
       gb.label_expr(E.field("name")) +
         f_char("name") +
@@ -66,7 +66,7 @@ object MicroController extends ModelBuilder {
   }
 
   class initializer1[F[+X]](runtime_builder: RuntimeConstructor[F])
-    extends Initializer(runtime_builder, type_builder.build) {
+    extends Initializer(runtime_builder) {
     import Value.implicits._
     import inst._
     import type_builder._

@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import io.circe.parser.decode
 import io.circe.{Encoder, Decoder}
 import io.circe.syntax._
-import sysmo.reform.shared.query.{Query, QueryService}
+import sysmo.reform.shared.query.{Query, SQLQueryService}
 import sysmo.reform.shared.runtime.RFRuntime
 
 trait ReformServer[_F[+_]] {
@@ -21,7 +21,7 @@ trait ReformServer[_F[+_]] {
   import sysmo.reform.shared.query.Transport._
 
   def runtime: RFRuntime[F]
-  def query_service: QueryService[F]
+  def query_service: SQLQueryService[F]
 
   def parse_body[T : Decoder](body: String): F[T] = {
     decode[T](body) match {
@@ -38,7 +38,7 @@ trait ReformServer[_F[+_]] {
     make_handler {query : Query =>
       for {
         result_set <- query_service.query_table(query)
-        table <- query_service.materialize_result(result_set)
+        table <- result_set.cache
       } yield table
     }(body)
   }

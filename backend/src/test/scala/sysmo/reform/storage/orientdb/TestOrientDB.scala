@@ -24,7 +24,7 @@ object TestOrientDB extends App {
   Injector.configure(printer)
 
   val ts: TypeSystem = SkullInventoryBuilder.type_builder.build
-  val SkullEntry = ts.get("SkullEntry").get.asInstanceOf[RecordType]
+  val SkullSample = ts.get("SkullSample").get.asInstanceOf[RecordType]
 
   val conf = ConfigFactory.load()
   val storage = sysmo.reform.storage.create_orientdb[FLocal](
@@ -45,7 +45,7 @@ object TestOrientDB extends App {
 
     val input_reader = new csv.Reader(
       "data/import/Metadata.csv",
-      SkullEntry,
+      SkullSample,
       rfc.withHeader
     ).map_field(
       "image_type" -> "Image type"
@@ -53,7 +53,7 @@ object TestOrientDB extends App {
 
     input_reader.read { row_obj: input_reader.RowObj =>
       for {
-        rec <- runtime.create_record(SkullEntry, None)
+        rec <- runtime.create_record(SkullSample, None)
         rec2 <- {
           val values = row_obj.schema.fields.zipWithIndex
             .map { case (field, index) =>
@@ -69,21 +69,19 @@ object TestOrientDB extends App {
   }
 
   def query_data(): Unit = {
-    // select @rid, code, sex, age, image_type, BMI, `Filter 1`, `Filter 2` from `SkullEntry`
-    // ORDER BY BMI DESC
-    // delete from `SkullEntry`
-
     val fields = Seq("code", "sex", "age", "image_type")
-      .map(name => Expression.field(name, SkullEntry.field(name)))
+      .map { name =>
+        val ftype = SkullSample.field(name)
+        Expression.field(name, ftype)
+      }
 
-    //Expression.field(f)
 
     val query = BasicQuery(
-      source = SingleTable("SkullEntry"),
+      source = SingleTable("SkullSample"),
       projection = Fields(fields)
     )
 
-    runtime.run_query(query).flatMap(tbl => qs.materialize_result(tbl))
+    runtime.run_query(query).flatMap(_.cache)
       .map(tbl => println(new TablePrinter(tbl).print))
       .onError {
       case e: Throwable => throw(e)

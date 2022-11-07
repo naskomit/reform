@@ -8,7 +8,7 @@ trait DataTypeAux[DT] {
 }
 
 trait DataTypeBuilder[DT] {
-  val obj: DT
+  var dt: DT
   def builder: this.type = this
-  def build: DT = obj
+  def build: DT = dt
 }

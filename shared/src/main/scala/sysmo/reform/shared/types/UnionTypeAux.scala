@@ -2,7 +2,7 @@ package sysmo.reform.shared.types
 import sysmo.reform.shared.data.ObjectId
 
 trait UnionTypeAux extends DataTypeAux[UnionType] {
-  class Builder(val obj: UnionType) extends DataTypeBuilder[UnionType] {
+  class Builder(var dt: UnionType) extends DataTypeBuilder[UnionType] {
 
   }
 

@@ -49,7 +49,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
         source = source, projection = columns, filter = filter, sort = sort, range = Some(range)
       )
 
-      val f_data: ds.F[LocalTable] = ds.query_table(query).flatMap(ds.materialize_result)
+      val f_data: ds.F[LocalTable] = ds.query_table_local(query)
       f_data.map{(table: T.LocalTable) =>
         val data_proxy = AgGridFacades.table_proxy(table)
         //          val data = table.row_iter.toJSArray

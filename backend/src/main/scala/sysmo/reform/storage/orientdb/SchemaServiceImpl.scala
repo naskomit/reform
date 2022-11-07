@@ -73,7 +73,7 @@ class SchemaServiceImpl[F[+_]](session: SessionImpl[F])(implicit mt: MonadThrow[
             case PrimitiveDataType.Id => OType.STRING
           }
           case dtype: CompoundDataType => ???
-          case dtype: ArrayType => ???
+          case dtype: ArrayType => OType.LINK
           case dtype: ReferenceType => ???
           case dtype: MultiReferenceType => ???
         }

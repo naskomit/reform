@@ -5,7 +5,7 @@ import sysmo.reform.shared.runtime.{RFObject, RFRuntime, RuntimeConstructor}
 import sysmo.reform.shared.data.Value
 
 object BioReactorController extends ModelBuilder {
-  object type_builder extends TypeBuilder {
+  object type_builder extends TypeSystemBuilder {
     val Parameter = record("Parameter")
       .label_expr(E.field("name")) +
       f_char("name")
@@ -44,7 +44,7 @@ object BioReactorController extends ModelBuilder {
   }
 
   class initializer1[F[+X]](runtime_builder: RuntimeConstructor[F])
-    extends Initializer(runtime_builder, type_builder.build) {
+    extends Initializer(runtime_builder) {
     import Value.implicits._
     import inst._
     import type_builder._

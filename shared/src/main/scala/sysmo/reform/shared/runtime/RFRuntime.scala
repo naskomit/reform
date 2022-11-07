@@ -7,7 +7,7 @@ import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.query.Query
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.table.{Table, TableService}
+import sysmo.reform.shared.table.{LocalTable, Table, TableService}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.reflect.ClassTag

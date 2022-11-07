@@ -5,9 +5,9 @@ import sysmo.reform.shared.expr.{Expression => E}
 import sysmo.reform.shared.runtime.{RFObject, RFRuntime, RuntimeConstructor}
 
 object SkullInventoryBuilder extends ModelBuilder {
-  object type_builder extends TypeBuilder {
+  object type_builder extends TypeSystemBuilder {
     /** Data structures */
-    val SkullSample = record("SkullEntry").label_expr(E.field("code")) +
+    val SkullSample = record("SkullSample").label_expr(E.field("code")) +
       f_char("code") +
       f_char("image_type") +
       f_char("sex") +
@@ -24,7 +24,7 @@ object SkullInventoryBuilder extends ModelBuilder {
   }
 
   class initializer1[F[+_]](runtime_builder: RuntimeConstructor[F])
-    extends Initializer(runtime_builder, type_builder.build) {
+    extends Initializer(runtime_builder) {
     import Value.implicits._
     import inst._
     import type_builder._

@@ -5,7 +5,7 @@ import cats.syntax.all._
 import com.orientechnologies.orient.core.db.ODatabaseSession
 import sysmo.reform.shared.data.{RecordFieldCodec, Value}
 import sysmo.reform.shared.expr.FieldRef
-import sysmo.reform.shared.query.{BasicQuery, Columns, Fields, Projection, Query, QueryService, SQLQuery, SingleTable}
+import sysmo.reform.shared.query.{BasicQuery, Columns, Fields, Projection, Query, SQLQueryService, SQLQuery, SingleTable}
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Table}
 import sysmo.reform.shared.types.RecordType
@@ -16,7 +16,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class OrientDBQueryService[_F[+_]](session: SessionImpl[_F])(
-  implicit val mt: MonadThrow[_F]) extends QueryService[_F] {
+  implicit val mt: MonadThrow[_F]) extends SQLQueryService[_F] {
   private def quote(s: String): String = "`" + s + "`"
 
 //  override type FieldCodec = DBCodec[F]

@@ -14,6 +14,9 @@ trait Table[F[+_]] {
   def nrow: F[Int]
   def ncol: Int = schema.fields.size
   def row_iter: MonadicIterator[F, Table.Row]
+  def cache: F[LocalTable] = row_iter.traverse(rows =>
+    LocalRowBasedTable(schema, rows)
+  )
 }
 
 trait RandomAccessTable[F[+_]] {

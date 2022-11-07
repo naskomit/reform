@@ -15,7 +15,7 @@ object LocalObjects {
     protected val children: ArrayBuffer[Value] = ArrayBuffer.fill(dtype.fields.size)(Value.empty)
     override def own_children: MIter = {
       val child_fields = children.iterator.zipWithIndex.collect {
-        case (value, i) if dtype.fields(i).isInstanceOf[CompoundDataType] =>
+        case (value, i) if dtype.fields(i).dtype.isInstanceOf[CompoundDataType] =>
           value.get[ObjectId].get
       }
       MonadicIterator.from_iterator[F, ObjectId](child_fields)

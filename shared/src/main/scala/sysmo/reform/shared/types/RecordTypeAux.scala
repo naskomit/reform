@@ -7,30 +7,35 @@ import sysmo.reform.shared.types
 import sysmo.reform.shared.util.SequenceIndex
 
 trait RecordTypeAux  extends DataTypeAux[RecordType] {
-  class Builder(val obj: RecordType) extends DataTypeBuilder[RecordType] {
+  class Builder(var dt: RecordType) extends DataTypeBuilder[RecordType] {
 
-    def +(field: RecordFieldType): Builder = {
-      new Builder(obj.copy(fields = obj.fields :+ field))
+    def +(field: RecordFieldType): this.type = {
+      dt = dt.copy(fields = dt.fields :+ field)
+      this
     }
 
     def +(field: RecordFieldType.Builder): Builder = {
       this + field.build
     }
 
-    def descr(v: String): Builder = {
-      new Builder(obj.copy(descr = Some(v)))
+    def descr(v: String): this.type = {
+      dt = dt.copy(descr = Some(v))
+      this
     }
 
-    def fields(field_list: RecordFieldType.Builder*): Builder = {
-      new Builder(obj.copy(fields = obj.fields ++ field_list.map(f => f)))
+    def fields(field_list: RecordFieldType.Builder*): this.type = {
+      dt = dt.copy(fields = dt.fields ++ field_list.map(f => f))
+      this
     }
 
-    def label_expr(expr: Expression): Builder = {
-      new Builder(obj.copy(label_expr = Some(expr)))
+    def label_expr(expr: Expression): this.type = {
+      dt = dt.copy(label_expr = Some(expr))
+      this
     }
 
-    def extend(f: Builder => Builder): Builder = {
+    def extend(f: Builder => Builder): this.type = {
       f(this)
+      this
     }
 
   }
@@ -59,14 +64,16 @@ trait RecordFieldTypeAux {
 //    override def dtype: DataType = builder._dtype
 //  }
 
-  class Builder(obj: RecordFieldType) {
-    def optional(v: Boolean = true): Builder = {
-      new Builder(obj.copy(optional = v))
+  class Builder(var dt: RecordFieldType) {
+    def optional(v: Boolean = true): this.type = {
+      dt = dt.copy(optional = v)
+      this
     }
-    def label_expr(expr: Expression): Builder = {
-      new Builder(obj.copy(label_expr = Some(expr)))
+    def label_expr(expr: Expression): this.type = {
+      dt = dt.copy(label_expr = Some(expr))
+      this
     }
-    def build: RecordFieldType = obj
+    def build: RecordFieldType = dt
   }
 
   private def builder(name: String, dtype: DataType): Builder = {

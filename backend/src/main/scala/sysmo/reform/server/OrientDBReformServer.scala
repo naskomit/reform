@@ -1,7 +1,7 @@
 package sysmo.reform.server
 
 import cats.MonadThrow
-import sysmo.reform.shared.query.QueryService
+import sysmo.reform.shared.query.SQLQueryService
 import sysmo.reform.shared.runtime.RFRuntime
 import sysmo.reform.shared.types.TypeSystem
 import sysmo.reform.shared.util.containers.FLocal
@@ -18,7 +18,7 @@ trait OrientDBReformServer[_F[+_]] extends ReformServer[_F] {
     session.runtime(type_system)
   }
 
-  def query_service: QueryService[F] = {
+  def query_service: SQLQueryService[F] = {
     val session = storage.session
     session.query_service
   }
