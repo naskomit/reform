@@ -4,7 +4,7 @@
 
 # Home page
 GET        /                             sysmo.coviddata.controllers.Application.index
-#POST        /api/table       sysmo.coviddata.controllers.Application.table_api
+POST        /api/query       sysmo.coviddata.controllers.Application.query
 #POST        /api/chart       sysmo.coviddata.controllers.Application.chart_api
 
 # Prefix must match `play.assets.urlPrefix`

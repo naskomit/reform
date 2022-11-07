@@ -14,7 +14,6 @@ import sysmo.reform.shared.types.{RecordType, TypeSystem}
 import sysmo.reform.shared.util.Injector
 import sysmo.reform.shared.util.containers.FLocal
 import sysmo.reform.storage.io.csv
-import sysmo.reform.storage.orientdb.TestOrientDB.runtime
 
 object TestOrientDB extends App {
   val printer = new Printer {
@@ -84,7 +83,7 @@ object TestOrientDB extends App {
       projection = Fields(fields)
     )
 
-    runtime.run_table_query(query).flatMap(tbl => qs.materialize_result(tbl))
+    runtime.run_query(query).flatMap(tbl => qs.materialize_result(tbl))
       .map(tbl => println(new TablePrinter(tbl).print))
       .onError {
       case e: Throwable => throw(e)

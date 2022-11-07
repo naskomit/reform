@@ -95,7 +95,6 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
 
   // TODO Implement query !!!!!!!!!!!!!!!!!!!!!!!!!!
   override def count(q: Query): F[Int] = FLocal(objects.size)
-  override def run_query(q: Query): MonadicIterator[F, RFObject[F]] = ???
 
 //  {
 //    throw new NotImplementedError
@@ -111,7 +110,7 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
 //
 //  }
 
-  override def run_table_query(q: Query): F[Table[F]] =
+  override def run_query(q: Query): F[Table[F]] =
     mt.raiseError(new NotImplementedError("LocalRuntime.run_table_query()"))
 
   override def dispatch(action: RuntimeAction): F[Unit] = {

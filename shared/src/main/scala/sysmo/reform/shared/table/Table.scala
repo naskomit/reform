@@ -12,6 +12,7 @@ trait Table[F[+_]] {
   implicit val mt: MonadThrow[F]
   def schema: RecordType
   def nrow: F[Int]
+  def ncol: Int = schema.fields.size
   def row_iter: MonadicIterator[F, Table.Row]
 }
 

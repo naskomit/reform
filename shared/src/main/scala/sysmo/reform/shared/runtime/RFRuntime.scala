@@ -61,8 +61,7 @@ trait RFRuntime[_F[+_]] extends ObjectStorage[_F] {
   def list: MonadicIterator[F, ObjectProxy]
   def count: F[Int]
   def count(q: Query): F[Int]
-  def run_query(q: Query): MonadicIterator[F, RFObject[F]]
-  def run_table_query(q: Query): F[Table[F]]
+  def run_query(q: Query): F[Table[F]]
   def dispatch(action: RuntimeAction): F[Unit]
 }
 

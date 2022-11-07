@@ -51,16 +51,20 @@ class TestTransport extends AnyFunSpec with Matchers {
     val schema = (RecordType("Table 1")
       + fc.f_real("Real") + fc.f_int("Int")
       + fc.f_long("Long") + fc.f_bool("Bool")
-      + fc.f_char("Char") + fc.f_date("Date")
-      + fc.f_id("Id")
+      + fc.f_char("Char")
+//      + fc.f_date("Date") + fc.f_id("Id")
       ).build
 
     it("Serialize/Deserialize schema") {
-      println(schema.asJson.as[RecordType].getOrElse(null))
+      schema.asJson.as[RecordType] match {
+        case Left(err) => assert(false, err)
+        case Right(schema1) => assert(schema == schema1)
+      }
     }
 
     val row: Row = Table.Row.SeqRow(schema, Seq(
-      v_real, v_int, v_long, v_bool1, v_char, v_date, v_id
+      v_real, v_int, v_long, v_bool1, v_char
+      //, v_date, v_id
     ))
     val table: LocalTable = LocalRowBasedTable(schema, Seq(row))
 
@@ -68,17 +72,24 @@ class TestTransport extends AnyFunSpec with Matchers {
       val row_data = Seq(
         2.5.asJson, 63.asJson,
         1234232L.asJson, true.asJson,
-        "Hello".asJson, 1667378226371L.asJson,
-        "5fd1c681-d6e1-4ede-8b8b-1c1929525869".asJson
+        "Hello".asJson,
+//        1667378226371L.asJson, "5fd1c681-d6e1-4ede-8b8b-1c1929525869".asJson
       )
 
       assert(row.asJson == Json.fromValues(row_data))
     }
 
 
-    it("Serialize table") {
-//      println(table.asJson)
+    it("Serialize/Deserialize table") {
+      val table_json = table.asJson
+      table_json.as[LocalTable] match {
+        case Left(err) => assert(false, err)
+        case Right(table1) => {
+          for (i <- 0 until table.ncol) {
+            assert(table.get(0, i) == table1.get(0, i))
+          }
+        }
+      }
     }
-
   }
 }

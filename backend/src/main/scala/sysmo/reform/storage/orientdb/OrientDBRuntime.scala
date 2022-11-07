@@ -158,10 +158,8 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: SessionImpl[
   override def list: MonadicIterator[F, ObjectProxy] = ???
   override def count: F[Int] = ???
   override def count(q: Query): F[Int] = ???
-  override def run_query(q: Query): MonadicIterator[F, RFObject[F]] = ???
 
-
-  override def run_table_query(q: Query): F[Table[F]] = {
+  override def run_query(q: Query): F[Table[F]] = {
     for {
       sql <- session.query_service.generate_sql(q)
       table <- session.query_service.run_query(sql)
