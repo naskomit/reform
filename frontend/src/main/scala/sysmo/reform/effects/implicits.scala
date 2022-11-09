@@ -1,10 +1,11 @@
 package sysmo.reform.effects
 
 import cats.MonadThrow
+import cats.syntax.all._
 import japgolly.scalajs.react.callback.{AsyncCallback, CallbackTo}
 import org.scalajs.dom.console
-import sysmo.reform.shared.util.containers.FLocal
-
+import sysmo.reform.shared.containers.FLocal
+import sysmo.reform.shared.containers.implicits._
 import scala.scalajs.js
 import scala.scalajs.js.|
 
@@ -18,9 +19,8 @@ object implicits {
   }
   implicit object FLocal2AsyncCallback extends F2Callback[FLocal] {
     val mt = MonadThrow[FLocal]
-
     def sync[T](f: FLocal[T]): CallbackTo[T] = {
-      f match {
+      f.to_either match {
         case Left(error) => CallbackTo.throwException(error)
         case Right(value) => CallbackTo(value)
       }

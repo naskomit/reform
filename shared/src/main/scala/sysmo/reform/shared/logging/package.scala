@@ -69,8 +69,8 @@ package object logging {
     }
 
     def get_logger(name: String): Logger = {
-      Injector.inject[JsonPrinter].map(printer => new Logger(name, printer))
-        .orElse(Injector.inject[Printer].map(printer => new Logger(name, printer)))
+      Injector.inject_option[JsonPrinter].map(printer => new Logger(name, printer))
+        .orElse(Injector.inject_option[Printer].map(printer => new Logger(name, printer)))
       match {
         case Left(error) => throw error
         case Right(value) => value

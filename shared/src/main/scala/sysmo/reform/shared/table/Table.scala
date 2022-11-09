@@ -1,8 +1,10 @@
 package sysmo.reform.shared.table
 
 import cats.MonadThrow
+import cats.syntax.all._
 import sysmo.reform.shared.data.Value
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
+import sysmo.reform.shared.containers.implicits._
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.util.MonadicIterator
@@ -51,6 +53,7 @@ trait LocalTable extends Table[FLocal]
   with RandomAccessTable[FLocal]
   with Iterable [Table.Row] {
   val mt: MonadThrow[FLocal] = MonadThrow[FLocal]
+  override def cache: FLocal[LocalTable] = FLocal(this)
 }
 
 case class LocalRowBasedTable(schema: Schema, rows: Seq[Table.Row]) extends LocalTable {

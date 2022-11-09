@@ -4,10 +4,12 @@ import cats.MonadThrow
 import cats.syntax.all._
 import com.typesafe.config.{Config, ConfigFactory}
 import io.circe.parser.decode
-import io.circe.{Encoder, Decoder}
+import io.circe.{Encoder, Decoder, Codec}
 import io.circe.syntax._
 import sysmo.reform.shared.query.{Query, SQLQueryService}
 import sysmo.reform.shared.runtime.RFRuntime
+import sysmo.reform.shared.{containers => C}
+import sysmo.reform.shared.service.RemoteResult
 
 trait ReformServer[_F[+_]] {
   type F[+X] = _F[X]
@@ -31,7 +33,12 @@ trait ReformServer[_F[+_]] {
   }
 
   def make_handler[I: Decoder, O: Encoder](f: I => F[O])(body: String): F[String] = {
-    parse_body[I](body).flatMap(i => f(i)).map(o => o.asJson.toString)
+    import RemoteResult.Transport._
+    parse_body[I](body)
+      .flatMap(i => C.catch_exception(f(i)))
+      .map(RemoteResult.ok)
+      .handleError(err => RemoteResult.err(err))
+      .map(o => o.asJson.toString)
   }
 
   def handle_query(body: String): F[String] = {

@@ -9,6 +9,7 @@ import java.util.Date
 import Value.implicits._
 import cats.MonadThrow
 import cats.syntax.all._
+import sysmo.reform.shared.{containers => C}
 
 class DBCodec[_F[+_]](implicit val mt: MonadThrow[_F]) extends RecordFieldCodec[_F] {
   type Record = OElement
@@ -47,14 +48,14 @@ class DBCodec[_F[+_]](implicit val mt: MonadThrow[_F]) extends RecordFieldCodec[
 
   override def write_value(field: RecordFieldType, record: Record, value: Value): F[Unit] = {
     val name = field.name
-    def set[T: ValueExtractor](_value: Value): F[Unit] = Util.catch_exception {
+    def set[T: ValueExtractor](_value: Value): F[Unit] = C.catch_exception {
       _value.get[T] match {
         case Some(v) => mt.pure(record.setProperty(name, v))
         case None => mt.pure(record.removeProperty(name))
       }
     }
 
-    def set_orid(_value: Value): F[Unit] = Util.catch_exception {
+    def set_orid(_value: Value): F[Unit] = C.catch_exception {
       _value.get[ObjectId] match {
         case Some(v) => Util.ensure_orientid(v).map(oid => record.setProperty(name, oid))
         case None => mt.pure(record.removeProperty(name))

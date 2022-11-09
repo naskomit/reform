@@ -54,7 +54,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
         val data_proxy = AgGridFacades.table_proxy(table)
         //          val data = table.row_iter.toJSArray
         val requested_rows = params.endRow - params.startRow
-        val nrow = table.nrow.toOption.get
+        val nrow = table.nrow.get
         val total_rows = if ( nrow < requested_rows)
           params.startRow + nrow
         else

@@ -228,8 +228,8 @@ object AgGridFacades extends Logging {
     val getter : js.Function3[LocalTable, String, js.Any, Option[Table.Row]] =
       (table: LocalTable, prop: String, receiver: js.Any) => {
         val index = prop.toInt
-        if (index < table.nrow.toOption.get) {
-          table.row(index).toOption
+        if (index < table.nrow.get) {
+          table.row(index).to_option
         }
         else {
           None

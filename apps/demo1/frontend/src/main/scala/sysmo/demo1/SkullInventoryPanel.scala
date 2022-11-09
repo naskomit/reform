@@ -6,7 +6,7 @@ import sysmo.reform.effects.implicits._
 import sysmo.reform.explorers.FormExplorerF
 import sysmo.reform.shared.examples.SkullInventoryBuilder
 import sysmo.reform.shared.runtime.{LocalRuntime, LocalRuntimeConstructor, RFObject}
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 
 
 object SkullInventoryPanel extends Panel {
@@ -23,7 +23,7 @@ object SkullInventoryPanel extends Panel {
   }
 
 
-  val component = ScalaComponent.builder[Props]("BioReactorController")
+  val component = ScalaComponent.builder[Props]("SkullInventoryPanel")
     .initialState(State())
     .renderBackend[Backend]
     .build

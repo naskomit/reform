@@ -16,5 +16,5 @@ GET        /versionedAssets/*file        controllers.Assets.versioned(path="/pub
 GET     /frontend/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/frontend", file)
 GET     /shared/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/shared", file)
 
-#GET     /src/main/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/covidhub_frontend/src/main", file)
+GET     /src/main/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/apps/demo1/frontend/src/main", file)
 #GET     /reform_shared/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/covidhub_shared", file)

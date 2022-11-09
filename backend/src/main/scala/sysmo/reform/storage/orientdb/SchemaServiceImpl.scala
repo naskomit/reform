@@ -2,13 +2,11 @@ package sysmo.reform.storage.orientdb
 
 import cats.MonadThrow
 import cats.syntax.all._
-import com.orientechnologies.orient.core.db.{ODatabaseSession, OrientDB, OrientDBConfig}
 import com.orientechnologies.orient.core.metadata.schema.{OClass, OType}
 import sysmo.reform.shared.storage.{SchemaService, StorageSchema}
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordFieldType, RecordType, ReferenceType, TypeSystem}
 import sysmo.reform.shared.logging.Logging
-
-import scala.collection.immutable.Seq
+import sysmo.reform.shared.{containers => C}
 import scala.jdk.CollectionConverters._
 
 class SchemaImpl(klass: OClass) extends StorageSchema {
@@ -26,14 +24,14 @@ class SchemaServiceImpl[F[+_]](session: SessionImpl[F])(implicit mt: MonadThrow[
   private def klasses: Iterable[OClass] = oschema.getClasses.asScala
 
   def list_schemas: F[Iterable[StorageSchema]] = {
-    Util.catch_exception(
+    C.catch_exception(
       mt.pure(klasses
         .map(klass => new SchemaImpl(klass))
     ))
   }
 
   override def has_schema(name: String): F[Boolean] = {
-    Util.catch_exception {
+    C.catch_exception {
       mt.pure(oschema.existsClass(name))
     }
   }
@@ -44,7 +42,7 @@ class SchemaServiceImpl[F[+_]](session: SessionImpl[F])(implicit mt: MonadThrow[
         logger.info(s"Schema ${name} is present")
         mt.pure()
       }
-      case false => Util.catch_exception {
+      case false => C.catch_exception {
         logger.info(s"Creating schema ${name}")
         oschema.createClass(name)
         mt.pure()
@@ -60,7 +58,7 @@ class SchemaServiceImpl[F[+_]](session: SessionImpl[F])(implicit mt: MonadThrow[
   }
 
   private def create_record_fields(klass: OClass, dtype: RecordType): F[Unit] = {
-    Util.catch_exception {
+    C.catch_exception {
       dtype.fields.foreach {rec_field =>
         val otype = rec_field.dtype match {
           case dtype: PrimitiveDataType => dtype match {
@@ -84,7 +82,7 @@ class SchemaServiceImpl[F[+_]](session: SessionImpl[F])(implicit mt: MonadThrow[
   }
 
   override def add_record_schema(record_type: RecordType): F[Unit] = {
-    Util.catch_exception {
+    C.catch_exception {
       if (oschema.existsClass(record_type.symbol)) {
         return mt.raiseError(new EntityDuplicationError(s"Class ${record_type.symbol} already exists in the database"))
       } else {

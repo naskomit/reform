@@ -3,7 +3,7 @@ package sysmo.reform.shared.table
 import io.circe.Decoder.{Result, failed}
 import sysmo.reform.shared.util.CirceTransport
 import cats.implicits._
-import io.circe.DecodingFailure
+import io.circe.{Codec, DecodingFailure}
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, ReferenceType}
 
@@ -21,7 +21,7 @@ object Transport extends CirceTransport {
       )
     }
 
-  implicit val enc_LocalTable: Encoder[LocalTable] =
+  val enc_LocalTable: Encoder[LocalTable] =
     Encoder.instance{table =>
       Map(
         "schema" -> table.schema.asJson,
@@ -38,7 +38,7 @@ object Transport extends CirceTransport {
     }
   }
 
-  implicit object LocalTableDecoder extends Decoder[LocalTable] {
+  object LocalTableDecoder extends Decoder[LocalTable] {
     override def apply(c: HCursor): Result[LocalTable] = {
       for {
         schema <- c.downField("schema").as[Table.Schema]
@@ -58,4 +58,9 @@ object Transport extends CirceTransport {
       } yield LocalRowBasedTable(schema, rows)
     }
   }
+
+  implicit val codec_LocalTable: Codec[LocalTable] = Codec.from(
+    LocalTableDecoder, enc_LocalTable
+  )
+
 }

@@ -1,9 +1,10 @@
 package sysmo.reform.shared.sources.property
 
 import cats.MonadThrow
+import sysmo.reform.shared.containers
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.sources.{Dispatcher, EditableSource, SourceAction}
-import sysmo.reform.shared.util.{MonadicIterator, containers}
+import sysmo.reform.shared.util.MonadicIterator
 
 trait PropertySource[F[+_]] extends EditableSource[F] {
   implicit val mt: MonadThrow[F]

@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.runtime.RFRuntime
 import sysmo.reform.shared.storage.{SchemaService, Storage, StorageSession}
-import sysmo.reform.shared.types.{RecordType, TypeSystem}
+import sysmo.reform.shared.types.{TypeSystem}
 
 class StorageImpl[F[+_]](config: Config)(implicit val mt: MonadThrow[F])
   extends Storage[F] {

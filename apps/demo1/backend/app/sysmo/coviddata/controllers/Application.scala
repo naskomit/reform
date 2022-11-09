@@ -1,22 +1,49 @@
 package sysmo.coviddata.controllers
 
+import cats.MonadThrow
+import cats.syntax.all._
+
 import javax.inject._
 import play.api.Configuration
 import play.api.mvc._
-import sysmo.reform.shared.query.Query
-import sysmo.reform.shared.util.containers.FLocal
-import sysmo.reform.shared.util.containers.implicits._
+import sysmo.reform.server.OrientDBReformServer
+import sysmo.reform.shared.containers.{FLocal, RFContainer}
+import sysmo.reform.shared.containers.implicits._
+import sysmo.reform.shared.examples.SkullInventoryBuilder
+import sysmo.reform.shared.types.TypeSystem
 
 import scala.concurrent.{ExecutionContext, Future}
+object SkullInventoryReformServer extends OrientDBReformServer[FLocal] {
+  override val mt = MonadThrow[FLocal]
+  override val type_system: TypeSystem = SkullInventoryBuilder.type_builder.build
+}
 
 @Singleton
 class Application @Inject()(cc: ControllerComponents, config: Configuration)(implicit ec: ExecutionContext) extends AbstractController(cc) {
   private val rf_server = SkullInventoryReformServer
 
-  // final def async(block: => Future[Result]): Action[AnyContent]
-  def async_handler[F[+_]](handler: String => F[String]): Action[AnyContent] = {
+  def respond[T, F[+T] <: RFContainer[T]](result: F[T])(implicit mt: MonadThrow[F]): Future[Result] = {
+    result
+      .map(x => Ok(x.toString))
+      .handleError(err =>
+        if (err.getMessage == null) {
+          Ok(err.getClass.getName)
+        } else {
+          Ok(err.getMessage)
+        }
+      )
+      .to_future
+  }
+
+  def async_handler[F[+T] <: RFContainer[T]](handler: String => F[String])(implicit mt: MonadThrow[F]): Action[AnyContent] = {
     Action.async {req =>
-      FLocal.from_option(req.body.asText).map(x => Ok(x)).to_future
+      respond(for {
+        body <- req.body.asText match {
+          case Some(x) => mt.pure(x)
+          case None => mt.raiseError(new IllegalArgumentException("Request must have a body"))
+        }
+        result <- handler(body)
+      } yield result)
     }
   }
 

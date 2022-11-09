@@ -2,22 +2,15 @@ package sysmo.reform.storage.orientdb
 
 import cats.MonadThrow
 import cats.syntax.all._
-import com.orientechnologies.orient.core.db.ODatabaseSession
-import com.orientechnologies.orient.core.id.{ORID, ORecordId}
-import com.orientechnologies.orient.core.metadata.schema.OProperty
+import com.orientechnologies.orient.core.id.{ORID}
 import com.orientechnologies.orient.core.record.{OElement, ORecord}
-import sysmo.reform.shared.data.{ObjectId, ObjectIdSupplier, UUObjectId, Value, ValueConstructor, ValueExtractor}
-import sysmo.reform.shared.runtime.{ArrayInstance, Constructors, LocalObjects, LocalRuntime, ObjectProxy, RFObject, RFRuntime, RecordInstance, RuntimeAction}
+import sysmo.reform.shared.data.{ObjectId, Value}
+import sysmo.reform.shared.runtime.{ArrayInstance, Constructors, LocalObjects, ObjectProxy, RFRuntime, RecordInstance, RuntimeAction}
 import sysmo.reform.shared.table.Table
-import sysmo.reform.shared.types.{ArrayType, CompoundDataType, DataType, MultiReferenceType, PrimitiveDataType, RecordFieldType, RecordType, ReferenceType, TypeSystem}
+import sysmo.reform.shared.types.{ArrayType, RecordType, TypeSystem}
 import sysmo.reform.shared.util.MonadicIterator
-import Value.implicits._
-import com.orientechnologies.orient.core.sql.OSQLEngine
 import sysmo.reform.shared.query.{BasicQuery, Query}
-import sysmo.reform.shared.table.Table.Schema
-
-import java.util.Date
-import scala.jdk.CollectionConverters._
+import sysmo.reform.shared.{containers => C}
 
 class OrientId(orid: ORID) extends ObjectId {
   override type Id = ORID
@@ -82,7 +75,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: SessionImpl[
       oid <- Util.ensure_orientid(id)
       element <- Aux.load_element(oid)
       dtype <- Aux.get_record_type(element)
-      instance <- Util.catch_exception {
+      instance <- C.catch_exception {
         val parent_id = Aux.get_parent_id(element)
         val inst = LocalObjects.record(dtype, id, parent_id)(mt)
         dtype.fields
@@ -127,7 +120,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: SessionImpl[
         val field_type = rec_type.field(name)
         field_type match {
           case Some(ftype) => {
-            Util.catch_exception(
+            C.catch_exception(
               session.rec_field_codec.write_value(ftype, element, value)
             )
           }
@@ -146,7 +139,7 @@ class OrientDBRuntime[_F[+_]](val type_system: TypeSystem, session: SessionImpl[
   override def remove(id: ObjectId): F[Unit] = {
     for {
       oid <- Util.ensure_orientid(id)
-      res <- Util.catch_exception{
+      res <- C.catch_exception{
         session.db_session.delete(oid.v)
         mt.pure()
       }

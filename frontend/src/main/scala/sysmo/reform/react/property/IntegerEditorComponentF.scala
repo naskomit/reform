@@ -3,7 +3,7 @@ package sysmo.reform.react.property
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.runtime.RecordFieldInstance
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 
 class IntegerEditorComponentF[F[+_]]
 (implicit val f2c: F2Callback[F])
@@ -13,8 +13,8 @@ class IntegerEditorComponentF[F[+_]]
 
   override def format(value: Value): String = value.get[String].getOrElse("")
   override def parse(s: String): FLocal[Value] = s.toIntOption match {
-      case Some(x) => Right(Value(x))
-      case None => Left(new IllegalArgumentException(s"Cannot convert ${s} to integer"))
+      case Some(x) => FLocal(Value(x))
+      case None => FLocal.error(new IllegalArgumentException(s"Cannot convert ${s} to integer"))
     }
 
   override val display_name: String = "IntegerEditor"

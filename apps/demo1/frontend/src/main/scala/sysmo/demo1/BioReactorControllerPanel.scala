@@ -6,7 +6,7 @@ import sysmo.reform.effects.implicits._
 import sysmo.reform.explorers.FormExplorerF
 import sysmo.reform.shared.examples.{BioReactorController, MicroController}
 import sysmo.reform.shared.runtime.{LocalRuntime, LocalRuntimeConstructor, RFObject}
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 
 
 object BioReactorControllerPanel extends Panel {

@@ -20,6 +20,7 @@ object Application extends UIApplication {
     SimplePage("RuntimeExplorer", None, "fa fa-list-check", RuntimeExplorerPanel),
     SimplePage("BioReactorController", None, "fa fa-list-check", BioReactorControllerPanel),
     SimplePage("SkullInventory", None, "fa fa-list-check", SkullInventoryPanel),
+    SimplePage("SkullInventory2", None, "fa fa-list-check", SkullInventoryPanel2),
   )
 
   override def app_config: Configuration = new Configuration {

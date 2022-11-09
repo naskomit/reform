@@ -4,7 +4,7 @@ import japgolly.scalajs.react.{ReactEventFromInput, ScalaComponent}
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.runtime.SetFieldValue
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 
 trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
   case class State(local_value: String, status: PropertyEditor.Status, focused: Boolean)
@@ -49,7 +49,7 @@ trait EncodedTextualEditor[F[+_]] extends PropertyEditor[F] {
 
     def on_blur(p: Props, s: State): AsyncCallback[Unit] = {
       val value: FLocal[Value] = parse(s.local_value)
-      value match {
+      value.to_either match {
         case Right(x) if (x != p.field.value) => f2c.async(p.dispatcher.dispatch(
           SetFieldValue(p.id, p.field.copy(value = x))
         )) >> $.modStateAsync(s => s.copy(

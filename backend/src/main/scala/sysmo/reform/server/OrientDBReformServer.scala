@@ -4,12 +4,13 @@ import cats.MonadThrow
 import sysmo.reform.shared.query.SQLQueryService
 import sysmo.reform.shared.runtime.RFRuntime
 import sysmo.reform.shared.types.TypeSystem
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 import sysmo.reform.storage.orientdb.OrientDBQueryService
 
 trait OrientDBReformServer[_F[+_]] extends ReformServer[_F] {
   val type_system: TypeSystem
-  val storage = sysmo.reform.storage.create_orientdb[F](
+
+  lazy val storage = sysmo.reform.storage.create_orientdb[F](
     config_storage.getConfig("orientdb")
   )
 

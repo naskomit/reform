@@ -2,12 +2,10 @@ package sysmo.reform.storage.orientdb
 
 import cats.MonadThrow
 import cats.syntax.all._
-import com.orientechnologies.orient.core.db.ODatabaseSession
-import sysmo.reform.shared.data.{RecordFieldCodec, Value}
-import sysmo.reform.shared.expr.FieldRef
-import sysmo.reform.shared.query.{BasicQuery, Columns, Fields, Projection, Query, SQLQueryService, SQLQuery, SingleTable}
+import sysmo.reform.shared.data.{Value}
+import sysmo.reform.shared.query.{BasicQuery, Fields, Query, SQLQueryService, SQLQuery, SingleTable}
 import sysmo.reform.shared.table.Table.Schema
-import sysmo.reform.shared.table.{LocalRowBasedTable, LocalTable, Table}
+import sysmo.reform.shared.table.{Table}
 import sysmo.reform.shared.types.RecordType
 import sysmo.reform.shared.util.MonadicIterator
 
@@ -18,9 +16,6 @@ import scala.collection.mutable.ArrayBuffer
 class OrientDBQueryService[_F[+_]](session: SessionImpl[_F])(
   implicit val mt: MonadThrow[_F]) extends SQLQueryService[_F] {
   private def quote(s: String): String = "`" + s + "`"
-
-//  override type FieldCodec = DBCodec[F]
-//  val rec_field_codec: DBCodec[F] = new DBCodec[F]()
 
 
   override def list_tables(): F[Seq[Schema]] = mt.pure(Seq())

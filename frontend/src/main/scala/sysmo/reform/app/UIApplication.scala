@@ -8,6 +8,10 @@ import sysmo.reform.css.ReFormCSS
 import sysmo.reform.shared.logging.{JsonPrinter, Logging, Printer}
 import sysmo.reform.css.CssSettings._
 import sysmo.reform.shared.util.Injector
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
+import scala.concurrent.ExecutionContext
+
 
 trait UIApplication extends Logging {
   val react_node: String = "mainApp"
@@ -16,6 +20,12 @@ trait UIApplication extends Logging {
   val layout: Layout
 
   def main(args: Array[String]): Unit = {
+    configure_printers()
+    configure_execution_context()
+    dom.window.addEventListener("load", init_react)
+  }
+
+  def configure_printers(): Unit = {
     val printer = new JsonPrinter {
       override def out(msg: Json): Unit = dom.console.log(msg)
       override def warn(msg: Json): Unit = dom.console.warn(msg)
@@ -26,7 +36,10 @@ trait UIApplication extends Logging {
     }
     Injector.configure[Printer](printer)
     Injector.configure[JsonPrinter](printer)
-    dom.window.addEventListener("load", init_react)
+  }
+
+  def configure_execution_context()(implicit ec: ExecutionContext): Unit = {
+    Injector.configure[ExecutionContext](ec)
   }
 
   def init_react(e: Event): Unit = {

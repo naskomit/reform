@@ -8,7 +8,8 @@ import cats.MonadThrow
 import cats.syntax.all._
 import sysmo.reform.shared.query.{BasicQuery, Query, QueryFilter}
 import sysmo.reform.shared.table.Table
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
+import sysmo.reform.shared.containers.implicits._
 
 class CategorialIndex[K, V] {
   private val index_map: mutable.Map[K, mutable.HashSet[V]] = mutable.HashMap()
@@ -93,23 +94,10 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
 
   def count: F[Int] = FLocal(objects.size)
 
-  // TODO Implement query !!!!!!!!!!!!!!!!!!!!!!!!!!
   override def count(q: Query): F[Int] = FLocal(objects.size)
 
-//  {
-//    throw new NotImplementedError
-////    q match {
-////      case BasicQuery(source, columns, filter, sort, range) => filter match {
-////        case Some(QueryFilter(expr)) => expr match {
-////          case expression: TypePredicateExpression => ???
-////          case _ => throw new NotImplementedError(s"Cannot handle filter expression $expr")
-////        }
-////        case None => MonadicIterator.from_iterator(objects.values.iterator)
-////      }
-////    }
-//
-//  }
 
+  // TODO Implement query !!!!!!!!!!!!!!!!!!!!!!!!!!
   override def run_query(q: Query): F[Table[F]] =
     mt.raiseError(new NotImplementedError("LocalRuntime.run_table_query()"))
 

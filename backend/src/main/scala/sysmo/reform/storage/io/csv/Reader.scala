@@ -9,12 +9,15 @@ import sysmo.reform.shared.table.Table
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType}
 import sysmo.reform.shared.util.MonadicIterator
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
+import sysmo.reform.shared.containers.implicits._
+import sysmo.reform.shared.logging.Logging
 
 import java.io.File
 import scala.util.{Failure, Success, Using}
 
-class Reader(path: String, rec_type: RecordType, conf: CsvConfiguration) {
+class Reader(path: String, rec_type: RecordType, conf: CsvConfiguration)
+  extends Logging {
   import kantan.csv._ // All kantan.csv types.
   import kantan.csv.ops._ // Enriches types with useful methods.
   type F[+X] = FLocal[X];
@@ -89,11 +92,10 @@ class Reader(path: String, rec_type: RecordType, conf: CsvConfiguration) {
 
   def read(f: RowObj => FLocal[Unit]): FLocal[Unit] = {
     def process_rows(reader: CsvReader[ReadResult[RowObj]]): F[Unit] = {
-      for (row_res <- reader) {
-        row_res.flatMap(row => f(row)) match {
-          case err@Left(value) => return err
-          case Right(_) =>
-        }
+      for (row_res <- FLocal.to_flocal_iter(reader.iterator)) {
+        row_res.flatMap(row => f(row)).handleError(
+          e => logger.error(e)
+        )
       }
       FLocal()
     }

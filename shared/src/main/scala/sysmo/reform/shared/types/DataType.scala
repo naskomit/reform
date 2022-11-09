@@ -4,7 +4,7 @@ import cats.Show
 import sysmo.reform.shared.data.{ObjectId, Value}
 import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.util.{CirceTransport, SequenceIndex}
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 
 sealed trait DataType extends Product with Serializable {
 //  def id: ObjectId
