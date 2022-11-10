@@ -5,10 +5,20 @@ import sysmo.reform.shared.query.SQLQueryService
 import sysmo.reform.shared.runtime.RFRuntime
 import sysmo.reform.shared.types.TypeSystem
 import sysmo.reform.shared.containers.FLocal
+import sysmo.reform.shared.logging.Printer
+import sysmo.reform.shared.util.Injector
 import sysmo.reform.storage.orientdb.OrientDBQueryService
 
 trait OrientDBReformServer[_F[+_]] extends ReformServer[_F] {
   val type_system: TypeSystem
+
+  val printer = new Printer {
+    override def out(msg: String): Unit = println(msg)
+    override def warn(msg: String): Unit = println(msg)
+    override def error(msg: String): Unit = println(msg)
+  }
+  println(s"Printer ${printer}")
+  Injector.configure(printer)
 
   lazy val storage = sysmo.reform.storage.create_orientdb[F](
     config_storage.getConfig("orientdb")

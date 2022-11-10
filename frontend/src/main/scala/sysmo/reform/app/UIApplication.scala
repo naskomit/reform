@@ -26,10 +26,21 @@ trait UIApplication extends Logging {
   }
 
   def configure_printers(): Unit = {
+    import scalajs.js.JSON
+    def to_js(x: Json): Dynamic = {
+      val res = JSON.parse(x.toString())
+//      println(res.getClass.getName)
+//      println(res)
+      res
+    }
+
     val printer = new JsonPrinter {
-      override def out(msg: Json): Unit = dom.console.log(msg)
-      override def warn(msg: Json): Unit = dom.console.warn(msg)
-      override def error(msg: Json): Unit = dom.console.error(msg)
+      override def out(msg: Json): Unit =
+        dom.console.log(to_js(msg))
+      override def warn(msg: Json): Unit =
+        dom.console.warn(to_js(msg))
+      override def error(msg: Json): Unit =
+        dom.console.error(to_js(msg))
       override def out(msg: String): Unit = dom.console.log(msg)
       override def warn(msg: String): Unit = dom.console.warn(msg)
       override def error(msg: String): Unit = dom.console.error(msg)

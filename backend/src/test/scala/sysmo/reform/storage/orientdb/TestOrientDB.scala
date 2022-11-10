@@ -4,6 +4,7 @@ import cats.MonadThrow
 import cats.syntax.all._
 import com.typesafe.config.ConfigFactory
 import kantan.csv.{DecodeError, rfc}
+import sysmo.reform.server.OrientDBReformServer
 import sysmo.reform.shared.examples.SkullInventoryBuilder
 import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.logging.Printer
@@ -12,30 +13,22 @@ import sysmo.reform.shared.runtime.LocalRuntime
 import sysmo.reform.shared.table.{Table, TablePrinter}
 import sysmo.reform.shared.types.{RecordType, TypeSystem}
 import sysmo.reform.shared.util.Injector
-import sysmo.reform.shared.util.containers.FLocal
+import sysmo.reform.shared.containers.FLocal
 import sysmo.reform.storage.io.csv
+import sysmo.reform.shared.containers.implicits._
 
 object TestOrientDB extends App {
-  val printer = new Printer {
-    override def out(msg: String): Unit = println(msg)
-    override def warn(msg: String): Unit = println(msg)
-    override def error(msg: String): Unit = println(msg)
+  object SkullInventoryReformServer extends OrientDBReformServer[FLocal] {
+    override val mt = MonadThrow[FLocal]
+    override val type_system: TypeSystem = SkullInventoryBuilder.type_builder.build
   }
-  Injector.configure(printer)
 
-  val ts: TypeSystem = SkullInventoryBuilder.type_builder.build
-  val SkullSample = ts.get("SkullSample").get.asInstanceOf[RecordType]
-
-  val conf = ConfigFactory.load()
-  val storage = sysmo.reform.storage.create_orientdb[FLocal](
-    conf.getConfig("storage.orientdb")
-  )
-  val session = storage.session
+  val ts = SkullInventoryReformServer.type_system
+  val SkullSampleType = ts.get("SkullSample").get.asInstanceOf[RecordType]
+  val session = SkullInventoryReformServer.storage.session
   val schema_service = session.schema
   val qs = session.query_service
   val runtime = session.runtime(ts)
-
-  val mt = MonadThrow[FLocal]
 
 
   def import_data(): Unit = {
@@ -45,7 +38,7 @@ object TestOrientDB extends App {
 
     val input_reader = new csv.Reader(
       "data/import/Metadata.csv",
-      SkullSample,
+      SkullSampleType,
       rfc.withHeader
     ).map_field(
       "image_type" -> "Image type"
@@ -53,7 +46,7 @@ object TestOrientDB extends App {
 
     input_reader.read { row_obj: input_reader.RowObj =>
       for {
-        rec <- runtime.create_record(SkullSample, None)
+        rec <- runtime.create_record(SkullSampleType, None)
         rec2 <- {
           val values = row_obj.schema.fields.zipWithIndex
             .map { case (field, index) =>
@@ -71,7 +64,7 @@ object TestOrientDB extends App {
   def query_data(): Unit = {
     val fields = Seq("code", "sex", "age", "image_type")
       .map { name =>
-        val ftype = SkullSample.field(name)
+        val ftype = SkullSampleType.field(name)
         Expression.field(name, ftype)
       }
 

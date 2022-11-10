@@ -48,15 +48,15 @@ class RemoteHttpService(val base_path: Option[String])
         case Right(value) => mt.pure(value)
       }
     }.flatMap {
-      case Err(msg, stacktrace) => mt.raiseError(ServiceError(msg, stacktrace))
+      case err: Err => mt.raiseError(ServiceError(err))
       case Ok(value) => mt.pure(value)
     }.handleErrorWith { error => error match {
-      case ServiceError(msg, stacktrace) => {
+      case ServiceError(err) => {
         logger.error("Remote service error")
-        logger.error(msg)
-        if (stacktrace.length > 0) {
+        logger.error(err.msg)
+        if (err.stacktrace.nonEmpty) {
           logger.error("Stacktrace:")
-          logger.error(stacktrace.asJson)
+          err.stacktrace.foreach(println)
         }
       }
       case err => logger.error(err)
