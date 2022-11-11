@@ -6,8 +6,9 @@ import org.scalajs.dom
 import sysmo.reform.shared.{query, expr => E, table => T}
 import cats.syntax.all._
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.shared.query.{BasicQuery, ColumnSort, Columns, QueryFilter, QueryRange, QuerySort, QuerySource}
+import sysmo.reform.shared.query.{BasicQuery, ColumnSort, Columns, Fields, QueryFilter, QueryRange, QuerySort, QuerySource}
 import sysmo.reform.shared.table.{LocalTable, SelectionHandler}
+import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType}
 
 import scala.scalajs.js
 
@@ -31,11 +32,15 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
       Some(query.QuerySort(
         sort_model.toSeq.map(sort_item => {
           ColumnSort(E.ColumnRef(sort_item.colId), sort_item.sort == "asc")
-        }): _*
+        })
       ))
   }
 
-  val columns = Columns(schema.fields.map(field => E.ColumnRef(field.name)))
+//  val columns = Columns(schema.fields.map(field => E.ColumnRef(field.name)))
+
+  val fields = Fields(schema.fields.map(field =>
+    E.FieldRef(field.name, Some(field))
+  ))
 
   val native : AgGridFacades.TableDatasource = {
     val ag_ds = (new js.Object).asInstanceOf[AgGridFacades.TableDatasource]
@@ -46,7 +51,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
       val sort = process_sort(params.sortModel)
       val range = QueryRange(params.startRow, params.endRow - params.startRow)
       val query = BasicQuery(
-        source = source, projection = columns, filter = filter, sort = sort, range = Some(range)
+        source = source, projection = fields, filter = filter, sort = sort, range = Some(range)
       )
 
       val f_data: ds.F[LocalTable] = ds.query_table_local(query)

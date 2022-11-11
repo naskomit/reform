@@ -5,36 +5,38 @@ import sysmo.reform.app.{Configuration, Panel}
 import sysmo.reform.shared.runtime.RemoteRuntime
 import sysmo.reform.service.RemoteHttpService
 import sysmo.reform.shared.containers.{FLocal, FRemote}
-import cats.syntax.all._
+import sysmo.reform.explorers.RecordExplorerF
 import sysmo.reform.shared.examples.SkullInventoryBuilder
 import sysmo.reform.shared.expr.Expression
 import sysmo.reform.shared.query.{BasicQuery, Fields, Query, SingleTable}
 import sysmo.reform.shared.types.{RecordType, TypeSystem}
 
-import scala.concurrent.ExecutionContext
-
 
 object SkullInventoryPanel2 extends Panel {
+  object RecordExlorer extends RecordExplorerF[FRemote]
+
   case class Props()
   case class State(runtime: Option[RemoteRuntime[FRemote]])
 
   final class Backend($: BScope) {
     def render(p: Props, s: State): VdomElement = {
       <.div(
-        <.h2("SkullInventoryPanel2")
+        <.div(^.cls := "page-title",
+          <.h1("Skull Inventory")
+        ),
+        <.div(^.cls := "wrapper wrapper-white",
+          s.runtime match {
+            case Some(runtime) => RecordExlorer(runtime, "SkullSample")
+            case None => <.div("Initializing runtime ...")
+          }
+        )
       )
     }
 
     def init(p: Props): CallbackTo[Unit] = {
-
       val ts = SkullInventoryBuilder.type_system
       val remote = new RemoteHttpService(Some("api"))
       val runtime = RemoteRuntime(ts, remote)
-      implicit val mt = runtime.mt
-      println("Running query")
-      runtime
-        .run_query(create_query(ts))
-        .map(table => println("Done query"))
       $.modState((state, props) => state.copy(runtime = Some(runtime)))
     }
   }

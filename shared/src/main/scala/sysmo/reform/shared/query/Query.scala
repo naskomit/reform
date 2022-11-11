@@ -17,7 +17,7 @@ case class QueryFilter(expr: PredicateExpression)
 /** # Sort */
 case class ColumnSort(col: ColumnRef, ascending: Boolean)
 
-case class QuerySort(column_sorts: ColumnSort*)
+case class QuerySort(column_sorts: Seq[ColumnSort])
 
 /** # Source */
 sealed trait QuerySource

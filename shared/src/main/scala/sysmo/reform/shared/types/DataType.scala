@@ -7,8 +7,10 @@ import sysmo.reform.shared.util.{CirceTransport, SequenceIndex}
 import sysmo.reform.shared.containers.FLocal
 
 sealed trait DataType extends Product with Serializable {
-//  def id: ObjectId
+  // TODO Problem with adding fields to builders after they have been crossreferenced
+  // TODO Implement late building
   def show: String
+//  def id: ObjectId
 //  override def equals(obj: Any): Boolean = obj match {
 //    case other: DataType => other.id == id
 //    case _ => false

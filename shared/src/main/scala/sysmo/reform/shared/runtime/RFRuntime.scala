@@ -68,7 +68,7 @@ trait RFRuntime[_F[+_]] extends ObjectStorage[_F] {
 object RFRuntime {
   import Value.implicits._
 
-  class TableView[_F[+_]](runtime: RFRuntime[_F]) extends TableService[_F] {
+  class InstanceTable[_F[+_]](runtime: RFRuntime[_F]) extends TableService[_F] {
     override val mt: MonadThrow[F] = runtime.mt
     override def list_tables(): F[Seq[RecordType]] = mt.map(table_schema(""))(x => Seq(x))
 
@@ -104,10 +104,26 @@ object RFRuntime {
     }
   }
 
-  object implicits {
+  def instance_table[F[+_]](runtime: RFRuntime[F]): TableService[F] =
+    new InstanceTable[F](runtime)
 
-    implicit class runtime2table[F[+_]](runtime: RFRuntime[F]) extends TableView[F](runtime)
+
+  class RecordExplorerView[_F[+_]](runtime: RFRuntime[_F]) extends TableService[_F] {
+    protected val ts: TypeSystem = runtime.type_system
+
+    override implicit val mt: MonadThrow[F] = runtime.mt
+    override def list_tables(): F[Seq[Schema]] = ???
+    override def table_schema(table_id: String): F[Schema] = ts.get(table_id) match {
+      case Some(rec: RecordType) => mt.pure(rec)
+      case Some(x) => mt.raiseError(new IllegalArgumentException(s"Expected ${table_id} to be a record type, found ${x}"))
+      case None => mt.raiseError(new IllegalArgumentException(s"Cannot find type ${table_id} in the type system"))
+    }
+
+    override def query_table(q: Query): F[Table[F]] = runtime.run_query(q)
   }
+
+  def record_explorer[F[+_]](runtime: RFRuntime[F]): TableService[F] =
+    new RecordExplorerView[F](runtime)
 }
 
 trait RuntimeConstructor[_F[+_]] {

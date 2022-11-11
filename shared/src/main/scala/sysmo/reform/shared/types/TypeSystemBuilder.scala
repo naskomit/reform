@@ -1,5 +1,7 @@
 package sysmo.reform.shared.types
 
+import cats.MonadThrow
+
 trait TypeSystemBuilder extends RecordFieldType.Constr {
   var type_map: Map[String, DataTypeBuilder[DataType]] = Map()
 
@@ -28,4 +30,10 @@ case class TypeSystem(type_map: Map[String, DataType]) {
     case x: ArrayType => x
   }
   def get(symbol: String): Option[DataType] = type_map.get(symbol)
+
+  def get_record_type[F[+_]](symbol: String)(implicit mt: MonadThrow[F]) = get(symbol) match {
+    case Some(rec: RecordType) => mt.pure(rec)
+    case Some(x) => mt.raiseError(new IllegalArgumentException(s"Expected ${symbol} to be a record type, found ${x}"))
+    case None => mt.raiseError(new IllegalArgumentException(s"Cannot find type ${symbol} in the type system"))
+  }
 }

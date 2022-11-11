@@ -20,17 +20,19 @@ object MicroController extends ModelBuilder {
       .label_expr(E.field("symbol")) +
       f_char("symbol")
 
-    val Field = record("Field")
+    val Field = record("Field") +
+      f_char("name") +
+      f_char("descr")
+    Field
+    //+ f_ref("type", Type)
+
+
     val StructureType = record("Structure")
       .label_expr(E.field("symbol")) +
       f_char("symbol") +
       f_array("fields", Field)
 
     val Type = union("Type", PrimitiveType, StructureType)
-
-    Field + f_char("name") +
-      f_char("descr")
-    //+ f_ref("type", Type)
 
     /** Input - Output */
     val DigitalInput = record("DigitalInput")

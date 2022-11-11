@@ -4,7 +4,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.shared.runtime.RFRuntime
-import RFRuntime.implicits._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.table.TableViewerF
 import sysmo.reform.shared.query.{QuerySource, SingleTable}
@@ -19,7 +18,7 @@ class InstanceTableF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent 
 
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
-      val ts = p.runtime: TableService[F]
+      val ts = RFRuntime.instance_table(p.runtime)
       s.schema match {
         case Some(sch) => TableViewer(ts, sch, p.source, "800px", None)
         case None => <.div("Loading table schema")
@@ -28,7 +27,7 @@ class InstanceTableF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent 
 
     def start(p: Props): AsyncCallback[Unit] = for {
       sch <- {
-        val ts = p.runtime: TableService[F]
+        val ts = RFRuntime.instance_table(p.runtime)
         f2c.async(ts.table_schema(""))
       }
       su <- $.modStateAsync(s => s.copy(schema = Some(sch)))
