@@ -3,10 +3,11 @@ package sysmo.reform.react.table.aggrid
 import cats.MonadThrow
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
-import sysmo.reform.shared.{query, expr => E, table => T}
+import sysmo.reform.shared.{query, table => T}
+import sysmo.reform.shared.expr.{Expression => E, LogicalAnd}
 import cats.syntax.all._
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.shared.query.{BasicQuery, ColumnSort, Columns, Fields, QueryFilter, QueryRange, QuerySort, QuerySource}
+import sysmo.reform.shared.query.{BasicQuery, FieldSort, Fields, QueryFilter, QueryRange, QuerySort, QuerySource}
 import sysmo.reform.shared.table.{LocalTable, SelectionHandler}
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType}
 
@@ -20,7 +21,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
     }.collect {case(k, Some(flt)) => (k, flt)
     }.values.toSeq
     if (filter_seq.nonEmpty) {
-      Some(query.QueryFilter(E.LogicalAnd(filter_seq: _*)))
+      Some(query.QueryFilter(LogicalAnd(filter_seq: _*)))
     } else
       None
   }
@@ -31,7 +32,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
     else
       Some(query.QuerySort(
         sort_model.toSeq.map(sort_item => {
-          ColumnSort(E.ColumnRef(sort_item.colId), sort_item.sort == "asc")
+          FieldSort(E.field(sort_item.colId), sort_item.sort == "asc")
         })
       ))
   }
@@ -39,7 +40,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
 //  val columns = Columns(schema.fields.map(field => E.ColumnRef(field.name)))
 
   val fields = Fields(schema.fields.map(field =>
-    E.FieldRef(field.name, Some(field))
+    E.field(field.name, Some(field))
   ))
 
   val native : AgGridFacades.TableDatasource = {

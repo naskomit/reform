@@ -9,6 +9,7 @@ trait Context[_F[+_]] {
   type V = Value
   val mt: MonadThrow[F]
   def get(key: String): F[V]
+  def get(path: Seq[String]): F[V] = get(path.mkString("."))
   def iterator: MonadicIterator[F, (String, V)]
   def updated(key: String, value: V):  Context[F]
   def removed(key: String): Context[F]

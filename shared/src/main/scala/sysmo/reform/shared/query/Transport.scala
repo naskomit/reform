@@ -18,10 +18,9 @@ object Transport extends CirceTransport {
 
   implicit val codec_QuerySource: Codec[QuerySource] = deriveCodec[QuerySource]
   implicit val codec_Projection: Codec[Projection] = deriveCodec[Projection]
-  implicit val codec_Columns: Codec[Columns] = deriveCodec[Columns]
   implicit val codec_Fields: Codec[Fields] = deriveCodec[Fields]
   implicit val codec_QueryFilter: Codec[QueryFilter] = deriveCodec[QueryFilter]
   implicit val codec_QuerySort: Codec[QuerySort] = deriveCodec[QuerySort]
-  implicit val codec_ColumnSort: Codec[ColumnSort] = deriveCodec[ColumnSort]
+  implicit val codec_ColumnSort: Codec[FieldSort] = deriveCodec[FieldSort]
   implicit val codec_QueryRange: Codec[QueryRange] = deriveCodec[QueryRange]
 }

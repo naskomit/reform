@@ -1,13 +1,12 @@
 package sysmo.reform.shared.query
 
-import sysmo.reform.shared.expr.{ColumnRef, FieldRef, PredicateExpression}
+import sysmo.reform.shared.expr.{FieldRef, PredicateExpression}
 
 /** # Filter */
 sealed trait Projection
 object Projection {
   case object All extends Projection
 }
-case class Columns(columns: Seq[ColumnRef]) extends Projection
 case class Fields(fields: Seq[FieldRef]) extends Projection
 
 
@@ -15,9 +14,9 @@ case class Fields(fields: Seq[FieldRef]) extends Projection
 case class QueryFilter(expr: PredicateExpression)
 
 /** # Sort */
-case class ColumnSort(col: ColumnRef, ascending: Boolean)
+case class FieldSort(field: FieldRef, ascending: Boolean)
 
-case class QuerySort(column_sorts: Seq[ColumnSort])
+case class QuerySort(field_sorts: Seq[FieldSort])
 
 /** # Source */
 sealed trait QuerySource

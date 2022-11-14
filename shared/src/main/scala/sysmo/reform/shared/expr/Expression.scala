@@ -6,8 +6,7 @@ import sysmo.reform.shared.types.RecordFieldType
 /** # Expression subclasses */
 sealed trait Expression
 
-case class ColumnRef(id: String, alias: Option[String] = None, table: Option[String] = None) extends Expression
-case class FieldRef(id: String, ftype: Option[RecordFieldType] = None) extends Expression
+case class FieldRef(path: Seq[String], ftype: Option[RecordFieldType] = None) extends Expression
 case class Constant(v: Value) extends Expression
 
 sealed trait PredicateExpression extends Expression {
@@ -101,8 +100,9 @@ object Expression {
   def apply(v: Value): Constant = Constant(v)
   def apply[T](x: T)(implicit vc: ValueConstructor[T]): Constant =
     Constant(vc.toValue(x))
-  def col(id: String): ColumnRef = ColumnRef(id)
-  def field(id: String, ftype: Option[RecordFieldType] = None): FieldRef = FieldRef(id, ftype)
+  def field(id: String): FieldRef = FieldRef(Seq(id), None)
+  def field(id: String, ftype: Option[RecordFieldType]): FieldRef = FieldRef(Seq(id), ftype)
+  def field(path: Seq[String], ftype: Option[RecordFieldType] = None): FieldRef = FieldRef(path, ftype)
 
   object implicits {
     /** # Expression */

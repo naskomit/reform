@@ -4,20 +4,16 @@ import cats.MonadThrow
 import cats.syntax.all._
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.logging.Logging
-import sysmo.reform.shared.query.{BasicQuery, Fields, Query, SQLGenerator, SQLModel, SQLQueryService, SQLTextualGenerator, SingleTable}
+import sysmo.reform.shared.query.{Query, SQLGenerator, SQLTextualQuery, SQLQueryService}
 import sysmo.reform.shared.table.Table.Schema
 import sysmo.reform.shared.table.Table
-import sysmo.reform.shared.types.{RecordFieldType, RecordType}
+import sysmo.reform.shared.types.{RecordType}
 import sysmo.reform.shared.util.MonadicIterator
 
 import scala.jdk.CollectionConverters._
 
-class OrientDBSQLTextualGenerator[F[+_]](implicit val mt: MonadThrow[F])
-  extends SQLTextualGenerator[F] {
-}
-
 class OrientDBSQLGenerator[F[+_]](implicit val mt: MonadThrow[F]) extends SQLGenerator[F] {
-  object textual_generator extends OrientDBSQLTextualGenerator[F]
+
 }
 
 class OrientDBQueryService[_F[+_]](session: SessionImpl[_F])(
@@ -29,14 +25,10 @@ class OrientDBQueryService[_F[+_]](session: SessionImpl[_F])(
   // TODO
   override def table_schema(table_id: String): F[Schema] = ???
 
-  override def generate_sql(q: Query): F[SQLModel.TextualQuery] = {
-    q match {
-      case qb: BasicQuery => sql_generator.from_basic_query(qb)
-      case _ => mt.raiseError(new IllegalArgumentException("Can only process BasicQuery"))
-    }
-  }
+  override def generate_sql(q: Query): F[SQLTextualQuery] =
+    sql_generator.generate(q)
 
-  override def run_query(sql: SQLModel.TextualQuery): F[Table[F]] = {
+  override def run_query(sql: SQLTextualQuery): F[Table[F]] = {
     logger.info(sql.q)
     for {
       result_schema <- {

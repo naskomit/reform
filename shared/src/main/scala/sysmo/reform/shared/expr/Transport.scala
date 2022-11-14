@@ -9,7 +9,6 @@ object Transport extends CirceTransport {
   import sysmo.reform.shared.types.Transport._
   import sysmo.reform.shared.data.Transport._
 
-  implicit val codec_ColumnRef: Codec[ColumnRef] = deriveCodec[ColumnRef]
   implicit val codec_FieldRef: Codec[FieldRef] = deriveCodec[FieldRef]
   implicit val codec_Constant: Codec[Constant] = deriveCodec[Constant]
 

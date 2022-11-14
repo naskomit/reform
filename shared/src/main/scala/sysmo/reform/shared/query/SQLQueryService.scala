@@ -9,8 +9,8 @@ import sysmo.reform.shared.types.RecordFieldType
 trait QueryService[_F[+_]] extends TableService[_F]
 
 trait SQLQueryService[_F[+_]] extends QueryService[_F] {
-  def generate_sql(q: Query): F[SQLModel.TextualQuery]
-  def run_query(sql: SQLModel.TextualQuery): F[Table[F]]
+  def generate_sql(q: Query): F[SQLTextualQuery]
+  def run_query(sql: SQLTextualQuery): F[Table[F]]
 
   override def query_table(q: Query): F[Table[F]] = {
     for {

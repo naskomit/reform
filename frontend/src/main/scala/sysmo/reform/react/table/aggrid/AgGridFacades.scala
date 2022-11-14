@@ -5,7 +5,7 @@ import japgolly.scalajs.react.facade
 import japgolly.scalajs.react.facade.React.Node
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
-import sysmo.reform.shared.{expr => E}
+import sysmo.reform.shared.expr.{Expression => E, PredicateExpression}
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.table.{LocalTable, SelectionHandler, Table}
 import sysmo.reform.shared.logging.Logging
@@ -63,10 +63,9 @@ object AgGridFacades extends Logging {
   }
 
 
-  def extract_filter(flt_js : ColumnFilterJS, column: String): Option[E.PredicateExpression] = {
-    import E.Expression.implicits._
+  def extract_filter(flt_js : ColumnFilterJS, column: String): Option[PredicateExpression] = {
+    import E.implicits._
     import Value.implicits._
-    val Expr = E.Expression
     val flt = ColumnFilter.fromJS(flt_js)
       dom.console.log(flt_js)
       flt match {
@@ -75,8 +74,8 @@ object AgGridFacades extends Logging {
           val cond1 = extract_filter(flt_binary.condition1, column)
           val cond2 = extract_filter(flt_binary.condition2, column)
           (op, cond1, cond2) match {
-            case ("AND", Some(c1), Some(c2)) => Some(E.LogicalAnd(c1, c2))
-            case ("OR", Some(c1), Some(c2)) => Some(E.LogicalOr(c1, c2))
+            case ("AND", Some(c1), Some(c2)) => Some(c1 && c2)
+            case ("OR", Some(c1), Some(c2)) => Some(c1 || c2)
             case _ => {logger.warn(s"Cannot decode filter ${(op, cond1, cond2)}"); None}
           }
         }
@@ -84,12 +83,12 @@ object AgGridFacades extends Logging {
         case ColumnFilter(Some("text"), None, Some(pred_str)) => {
           val f = flt_js.asInstanceOf[TextFilterModelJS]
           val predicate = pred_str match {
-            case "equals" => Expr.col(column) === Expr(f.filter)
-            case "notEqual" => Expr.col(column) !== Expr(f.filter)
-            case "contains" => Expr.col(column).str.containing(Expr(f.filter))
-            case "notContains" => Expr.col(column).str.not_containing(Expr(f.filter))
-            case "startsWith" => Expr.col(column).str.starting_with(Expr(f.filter))
-            case "endsWith" => Expr.col(column).str.ending_with(Expr(f.filter))
+            case "equals" => E.field(column) === E(f.filter)
+            case "notEqual" => E.field(column) !== E(f.filter)
+            case "contains" => E.field(column).str.containing(E(f.filter))
+            case "notContains" => E.field(column).str.not_containing(E(f.filter))
+            case "startsWith" => E.field(column).str.starting_with(E(f.filter))
+            case "endsWith" => E.field(column).str.ending_with(E(f.filter))
 
           }
           Some(predicate)
@@ -97,16 +96,16 @@ object AgGridFacades extends Logging {
 
         case ColumnFilter(Some("number"), None, Some(pred_str)) => {
           val f = flt_js.asInstanceOf[NumberFilterModelJS]
-          val predicate: E.PredicateExpression = if (pred_str == "inRange") {
-            Expr.col(column) >= Expr(f.filter) && Expr.col(column) <= Expr(f.filterTo)
+          val predicate: PredicateExpression = if (pred_str == "inRange") {
+            E.field(column) >= E(f.filter) && E.field(column) <= E(f.filterTo)
           } else {
             pred_str match {
-              case "equals" => Expr.col(column) === Expr(f.filter)
-              case "notEqual" => Expr.col(column) !== Expr(f.filter)
-              case "lessThan" => Expr.col(column) < Expr(f.filter)
-              case "lessThanOrEqual" => Expr.col(column) <= Expr(f.filter)
-              case "greaterThan" => Expr.col(column) > Expr(f.filter)
-              case "greaterThanOrEqual" => Expr.col(column) >= Expr(f.filter)
+              case "equals" => E.field(column) === E(f.filter)
+              case "notEqual" => E.field(column) !== E(f.filter)
+              case "lessThan" => E.field(column) < E(f.filter)
+              case "lessThanOrEqual" => E.field(column) <= E(f.filter)
+              case "greaterThan" => E.field(column) > E(f.filter)
+              case "greaterThanOrEqual" => E.field(column) >= E(f.filter)
 
             }
           }
