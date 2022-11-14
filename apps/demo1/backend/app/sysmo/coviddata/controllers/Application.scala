@@ -25,13 +25,16 @@ class Application @Inject()(cc: ControllerComponents, config: Configuration)(imp
   def respond[T, F[+T] <: RFContainer[T]](result: F[T])(implicit mt: MonadThrow[F]): Future[Result] = {
     result
       .map(x => Ok(x.toString))
-      .handleError(err =>
-        if (err.getMessage == null) {
-          Ok(err.getClass.getName)
-        } else {
-          Ok(err.getMessage)
-        }
-      )
+      .handleError { err =>
+        val err_msg =
+          if (err.getMessage == null) {
+            err.getClass.getName
+          } else {
+            err.getMessage
+          }
+        System.err.println(err_msg)
+        Ok(err_msg)
+      }
       .to_future
   }
 

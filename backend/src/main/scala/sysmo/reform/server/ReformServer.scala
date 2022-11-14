@@ -37,8 +37,9 @@ trait ReformServer[_F[+_]] {
     parse_body[I](body)
       .flatMap(i => C.catch_exception(f(i)))
       .map(RemoteResult.ok)
-      .handleError(err => RemoteResult.err(err))
-      .map(o => o.asJson.toString)
+      .handleError {err =>
+        RemoteResult.handle_error(err, log = true)
+      }.map(o => o.asJson.toString)
   }
 
   def handle_query(body: String): F[String] = {

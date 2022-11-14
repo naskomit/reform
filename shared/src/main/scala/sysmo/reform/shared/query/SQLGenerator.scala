@@ -50,7 +50,8 @@ trait SQLGenerator[F[+_]] {
       order <- generate_order(q.sort)
       from <- generate_from(q.source)
       sql <- {
-        val sql_model = SQLModel.SQL(select, from, None, order, ftypes)
+        val where = q.filter.map(flt => SQLModel.Where(flt.expr))
+        val sql_model = SQLModel.SQL(select, from, where, order, ftypes)
         textual_generator.generate(sql_model, ftypes)
       }
     } yield sql

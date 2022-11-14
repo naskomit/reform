@@ -10,9 +10,19 @@ case class Err(msg: String, stacktrace: Seq[String]) extends RemoteResult[Nothin
 
 object RemoteResult {
   def ok[T](value: T): RemoteResult[T] = Ok(value)
-  def err[T](e: Throwable): RemoteResult[T] = {
+  def err[T](e: Throwable, log: Boolean = false): RemoteResult[T] = {
     val msg = if (e.getMessage == null) e.getClass.getName else e.getMessage
     val stacktrace = e.getStackTrace.map(ste => ste.toString)
+    Err(msg, stacktrace)
+  }
+
+  def handle_error[T](e: Throwable, log: Boolean = false): RemoteResult[T] = {
+    val msg = if (e.getMessage == null) e.getClass.getName else e.getMessage
+    val stacktrace = e.getStackTrace.map(ste => ste.toString)
+    if (log) {
+      System.err.println(msg)
+      e.printStackTrace(System.err)
+    }
     Err(msg, stacktrace)
   }
 
