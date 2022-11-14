@@ -30,7 +30,7 @@ object TextualTreeNode {
     TextualTreeInternalNode(Seq(), sep, enclosure)
   }
 
-  lazy val empty = node("")
+  lazy val empty: TextualTreeNode = node("")
 }
 case class TextualTreeLeaf(value: String) extends TextualTreeNode
 case class TextualTreeInternalNode(var children: Seq[TextualTreeNode], sep: String, enclosure: Enclosure)

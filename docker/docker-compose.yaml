@@ -24,9 +24,9 @@ services:
 
   app-server:
     container_name: app-server
-    image: server:0.1.0-SNAPSHOT
+    image: demo1_backend:0.1.1
     ports:
-      - 9000:9000
+      - 9005:9000
     networks:
       - net-1
 
