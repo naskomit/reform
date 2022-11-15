@@ -16,3 +16,10 @@ orientdb/up:
 
 orientdb/bash:
 	docker compose exec orientdb /bin/bash
+
+#cd docker &&
+keycloak/up:
+	docker compose up keycloak
+
+keycloak/down:
+	docker compose stop keycloak

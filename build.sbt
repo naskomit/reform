@@ -109,10 +109,10 @@ lazy val demo1_backend = project
     // triggers scalaJSPipeline when using compile or continuous compilation
     Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
     dockerChmodType := DockerChmodType.UserGroupWriteExecute,
-    dockerBaseImage := "openjdk:11",
+    dockerBaseImage := "eclipse-temurin:11-jre-alpine",
     dockerExposedPorts += 9000,
   )
-  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin)
+  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin, AshScriptPlugin)
   .dependsOn(backend)
 
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project demo1_backend" :: s} //andThen {s: State => "run" :: s}
