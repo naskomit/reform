@@ -5,7 +5,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.react.ReactComponent
 import sysmo.reform.shared.runtime.RFRuntime
 import sysmo.reform.effects.implicits.F2Callback
-import sysmo.reform.react.table.TableViewerF
+import sysmo.reform.react.table.{TableOptions, TableViewerF}
 import sysmo.reform.shared.query.{QuerySource, SingleTable}
 import sysmo.reform.shared.table.{Table, TableService}
 
@@ -20,7 +20,10 @@ class InstanceTableF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent 
     def render (p: Props, s: State): VdomElement = {
       val ts = RFRuntime.instance_table(p.runtime)
       s.schema match {
-        case Some(sch) => TableViewer(ts, sch, p.source, "800px", None)
+        case Some(schema) => {
+          val table_options = TableOptions.builder(schema)
+          TableViewer(ts, schema, p.source, table_options.build())
+        }
         case None => <.div("Loading table schema")
       }
     }

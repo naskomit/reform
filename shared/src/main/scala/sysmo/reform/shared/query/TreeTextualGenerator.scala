@@ -26,6 +26,10 @@ object TextualTreeNode {
     TextualTreeLeaf(value)
   }
 
+  def leaf(value: Int): TextualTreeLeaf = {
+    TextualTreeLeaf(value.toString)
+  }
+
   def node(sep: String, enclosure: Enclosure = Enclosure.None): TextualTreeInternalNode = {
     TextualTreeInternalNode(Seq(), sep, enclosure)
   }

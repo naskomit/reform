@@ -41,24 +41,6 @@ object SkullInventoryPanel2 extends Panel {
     }
   }
 
-
-  def create_query(ts: TypeSystem): Query = {
-    val SkullSample = ts.get("SkullSample").get.asInstanceOf[RecordType]
-    val fields = Seq("code", "sex", "age", "image_type")
-      .map { name =>
-        val ftype = SkullSample.field(name)
-        Expression.field(name, ftype)
-      }
-
-
-    val query = BasicQuery(
-      source = SingleTable("SkullSample"),
-      projection = Fields(fields)
-    )
-
-    query
-  }
-
   val component = ScalaComponent.builder[Props]("SkullInventoryPanel2")
     .initialState(State(None))
     .renderBackend[Backend]

@@ -1,18 +1,14 @@
 package sysmo.reform.react.table.aggrid
 
-import japgolly.scalajs.react.{Children, JsComponent}
-import japgolly.scalajs.react.facade
-import japgolly.scalajs.react.facade.React.Node
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
-import sysmo.reform.shared.expr.{Expression => E, PredicateExpression}
+import sysmo.reform.shared.expr.{PredicateExpression, Expression => E}
 import sysmo.reform.shared.data.Value
-import sysmo.reform.shared.table.{LocalTable, SelectionHandler, Table}
 import sysmo.reform.shared.logging.Logging
+import sysmo.reform.shared.table.{LocalTable, Table}
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.annotation.{JSGlobal, JSImport}
 import scala.scalajs.js.|
 
 object AgGridFacades extends Logging {
@@ -135,7 +131,7 @@ object AgGridFacades extends Logging {
     /** The first row index to NOT get. */
     val endRow: Int = js.native
     /** Callback to call for the result when successful. */
-    val successCallback: js.Function2[js.Array[_] | Proxy, Int, _] = js.native
+    val successCallback: js.Function2[js.Array[_] | js.Object, Int, _] = js.native
     /** Callback to call when the request fails. */
     val failCallback: js.Function0[Unit] = js.native
     /** If doing server side sorting, contains the sort model */
@@ -157,8 +153,9 @@ object AgGridFacades extends Logging {
     val rowIndex: Int = js.native
   }
 
+  @js.native
   trait Column extends js.Object {
-
+    def getColId(): String = js.native
   }
 
   @js.native
@@ -188,58 +185,6 @@ object AgGridFacades extends Logging {
     var cellRenderer: js.UndefOr[JSCellRenderer] = js.native
   }
 
-  object Filters extends Enumeration {
-    val default, text, number = Value
-  }
-
-  def column(field: String,
-             value_getter: Option[ValueGetter] = None,
-             headerName: Option[String] = None,
-             filter: Option[Filters.Value] = None,
-             sortable: Option[Boolean] = None,
-             cell_renderer: Option[CellRenderer] = None
-            ) : ColumnProps = {
-    val col_js = (new js.Object).asInstanceOf[ColumnProps]
-    col_js.field = field
-    col_js.valueGetter = value_getter.orUndefined
-    col_js.headerName = headerName.orUndefined
-    col_js.filter = filter match {
-      case None => None.orUndefined
-      case Some(Filters.default) => true
-      case Some(Filters.text) => "agTextColumnFilter"
-      case Some(Filters.number) => "agNumberColumnFilter"
-    }
-    col_js.sortable = sortable.orUndefined
-
-    col_js.cellRenderer = cell_renderer.map[JSCellRenderer](cr => {
-      (params) => cr.render(params)
-    }).orUndefined
-
-
-    col_js
-  }
-
-  @js.native
-  @JSGlobal
-  class Proxy(target: Any, handler: js.Any) extends js.Object
-
-  def table_proxy(table: LocalTable): Proxy = {
-    val getter : js.Function3[LocalTable, String, js.Any, Option[Table.Row]] =
-      (table: LocalTable, prop: String, receiver: js.Any) => {
-        val index = prop.toInt
-        if (index < table.nrow.get) {
-          table.row(index).to_option
-        }
-        else {
-          None
-        }
-      }
-    val table_proxy_handler = js.Dynamic.literal(
-      get = getter
-    )
-
-    new Proxy(table, table_proxy_handler)
-  }
 
   @js.native
   trait API extends js.Object {
@@ -258,75 +203,35 @@ object AgGridFacades extends Logging {
     val columnApi: ColumnAPI = js.native
   }
 
-  object AgGridNativeComponent {
+  /** Events */
+  @js.native
+  trait CellClickedEvent extends js.Object {
+    val column: Column
+    val value: js.Any
+    val data: js.Any
+    val rowIndex: js.UndefOr[Int]
+    val `type`: String
+  }
 
-    @JSImport("ag-grid-react", "AgGridReact")
-    @js.native
-    object AgGridReact extends js.Object
+  @js.native
+  trait CellContextMenuEvent extends js.Object {
+    val column: Column
+    val value: js.Any
+    val data: js.Any
+    val rowIndex: js.UndefOr[Int]
+  }
 
+  @js.native
+  trait ContextMenuParams extends js.Object {
 
-    @js.native
-    trait Props extends js.Object {
-      var columnDefs: js.Array[ColumnProps] = js.native
-      var rowData: js.Object = js.native
-      var reactUi: Boolean = js.native
-      var gridOptions: GridOptions = js.native
-      var rowSelection: js.UndefOr[String] = js.native
-      var onSelectionChanged: js.UndefOr[js.Function0[Unit]] = js.native
-      var onGridReady: js.UndefOr[js.Function1[OnGridReady, Unit]] = js.native
-    }
+  }
 
-    val component = JsComponent[Props, Children.None, Null](AgGridReact)
+  @js.native
+  trait ContextMenuItems extends js.Object {
 
-    def apply(datasource: TableDatasource, columns : Seq[ColumnProps],
-              selection_handler: Option[SelectionHandler]) = {
-      val p = (new js.Object).asInstanceOf[Props]
-      var api: Option[API] = None
-      var column_api: Option[ColumnAPI] = None
+  }
 
-      p.reactUi = true
-
-      val grid_options = (new js.Object).asInstanceOf[GridOptions]
-      grid_options.rowModelType = "infinite"
-      grid_options.datasource = datasource
-      p.gridOptions = grid_options
-      p.columnDefs = columns.toJSArray
-
-      val onGridReady: js.Function1[OnGridReady, Unit] = (params: OnGridReady) => {
-        api = Some(params.api)
-        column_api = Some(params.columnApi)
-      }
-      p.onGridReady = Some(onGridReady).orUndefined
-
-      def install_handler(handler: SelectionHandler): Unit = {
-        println(s"Installing handler ${handler.mode}")
-        val onSelectionChanged: js.Function0[Unit] = () => {
-          val selection = api.get.getSelectedRows.bind(api.get)()
-            .asInstanceOf[js.Array[Option[Table.Row]]]
-            .toSeq.collect {
-              case Some(row: Table.Row) => row
-            }
-          handler.on_change(selection)
-        }
-        p.onSelectionChanged = Some(onSelectionChanged).orUndefined
-      }
-
-      selection_handler match {
-        case Some(handler) => handler.mode match {
-          case SelectionHandler.NoSelection =>
-          case SelectionHandler.SingleRow => {
-            p.rowSelection = Some("single").orUndefined
-            install_handler(handler)
-          }
-          case SelectionHandler.MultiRow => {
-            p.rowSelection = Some("multiple").orUndefined
-            install_handler(handler)
-          }
-        }
-        case None =>
-      }
-
-      component.withProps(p)()
-    }
+  object Filters extends Enumeration {
+    val default, text, number = Value
   }
 }

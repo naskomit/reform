@@ -4,7 +4,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.react.table.TableViewerF
+import sysmo.reform.react.table.{TableOptions, TableViewerF}
 import sysmo.reform.shared.query.{QuerySource, SingleTable}
 import sysmo.reform.shared.runtime.ArrayInstance
 import sysmo.reform.shared.runtime.RFObject.TableView
@@ -21,7 +21,10 @@ class ArrayTableViewerF[F[+_]](implicit f2c: F2Callback[F]) extends ReactCompone
     def render (p: Props, s: State): VdomElement = {
       val ts = TableView(p.array): TableService[F]
       s.schema match {
-        case Some(sch) => TableViewer(ts, sch, p.source, "800px", None)
+        case Some(schema) => {
+          val table_options = TableOptions.builder(schema)
+          TableViewer(ts, schema, p.source, table_options.build())
+        }
         case None => <.div("Loading table schema")
       }
     }

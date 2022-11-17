@@ -1,19 +1,18 @@
 package sysmo.reform.react.table.aggrid
 
 import cats.MonadThrow
-import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
+import sysmo.reform.shared.expr.LogicalAnd
 import sysmo.reform.shared.{query, table => T}
-import sysmo.reform.shared.expr.{Expression => E, LogicalAnd}
-import cats.syntax.all._
-import sysmo.reform.react.ReactComponent
 import sysmo.reform.shared.query.{BasicQuery, FieldSort, Fields, QueryFilter, QueryRange, QuerySort, QuerySource}
-import sysmo.reform.shared.table.{LocalTable, SelectionHandler}
-import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordType, ReferenceType}
+import sysmo.reform.shared.table.{LocalTable, Table}
+import sysmo.reform.shared.expr.{Expression => E}
+import cats.syntax.all._
 
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSGlobal
 
-class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, schema: T.Table.Schema) {
+class AgGridSourceAdaptor[F[+_]](ds: T.TableService[F], source: QuerySource, schema: T.Table.Schema) {
   implicit val mt: MonadThrow[F] = ds.mt
   private def process_filter(filter_model : AgGridFacades.FilterModel): Option[QueryFilter] = {
     val filter_seq = filter_model.toMap.map {case (k, v) =>
@@ -37,7 +36,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
       ))
   }
 
-//  val columns = Columns(schema.fields.map(field => E.ColumnRef(field.name)))
+  //  val columns = Columns(schema.fields.map(field => E.ColumnRef(field.name)))
 
   val fields = Fields(schema.fields.map(field =>
     E.field(field.name, Some(field))
@@ -47,7 +46,6 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
     val ag_ds = (new js.Object).asInstanceOf[AgGridFacades.TableDatasource]
 
     ag_ds.getRows = params => {
-      dom.console.log(params)
       val filter = process_filter(params.filterModel)
       val sort = process_sort(params.sortModel)
       val range = QueryRange(params.startRow, params.endRow - params.startRow)
@@ -57,7 +55,7 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
 
       val f_data: ds.F[LocalTable] = ds.query_table_local(query)
       f_data.map{(table: T.LocalTable) =>
-        val data_proxy = AgGridFacades.table_proxy(table)
+        val data_proxy = AgGridSourceAdaptor.table_proxy(table)
         //          val data = table.row_iter.toJSArray
         val requested_rows = params.endRow - params.startRow
         val nrow = table.nrow.get
@@ -78,48 +76,28 @@ class AgGridSourceAgaptor[F[+_]](ds: T.TableService[F], source: QuerySource, sch
   }
 }
 
-object AgGridSourceAgaptor{
-  def apply[F[+_]](ds: T.TableService[F], source: QuerySource, schema: T.Table.Schema): AgGridSourceAgaptor[F] =
-    new AgGridSourceAgaptor(ds, source, schema)
-}
+object AgGridSourceAdaptor{
+  @js.native
+  @JSGlobal
+  class Proxy(target: Any, handler: js.Any) extends js.Object
 
-object AgGridComponent extends ReactComponent {
-  import japgolly.scalajs.react.ScalaComponent
-  import japgolly.scalajs.react.component.Scala.BackendScope
-  trait Props {
-    type F[+_]
-    val ds : AgGridSourceAgaptor[F]
-    val columns : Seq[AgGridFacades.ColumnProps]
-    val height: String
-    val selection_handler: Option[SelectionHandler]
+  def table_proxy(table: LocalTable): Proxy = {
+    val getter : js.Function3[LocalTable, String, js.Any, Option[Table.Row]] =
+      (table: LocalTable, prop: String, receiver: js.Any) => {
+        val index = prop.toInt
+        if (index < table.nrow.get) {
+          table.row(index).to_option
+        }
+        else {
+          None
+        }
+      }
+    val table_proxy_handler = js.Dynamic.literal(
+      get = getter
+    )
+
+    new Proxy(table, table_proxy_handler)
   }
-
-  case class State()
-
-  final class Backend($: BackendScope[Props, State]) {
-
-    def render(p: Props, s: State): VdomElement = {
-      <.div(
-        ^.cls := "ag-theme-alpine",
-        ^.height := p.height,
-        ^.width := "100%",
-        AgGridFacades.AgGridNativeComponent(p.ds.native, p.columns, p.selection_handler)
-      )
-    }
-  }
-
-  val component = ScalaComponent.builder[Props]("AgGrid")
-    .initialState(State())
-    .renderBackend[Backend]
-    .build
-
-  def apply[_F[+_]](_ds: T.TableService[_F], _table: QuerySource, _schema: T.Table.Schema,
-                    _columns: Seq[AgGridFacades.ColumnProps], _height: String, _selection_handler: Option[SelectionHandler]): Unmounted =
-    component(new Props {
-      override type F[+X] = _F[X]
-      val ds = AgGridSourceAgaptor(_ds, _table, _schema)
-      val columns = _columns
-      val height = _height
-      val selection_handler = _selection_handler
-    })
+  def apply[F[+_]](ds: T.TableService[F], source: QuerySource, schema: T.Table.Schema): AgGridSourceAdaptor[F] =
+    new AgGridSourceAdaptor(ds, source, schema)
 }

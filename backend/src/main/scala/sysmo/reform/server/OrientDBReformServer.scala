@@ -17,7 +17,6 @@ trait OrientDBReformServer[_F[+_]] extends ReformServer[_F] {
     override def warn(msg: String): Unit = println(msg)
     override def error(msg: String): Unit = println(msg)
   }
-  println(s"Printer ${printer}")
   Injector.configure(printer)
 
   lazy val storage = sysmo.reform.storage.create_orientdb[F](

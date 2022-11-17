@@ -68,7 +68,7 @@ sealed trait CompoundDataType extends DataType with HasSymbol
 case class RecordType(symbol: String, descr: Option[String], fields: Seq[RecordFieldType], label_expr: Option[Expression])
   extends CompoundDataType with HasLabelExpr {
   private lazy val _field_index: SequenceIndex[String, RecordFieldType] =
-    new SequenceIndex(fields, _.name)
+    SequenceIndex(fields, _.name)
   def field_index(name: String): Option[Int] = _field_index.get_index(name)
   def field(name: String): Option[RecordFieldType] =
     _field_index.get(name)

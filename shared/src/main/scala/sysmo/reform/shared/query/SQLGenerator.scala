@@ -3,14 +3,15 @@ package sysmo.reform.shared.query
 import cats.MonadThrow
 import cats.syntax.all._
 import sysmo.reform.shared.expr.{Containing, EndingWith, Expression, NonStartingWith, NotContaining, NotEndingWith, StartingWith}
+import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.query.Enclosure.Brackets
 import sysmo.reform.shared.types.RecordFieldType
 
 case class SQLTextualQuery(q: String, args: Seq[Any], ftypes: Seq[Option[RecordFieldType]])
 
-trait SQLGenerator[F[+_]] {
+trait SQLGenerator[F[+_]] extends Logging {
   implicit val mt: MonadThrow[F]
-  val T = TextualTreeNode
+  val TN = TextualTreeNode
   object K {
     val SELECT = "SELECT"
     val FROM = "FROM"
@@ -22,6 +23,8 @@ trait SQLGenerator[F[+_]] {
     val ASC = "ASC"
     val DESC = "DESC"
     val LIKE = "LIKE"
+    val LIMIT = "LIMIT"
+    val SKIP = "SKIP"
   }
 
   def generate_ftypes(projection: Projection): F[Seq[Option[RecordFieldType]]] = {
@@ -42,12 +45,12 @@ trait SQLGenerator[F[+_]] {
   }
 
   def generate_select(projection: Projection): F[TextualTreeNode] = {
-    val proj_txt = T.node(", ")
+    val proj_txt = TN.node(", ")
     (projection match {
-      case Projection.All => proj_txt += T.leaf("*")
+      case Projection.All => proj_txt += TN.leaf("*")
       case Fields(fields) => fields.foreach { field =>
-        val alias = field.ftype.map(ft => ft.name)
-        proj_txt += T.leaf(format_field(field.path, alias))
+//        val alias = field.ftype.map(ft => ft.name)
+        proj_txt += TN.leaf(format_field(field.path, None))
       }
       case _ => mt.raiseError(new IllegalArgumentException("OrientDB query engine only works with field references"))
     })
@@ -55,22 +58,22 @@ trait SQLGenerator[F[+_]] {
   }
 
   def generate_from(source: QuerySource): F[TextualTreeNode] = {
-    val source_txt = T.node(", ")
+    val source_txt = TN.node(", ")
     source match {
-      case table: SingleTable => source_txt += T.leaf(table.id)
+      case table: SingleTable => source_txt += TN.leaf(table.id)
       case _ => mt.raiseError(new IllegalArgumentException("Can only process SingleTable source"))
     }
     mt.pure(source_txt)
   }
 
   def generate_order(sort: Option[QuerySort]): F[TextualTreeNode] = {
-    val order_txt = T.node(", ")
+    val order_txt = TN.node(", ")
 
     sort match {
       case Some(QuerySort(field_sorts)) => field_sorts.foreach {
         case FieldSort(field, ascending) =>
           order_txt += (
-            T.leaf(format_field(field.path) +
+            TN.leaf(format_field(field.path) +
               (if (ascending) s" ${K.ASC}" else s" ${K.DESC}")))
       }
       case None =>
@@ -80,11 +83,11 @@ trait SQLGenerator[F[+_]] {
 
   private def binary_predicate(expr1: Expression, op: TextualTreeNode, expr2: Expression): F[TextualTreeNode] =
     mt.map2(generate_filter(expr1), generate_filter(expr2))((n1, n2) =>
-      T.node(" ", Brackets) += n1 += op += n2)
+      TN.node(" ", Brackets) += n1 += op += n2)
 
   private def not_expr(expr_node: F[TextualTreeNode]): F[TextualTreeNode] =
     expr_node.map(n =>
-      T.node(" ", Brackets) += T.leaf(K.NOT) += n
+      TN.node(" ", Brackets) += TN.leaf(K.NOT) += n
     )
 
   def generate_filter(expr: Expression): F[TextualTreeNode] = {
@@ -93,48 +96,48 @@ trait SQLGenerator[F[+_]] {
     import Value.implicits._
 
     expr match {
-      case FieldRef(path, _) => mt.pure(T.leaf(quote_field(path.mkString("."))))
+      case FieldRef(path, _) => mt.pure(TN.leaf(quote_field(path.mkString("."))))
       case Constant(v) => v match {
         case v if v.not_set => mt.raiseError(new IllegalArgumentException("Cannot handle empty values"))
-        case Value.CharValue(x) => mt.pure(T.leaf(quote_str(v.get[String].get)))
-        case _ => mt.pure(T.leaf(v.get[String].get))
+        case Value.CharValue(x) => mt.pure(TN.leaf(quote_str(v.get[String].get)))
+        case _ => mt.pure(TN.leaf(v.get[String].get))
       }
       case pred: PredicateExpression => pred match {
         case LogicalAnd(expr_list@_*) => expr_list.foldLeft(
-          mt.pure(T.node(s" ${K.AND} ", Brackets))
+          mt.pure(TN.node(s" ${K.AND} ", Brackets))
         ) { (parentF, sub) =>
             mt.map2(parentF, generate_filter(sub))((parent, n) => parent += n)
           }
         case LogicalOr(expr_list@_*) => expr_list.foldLeft(
-            mt.pure(T.node(s" ${K.OR} ", Brackets))
+            mt.pure(TN.node(s" ${K.OR} ", Brackets))
           ) { (parentF, sub) =>
             mt.map2(parentF, generate_filter(sub))((parent, n) => parent += n)
           }
         case LogicalNot(sub) => not_expr(generate_filter(sub))
         case CommonPredicate(op, arg1, arg2) => op match {
-          case Equal => binary_predicate(arg1, T.leaf("="), arg2)
-          case NotEqual => binary_predicate(arg1, T.leaf("!="), arg2)
+          case Equal => binary_predicate(arg1, TN.leaf("="), arg2)
+          case NotEqual => binary_predicate(arg1, TN.leaf("!="), arg2)
         }
         case NumericalPredicate(op, arg1, arg2) => op match {
-          case NP_> => binary_predicate(arg1, T.leaf(">"), arg2)
-          case NP_>= => binary_predicate(arg1, T.leaf(">="), arg2)
-          case NP_< => binary_predicate(arg1, T.leaf("<"), arg2)
-          case NP_<= => binary_predicate(arg1, T.leaf("<="), arg2)
+          case NP_> => binary_predicate(arg1, TN.leaf(">"), arg2)
+          case NP_>= => binary_predicate(arg1, TN.leaf(">="), arg2)
+          case NP_< => binary_predicate(arg1, TN.leaf("<"), arg2)
+          case NP_<= => binary_predicate(arg1, TN.leaf("<="), arg2)
         }
         case StringPredicate(op, arg1, Constant(sc)) => {
           val arg2 = sc.get[String].get
           op match {
-            case StartingWith => binary_predicate(arg1, T.leaf(K.LIKE), Expression(arg2 + "%"))
+            case StartingWith => binary_predicate(arg1, TN.leaf(K.LIKE), Expression(arg2 + "%"))
             case NonStartingWith => not_expr(
-              binary_predicate(arg1, T.leaf(K.LIKE), Expression(arg2 + "%"))
+              binary_predicate(arg1, TN.leaf(K.LIKE), Expression(arg2 + "%"))
             )
-            case EndingWith => binary_predicate(arg1, T.leaf(K.LIKE), Expression("%" + arg2))
+            case EndingWith => binary_predicate(arg1, TN.leaf(K.LIKE), Expression("%" + arg2))
             case NotEndingWith => not_expr(
-              binary_predicate(arg1, T.leaf(K.LIKE), Expression("%" + arg2))
+              binary_predicate(arg1, TN.leaf(K.LIKE), Expression("%" + arg2))
             )
-            case Containing => binary_predicate(arg1, T.leaf(K.LIKE), Expression("%" + arg2 + "%"))
+            case Containing => binary_predicate(arg1, TN.leaf(K.LIKE), Expression("%" + arg2 + "%"))
             case NotContaining => not_expr(
-              binary_predicate(arg1, T.leaf(K.LIKE), Expression("%" + arg2 + "%"))
+              binary_predicate(arg1, TN.leaf(K.LIKE), Expression("%" + arg2 + "%"))
             )
           }
         }
@@ -149,6 +152,18 @@ trait SQLGenerator[F[+_]] {
     }
   }
 
+  def generate_range(range: Option[QueryRange]): F[TextualTreeNode] = {
+    val range_txt = TN.node(" ")
+    range match {
+      case Some(x) => range_txt +=
+        TN.leaf("SKIP") += TN.leaf(x.start) +=
+        TN.leaf("LIMIT") += TN.leaf(x.length)
+
+      case None =>
+    }
+    mt.pure(range_txt)
+  }
+
   def from_basic_query(q: BasicQuery): F[SQLTextualQuery] = {
     for {
       ftypes <- generate_ftypes(q.projection)
@@ -156,20 +171,24 @@ trait SQLGenerator[F[+_]] {
       from <- generate_from(q.source)
       order <- generate_order(q.sort)
       filter <- q.filter.map(flt => generate_filter(flt.expr))
-        .getOrElse(mt.pure(T.empty))
+        .getOrElse(mt.pure(TN.empty))
+      range <- generate_range(q.range)
       query_txt <- {
-        val query_txt = T.node(" ")
-        query_txt += T.leaf(K.SELECT)
+        val query_txt = TN.node(" ")
+        query_txt += TN.leaf(K.SELECT)
         query_txt += select
-        query_txt += T.leaf(K.FROM)
+        query_txt += TN.leaf(K.FROM)
         query_txt += from
         if (filter.has_children) {
-          query_txt += T.leaf(K.WHERE)
+          query_txt += TN.leaf(K.WHERE)
           query_txt += filter
         }
         if (order.has_children) {
-          query_txt += T.leaf(K.ORDER)
+          query_txt += TN.leaf(K.ORDER)
           query_txt += order
+        }
+        if (range.has_children) {
+          query_txt += range
         }
         mt.pure(query_txt)
       }

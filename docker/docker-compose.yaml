@@ -22,14 +22,6 @@ services:
       - ../data/orientdb/backup/:/orientdb/backup
       - ../data/orientdb/config/:/orientdb/config
 
-  app-server:
-    container_name: app-server
-    image: demo1_backend:0.1.1
-    ports:
-      - 9005:9000
-    networks:
-      - net-1
-
   keycloak:
     container_name: keycloak
     image: quay.io/keycloak/keycloak:20.0.1
@@ -42,6 +34,14 @@ services:
       - start-dev
     ports:
       - 9010:8080
+
+  app-server:
+    container_name: app-server
+    image: demo1_backend:0.1.1
+    ports:
+      - 9005:9000
+    networks:
+      - net-1
 
 
 networks:

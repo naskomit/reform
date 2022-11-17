@@ -4,7 +4,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.react.ReactComponent
-import sysmo.reform.react.table.TableViewerF
+import sysmo.reform.react.table.{TableOptions, TableViewerF}
 import sysmo.reform.shared.containers.RFContainer
 import sysmo.reform.shared.query.{QuerySource, SingleTable}
 import sysmo.reform.shared.runtime.RFRuntime
@@ -18,7 +18,10 @@ class RecordExplorerF[F[+T] <: RFContainer[T]](implicit f2c: F2Callback[F]) exte
   final class Backend($: BackendScope[Props, State]) {
     def render (p: Props, s: State): VdomElement = {
       s.schema match {
-        case Some(schema) => TableViewer(s.table_service, schema, s.source, "800px", None)
+        case Some(schema) => {
+          val table_options = TableOptions.builder(schema)
+          TableViewer(s.table_service, schema, s.source, table_options.build())
+        }
         case None => <.div("Loading ...")
       }
     }

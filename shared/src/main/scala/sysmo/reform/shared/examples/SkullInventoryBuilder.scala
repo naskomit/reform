@@ -16,7 +16,10 @@ object SkullInventoryBuilder extends ModelBuilder {
       f_real("BMI") +
       f_char("BMI category") +
       f_char("Filter 1") +
-      f_char("Filter 2")
+      f_char("Filter 2") +
+      f_char("Link Soft") +
+      f_char("Link Bone")
+
 
     val SkullInventory = record("SkullInventory") +
       f_array("samples", SkullSample)
