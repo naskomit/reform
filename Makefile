@@ -24,6 +24,9 @@ demo1/build-docker:
 demo1/run-docker:
 	cd docker && docker compose up app-server
 
+demo1/clean-js:
+	rm apps/demo1/frontend/target/scala-2.13/scalajs-bundler/main/*.js*
+
 demo1/bash:
 	cd docker && docker compose exec app-server /bin/ash
 

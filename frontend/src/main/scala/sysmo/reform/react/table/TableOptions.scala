@@ -18,13 +18,17 @@ case class ColumnOptions(
                           header_name: Option[String] = None,
                           filter: Option[ColumnFilter] = None,
                           sortable: Option[Boolean] = None,
-                          cell_renderer: Option[CellRenderer] = None
+                          cell_formatter: Option[CellFormatter] = None
                         )
 
 object ColumnOptions {
   class ColumnOptionsBuilder(var current: ColumnOptions) {
-    def cell_renderer(v: CellRenderer): this.type = {
-      current = current.copy(cell_renderer = Some(v))
+    def cell_formatter(v: CellFormatter): this.type = {
+      current = current.copy(cell_formatter = Some(v))
+      this
+    }
+    def sortable(v: Boolean = true): this.type = {
+      current = current.copy(sortable = Some(v))
       this
     }
     def filter(v: ColumnFilter): this.type = {
@@ -43,11 +47,11 @@ object ColumnOptions {
       ColumnOptions(ftype.name)
     )
     val renderer = ftype.dtype match {
-      case PrimitiveDataType.Id => IdCellRenderer
-      case PrimitiveDataType.Date => DateCellRenderer
-      case _ => TextCellRenderer
+      case PrimitiveDataType.Id => IdCellFormatter
+      case PrimitiveDataType.Date => DateCellFormatter
+      case _ => TextCellFormatter
     }
-    bld.cell_renderer(renderer)
+    bld.cell_formatter(renderer)
 
     ftype.dtype match {
       case PrimitiveDataType.Char => bld.filter(ColumnFilter.Text)
@@ -68,6 +72,7 @@ case class TableOptions(size: TableSize,
                        )
 
 object TableOptions {
+  type Modifier = TableOptionsBuilder => TableOptionsBuilder
   class TableOptionsBuilder(
     var current: TableOptions,
     val column_builders: SequenceIndex[String, ColumnOptionsBuilder]
@@ -75,9 +80,15 @@ object TableOptions {
 
     def column(key: String): Option[ColumnOptionsBuilder] = column_builders.get(key)
 
+    def modify(mod: Modifier): this.type = {
+      mod(this)
+      this
+    }
+
     def build(): TableOptions = current.copy(
       column_options = column_builders.toSeq.map(_.build())
     )
+
   }
 
   def builder(schema: Table.Schema): TableOptionsBuilder = {

@@ -11,7 +11,7 @@ import sysmo.reform.shared.runtime.RFRuntime
 import sysmo.reform.shared.table.{Table, TableService}
 
 class RecordExplorerF[F[+T] <: RFContainer[T]](implicit f2c: F2Callback[F]) extends ReactComponent {
-  case class Props(runtime: RFRuntime[F], record_symbol: String)
+  case class Props(runtime: RFRuntime[F], record_symbol: String, table_option_modifier: Option[TableOptions.Modifier])
   case class State(table_service: TableService[F], schema: Option[Table.Schema], source: QuerySource)
   object TableViewer extends TableViewerF[F]
 
@@ -19,8 +19,11 @@ class RecordExplorerF[F[+T] <: RFContainer[T]](implicit f2c: F2Callback[F]) exte
     def render (p: Props, s: State): VdomElement = {
       s.schema match {
         case Some(schema) => {
-          val table_options = TableOptions.builder(schema)
-          TableViewer(s.table_service, schema, s.source, table_options.build())
+          val table_options_builder = TableOptions.builder(schema)
+          p.table_option_modifier.foreach{mod =>
+            mod(table_options_builder)
+          }
+          TableViewer(s.table_service, schema, s.source, table_options_builder.build())
         }
         case None => <.div("Loading ...")
       }
@@ -45,7 +48,7 @@ class RecordExplorerF[F[+T] <: RFContainer[T]](implicit f2c: F2Callback[F]) exte
       .build
 
   //
-  def apply(runtime: RFRuntime[F], record_symbol: String): Unmounted = {
-    component(Props(runtime, record_symbol))
+  def apply(runtime: RFRuntime[F], record_symbol: String, table_options_mod: Option[TableOptions.Modifier] = None): Unmounted = {
+    component(Props(runtime, record_symbol, table_options_mod))
   }
 }

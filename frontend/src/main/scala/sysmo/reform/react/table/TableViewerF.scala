@@ -4,12 +4,8 @@ import sysmo.reform.react.ReactComponent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.react.table.aggrid.{AgGridNativeComponent, AgGridSourceAdaptor, AgGridFacades => AGF}
-import sysmo.reform.shared.data.Value
-import Value.implicits._
-import sysmo.reform.effects.implicits.F2Callback
 import sysmo.reform.shared.query.QuerySource
-import sysmo.reform.shared.table.{SelectionHandler, Table, TableService}
-import sysmo.reform.shared.types.PrimitiveDataType
+import sysmo.reform.shared.table.{Table, TableService}
 
 class TableViewerF[F[+_]] extends ReactComponent {
   case class Props(ts: TableService[F], schema: Table.Schema,
@@ -34,7 +30,7 @@ class TableViewerF[F[+_]] extends ReactComponent {
   }
 
   val component =
-    ScalaComponent.builder[Props]("RecordTableViewer")
+    ScalaComponent.builder[Props]("TableViewer")
       .initialState(State())
       .renderBackend[Backend]
       .build

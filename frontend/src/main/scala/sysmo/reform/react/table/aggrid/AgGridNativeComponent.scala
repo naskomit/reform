@@ -1,7 +1,7 @@
 package sysmo.reform.react.table.aggrid
 
 import japgolly.scalajs.react.{Children, JsComponent}
-import sysmo.reform.react.table.{ColumnOptions, ColumnFilter, TableOptions}
+import sysmo.reform.react.table.{CellRenderer, ColumnFilter, ColumnOptions, TableOptions, TextCellFormatter}
 import sysmo.reform.react.table.aggrid.{AgGridFacades => Fc}
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.logging.Logging
@@ -10,7 +10,6 @@ import sysmo.reform.shared.table.{SelectionHandler, Table}
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import Value.implicits._
 
 object AgGridNativeComponent extends Logging {
 
@@ -56,14 +55,13 @@ object AgGridNativeComponent extends Logging {
       }
       col_js.sortable = col_option.sortable.orUndefined
 
-      val cell_renderer: Option[Fc.JSCellRenderer] = col_option.cell_renderer.map {renderer =>
-        (params: Fc.ICellRendererParams) => {
-          val v: Value = params.value.asInstanceOf[Value]
-          renderer.render(v)
+      val react_cell_renderer: Option[Fc.ReactCellRenderer] =
+        Some {
+//          (props) => CellRenderer(col_option.cell_formatter.getOrElse(TextCellFormatter)).jsComponent(props).raw
+          (props) => CellRenderer(col_option.cell_formatter.getOrElse(TextCellFormatter))(props.value).raw
         }
-      }
 
-      col_js.cellRenderer = cell_renderer.orUndefined
+      col_js.cellRendererFramework =  react_cell_renderer.orUndefined
 
       col_js
     }
@@ -137,3 +135,4 @@ object AgGridNativeComponent extends Logging {
     component.withProps(p)()
   }
 }
+

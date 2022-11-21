@@ -1,14 +1,12 @@
 package sysmo.reform.react.table.aggrid
 
 import org.scalajs.dom
-import org.scalajs.dom.HTMLElement
 import sysmo.reform.shared.expr.{PredicateExpression, Expression => E}
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.logging.Logging
-import sysmo.reform.shared.table.{LocalTable, Table}
+import sysmo.reform.shared.table.{Table}
 
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
 
 object AgGridFacades extends Logging {
@@ -169,10 +167,13 @@ object AgGridFacades extends Logging {
 
   @js.native
   trait ICellRendererParams extends js.Object {
-    val value: Any = js.native
+    val value: Value = js.native
     val valueFormatted: Any = js.native
   }
-  type JSCellRenderer = js.Function1[ICellRendererParams, HTMLElement]
+  type ReactElement = japgolly.scalajs.react.facade.React.Element
+  type ReactComponentFn[T] = (T) => ReactElement
+  type JSCellRenderer = js.Function1[ICellRendererParams, js.Object]
+  type ReactCellRenderer = js.Function1[ICellRendererParams, ReactElement]
 
   @js.native
   trait ColumnProps extends js.Object {
@@ -183,6 +184,8 @@ object AgGridFacades extends Logging {
     var filter: js.UndefOr[String | Boolean] = js.native
     var sortable: js.UndefOr[Boolean] = js.native
     var cellRenderer: js.UndefOr[JSCellRenderer] = js.native
+    var cellRendererFramework: js.UndefOr[ReactCellRenderer] = js.native
+//    var tooltipComponent: js.UndefOr[ReactComponentFn[js.Any]] = js.native
   }
 
 

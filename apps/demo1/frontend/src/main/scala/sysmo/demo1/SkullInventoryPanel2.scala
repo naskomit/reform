@@ -1,16 +1,14 @@
 package sysmo.demo1
 
+import japgolly.scalajs.react.React.Context
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.app.{Configuration, Panel}
+import sysmo.reform.app.{Configuration, Panel, PanelManager}
 import sysmo.reform.shared.runtime.RemoteRuntime
 import sysmo.reform.service.RemoteHttpService
-import sysmo.reform.shared.containers.{FLocal, FRemote}
+import sysmo.reform.shared.containers.FRemote
 import sysmo.reform.explorers.RecordExplorerF
+import sysmo.reform.react.table.{LinkCellFormatter, TableOptions}
 import sysmo.reform.shared.examples.SkullInventoryBuilder
-import sysmo.reform.shared.expr.Expression
-import sysmo.reform.shared.query.{BasicQuery, Fields, Query, SingleTable}
-import sysmo.reform.shared.types.{RecordType, TypeSystem}
-
 
 object SkullInventoryPanel2 extends Panel {
   object RecordExlorer extends RecordExplorerF[FRemote]
@@ -19,6 +17,13 @@ object SkullInventoryPanel2 extends Panel {
   case class State(runtime: Option[RemoteRuntime[FRemote]])
 
   final class Backend($: BScope) {
+    val modifier: TableOptions.Modifier = { bld =>
+      bld.column_builders.toSeq.map(_.sortable())
+      bld.column("Link Soft").foreach { col_bld =>
+        col_bld.cell_formatter(LinkCellFormatter)
+      }
+      bld
+    }
     def render(p: Props, s: State): VdomElement = {
       <.div(
         <.div(^.cls := "page-title",
@@ -26,8 +31,9 @@ object SkullInventoryPanel2 extends Panel {
         ),
         <.div(^.cls := "wrapper wrapper-white",
           s.runtime match {
-            case Some(runtime) => RecordExlorer(runtime, "SkullSample")
-            case None => <.div("Initializing runtime ...")
+            case Some(runtime) =>
+              RecordExlorer(runtime, "SkullSample", Some(modifier))
+            case _ => <.div("Initializing runtime ...")
           }
         )
       )
