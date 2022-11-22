@@ -1,8 +1,11 @@
 package sysmo.reform.widgets.table
 
+import sysmo.reform.effects.{CopyToClipboard, NotifySuccess}
 import sysmo.reform.widgets.table.ColumnOptions.ColumnOptionsBuilder
 import sysmo.reform.shared.actions.Action
 import sysmo.reform.shared.data.Value
+import Value.implicits._
+import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.table.{SelectionHandler, Table}
 import sysmo.reform.shared.types.{ArrayType, CompoundDataType, MultiReferenceType, PrimitiveDataType, RecordFieldType, ReferenceType}
 import sysmo.reform.shared.util.SequenceIndex
@@ -21,10 +24,12 @@ case class ColumnOptions(
                           filter: Option[ColumnFilter] = None,
                           sortable: Option[Boolean] = None,
                           cell_formatter: Option[CellFormatter] = None,
-                          cell_actions: CellActions
+                          cell_actions: CellActions,
+                          tooltip: Option[Boolean] = None,
                         )
 
 object ColumnOptions {
+  type Modifier = ColumnOptionsBuilder => ColumnOptionsBuilder
   class ColumnOptionsBuilder(var current: ColumnOptions) {
     def cell_formatter(v: CellFormatter): this.type = {
       current = current.copy(cell_formatter = Some(v))
@@ -40,12 +45,23 @@ object ColumnOptions {
       update_actions(_.copy(click = Some(f)))
     }
 
+    def on_click_copy(): this.type = {
+      update_actions(_.copy(click = Some(
+        v => CopyToClipboard(v) + NotifySuccess(s"Selected ${v.get[String]}")
+      )))
+    }
+
     def sortable(v: Boolean = true): this.type = {
       current = current.copy(sortable = Some(v))
       this
     }
     def filter(v: ColumnFilter): this.type = {
       current = current.copy(filter = Some(v))
+      this
+    }
+
+    def tooltip(v: Boolean = true): this.type = {
+      current = current.copy(tooltip = Some(v))
       this
     }
 
@@ -87,9 +103,26 @@ object TableOptions {
   class TableOptionsBuilder(
     var current: TableOptions,
     val column_builders: SequenceIndex[String, ColumnOptionsBuilder]
-  ) {
+  ) extends Logging {
 
     def column(key: String): Option[ColumnOptionsBuilder] = column_builders.get(key)
+
+    def columns(mod: ColumnOptions.Modifier): this.type = {
+      for (bld <- column_builders.toSeq) {
+        mod(bld)
+      }
+      this
+    }
+
+    def columns(keys: Seq[String], mod: ColumnOptions.Modifier): this.type = {
+      for (key <- keys) {
+        column_builders.get(key) match {
+          case Some(bld) => mod(bld)
+          case None => logger.warn(s"Column $key not found")
+        }
+      }
+      this
+    }
 
     def modify(mod: Modifier): this.type = {
       mod(this)

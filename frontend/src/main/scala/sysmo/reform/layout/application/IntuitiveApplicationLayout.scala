@@ -6,6 +6,7 @@ import japgolly.scalajs.react.{BackendScope, ReactEventFromInput}
 import org.scalajs.dom
 import sysmo.reform.app.{Page, PageBase, PageCollection}
 import sysmo.reform.widgets.notifications.ToastNotifications
+import sysmo.reform.widgets.tooltip.TooltipViewer
 
 /** From http://aqvatarius.com/themes/intuitive/index.html */
 object IntuitiveApplicationLayout extends ApplicationLayout {
@@ -82,9 +83,14 @@ object IntuitiveApplicationLayout extends ApplicationLayout {
       ToastNotifications()
     }
 
+    def tooltip(): VdomElement = {
+      TooltipViewer()
+    }
+
     def render(p: Props, s: State): VdomElement = {
       val height = dom.window.innerHeight - 100
       <.div(
+        tooltip(),
         notifications(),
         <.div(^.className := (if (s.menu_expanded) "dev-page dev-page-loaded" else "dev-page dev-page-loaded dev-page-sidebar-collapsed"),
           header(p),

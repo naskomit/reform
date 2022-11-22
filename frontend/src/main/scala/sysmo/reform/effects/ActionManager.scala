@@ -1,12 +1,15 @@
 package sysmo.reform.effects
 
-import japgolly.scalajs.react.React
+import japgolly.scalajs.react.{Callback, React}
 import japgolly.scalajs.react.React.Context
-import sysmo.reform.shared.actions.{Action, ActionExecutor}
+import sysmo.reform.shared.actions.{Action, ActionExecutor, Actionable, SideEffect}
 
 trait ActionManager {
   val parent: Option[ActionManager] = None
-  def dispatch(action_program: Action): Unit
+  def dispatch(action: Actionable): Unit
+  def callback(action: Actionable): Callback = Callback {
+    dispatch(action)
+  }
 }
 
 object DefaultActionManager extends ActionManager {
@@ -14,9 +17,9 @@ object DefaultActionManager extends ActionManager {
     Map(BrowserEffect.id -> new BrowserEffect.Handler)
   )
 
-  def dispatch(action_program: Action): Unit = {
-    println(action_program)
-    action_executor.execute(action_program)
+  def dispatch(action: Actionable): Unit = {
+    println(action)
+    action_executor.execute(action.as_action)
   }
 
 }

@@ -5,13 +5,19 @@ import cats.syntax.all._
 import sysmo.reform.shared.data.{ObjectId, Value}
 import Value.implicits._
 
-trait Action
+trait Actionable {
+  def as_action: Action
+}
 
-trait SideEffect {
+trait Action extends Actionable {
+  override def as_action: Action = this
+}
+
+trait SideEffect extends Actionable {
   def group: ObjectId
   def +(other: SideEffect): SequentialEffects =
     SequentialEffects(Seq(this, other))
-  def to_program: SequentialEffects =
+  override def as_action: SequentialEffects =
     SequentialEffects(Seq(this))
 }
 

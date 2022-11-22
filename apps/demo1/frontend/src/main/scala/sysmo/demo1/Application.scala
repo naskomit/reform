@@ -15,13 +15,22 @@ import sysmo.reform.layout.application.{ApplicationLayout, IntuitiveApplicationL
 // "fa fa-book-medical"
 // "fa fa-shuttle-space"
 object Application extends UIApplication {
-  override def pages: PageCollection = PageCollection(
-//    HomePage,
-    SimplePage("RuntimeExplorer", None, "fa fa-list-check", RuntimeExplorerPanel),
-    SimplePage("BioReactorController", None, "fa fa-list-check", BioReactorControllerPanel),
-    SimplePage("SkullInventory", None, "fa fa-list-check", SkullInventoryPanel),
-    SimplePage("SkullInventory2", None, "fa fa-list-check", SkullInventoryPanel2),
-  )
+  override def pages: PageCollection = SkullInventoryApplication.pages
 
   override val layout: ApplicationLayout = IntuitiveApplicationLayout
+}
+
+object SkullInventoryApplication {
+  val pages: PageCollection = PageCollection(
+    SimplePage("SkullInventory", Some("Skull Inventory"), "fa fa-list-check", SkullInventoryPanel),
+  )
+}
+
+object AllApplications {
+  val pages: PageCollection = PageCollection(
+    //    HomePage,
+    SimplePage("RuntimeExplorer", None, "fa fa-list-check", RuntimeExplorerPanel),
+    SimplePage("BioReactorController", None, "fa fa-list-check", BioReactorControllerPanel),
+    SimplePage("Skull Inventory", Some("Skull Inventory"), "fa fa-list-check", SkullInventoryPanel),
+  )
 }

@@ -165,15 +165,22 @@ object AgGridFacades extends Logging {
 
   type ValueGetter = js.Function1[ValueGetterParams, Value]
 
+  type ReactElement = japgolly.scalajs.react.facade.React.Element
+  type ReactComponentFn[T] = js.Function1[T, ReactElement]
+
   @js.native
   trait ICellRendererParams extends js.Object {
     val value: Value = js.native
     val valueFormatted: Any = js.native
   }
-  type ReactElement = japgolly.scalajs.react.facade.React.Element
-  type ReactComponentFn[T] = (T) => ReactElement
-  type JSCellRenderer = js.Function1[ICellRendererParams, js.Object]
-  type ReactCellRenderer = js.Function1[ICellRendererParams, ReactElement]
+//  type JSCellRenderer = js.Function1[ICellRendererParams, js.Object]
+  type ReactCellRenderer = ReactComponentFn[ICellRendererParams]
+
+  @js.native
+  trait ITooltipParams extends js.Object {
+    val value: Value = js.native
+  }
+  type TooltipValueGetter = js.Function1[ITooltipParams, String]
 
   @js.native
   trait ColumnProps extends js.Object {
@@ -183,11 +190,14 @@ object AgGridFacades extends Logging {
     var headerName: js.UndefOr[String] = js.native
     var filter: js.UndefOr[String | Boolean] = js.native
     var sortable: js.UndefOr[Boolean] = js.native
-    var cellRenderer: js.UndefOr[JSCellRenderer] = js.native
+//    var cellRenderer: js.UndefOr[JSCellRenderer] = js.native
     var cellRendererFramework: js.UndefOr[ReactCellRenderer] = js.native
 //    var tooltipComponent: js.UndefOr[ReactComponentFn[js.Any]] = js.native
     var resizable: js.UndefOr[Boolean] = js.native
     var onCellClicked: js.UndefOr[js.Function1[CellClickedEvent, Unit]] = js.native
+    var tooltipField: js.UndefOr[String] = js.native
+    var tooltipValueGetter: js.UndefOr[TooltipValueGetter] = js.native
+    var tooltipComponent: js.UndefOr[ReactCellRenderer] = js.native
   }
 
 

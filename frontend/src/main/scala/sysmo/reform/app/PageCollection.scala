@@ -5,8 +5,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 trait PageBase {
   val name: String
+  val label: Option[String]
   val icon: String
-  def make_label: String = name
+  def make_label: String = label.getOrElse(name)
   var path: String = ""
 }
 

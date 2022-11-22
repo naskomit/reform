@@ -1,6 +1,7 @@
 package sysmo.reform.widgets.table.aggrid
 
 import japgolly.scalajs.react.{Children, JsComponent}
+import org.scalajs.dom
 import sysmo.reform.effects.ActionManager
 import sysmo.reform.widgets.table.{CellRenderer, ColumnFilter, ColumnOptions, TableOptions, TextCellFormatter}
 import sysmo.reform.widgets.table.aggrid.{AgGridFacades => Fc}
@@ -8,6 +9,7 @@ import sysmo.reform.shared.actions.Action
 import sysmo.reform.shared.data.Value
 import sysmo.reform.shared.logging.Logging
 import sysmo.reform.shared.table.{SelectionHandler, Table}
+import sysmo.reform.widgets.tooltip.TableCellTooltip
 
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
@@ -32,6 +34,9 @@ object AgGridNativeComponent extends Logging {
     var onGridReady: js.UndefOr[js.Function1[Fc.OnGridReady, Unit]] = js.native
     var onCellClicked: js.UndefOr[js.Function1[Fc.CellClickedEvent, Unit]] = js.native
     var onCellContextMenu: js.Function1[Fc.CellContextMenuEvent, Unit] = js.native
+
+    var tooltipShowDelay: js.UndefOr[Int] = js.native
+    var tooltipHideDelay: js.UndefOr[Int] = js.native
   }
 
   val component = JsComponent[Props, Children.None, Null](AgGridReact)
@@ -46,6 +51,29 @@ object AgGridNativeComponent extends Logging {
     }
 
     col_opt.onCellClicked = Some(onCellClicked).orUndefined
+  }
+
+  def install_tooltip(col_opt: Fc.ColumnProps): Unit = {
+    import Value.implicits._
+    val tooltip_value_getter: Fc.TooltipValueGetter =
+      (props) => {
+        props.value.get[String].getOrElse("")
+      }
+
+    col_opt.tooltipValueGetter = Some(tooltip_value_getter).orUndefined
+
+    //      val tooltipComponent = ScalaComponent.builder[js.Any]
+    //        .stateless
+    //        .render_P(p => <.div("Hello"))
+    //        .build
+
+
+    //      val tooltip: Fc.ReactComponentFn[js.Any] =
+    //        (props) => {
+    //          tooltipComponent(props).raw
+    //        }
+    //      col_js.tooltipComponent = Some(tooltip).orUndefined
+
   }
 
   def create_columns(column_options: Seq[ColumnOptions], panel_manager: ActionManager): Seq[Fc.ColumnProps] = {
@@ -71,7 +99,6 @@ object AgGridNativeComponent extends Logging {
 
       val react_cell_renderer: Option[Fc.ReactCellRenderer] =
         Some {
-//          (props) => CellRenderer(col_option.cell_formatter.getOrElse(TextCellFormatter)).jsComponent(props).raw
           (props) => CellRenderer(
             col_opt.cell_formatter.getOrElse(TextCellFormatter), col_opt.cell_actions
           )(props.value).raw
@@ -79,9 +106,16 @@ object AgGridNativeComponent extends Logging {
 
       col_js.cellRendererFramework =  react_cell_renderer.orUndefined
 
+      // Install click handler
       col_opt.cell_actions.click match {
         case Some(f) => install_click_handler(col_js, f, panel_manager)
         case None =>
+      }
+
+      // Install tooltip
+      col_opt.tooltip match {
+        case Some(true) => install_tooltip(col_js)
+        case _ =>
       }
 
       col_js
@@ -109,6 +143,8 @@ object AgGridNativeComponent extends Logging {
     }
     p.onGridReady = Some(onGridReady).orUndefined
 
+    p.tooltipShowDelay = 100
+    p.tooltipHideDelay = 100
 //    def install_selection_handler(handler: SelectionHandler): Unit = {
 //      logger.info(s"Installing selection handler ${handler.mode}")
 //      val onSelectionChanged: js.Function0[Unit] = () => {
