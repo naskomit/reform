@@ -2,8 +2,8 @@ package sysmo.reform.explorers
 
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
-import sysmo.reform.react.ReactComponent
-import sysmo.reform.react.layouts.{NamedContent, TabbedLayout}
+import sysmo.reform.layout.form.{NamedContent, TabbedLayout}
+import sysmo.reform.widgets.ReactComponent
 import sysmo.reform.shared.runtime.{RFObject, RFRuntime}
 
 class FormExplorerF[F[+_]](implicit f2c: F2Callback[F]) extends ReactComponent {

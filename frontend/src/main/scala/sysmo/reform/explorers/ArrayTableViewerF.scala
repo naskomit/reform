@@ -3,8 +3,8 @@ package sysmo.reform.explorers
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
-import sysmo.reform.react.ReactComponent
-import sysmo.reform.react.table.{TableOptions, TableViewerF}
+import sysmo.reform.widgets.ReactComponent
+import sysmo.reform.widgets.table.{TableOptions, TableViewerF}
 import sysmo.reform.shared.query.{QuerySource, SingleTable}
 import sysmo.reform.shared.runtime.ArrayInstance
 import sysmo.reform.shared.runtime.RFObject.TableView

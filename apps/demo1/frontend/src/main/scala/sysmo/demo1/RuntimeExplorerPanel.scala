@@ -1,6 +1,6 @@
 package sysmo.demo1
 
-import sysmo.reform.app.{Configuration, Panel}
+import sysmo.reform.app.Panel
 import sysmo.reform.explorers.{FormExplorerF, InstanceTableF, ObjectTreeBrowserF}
 import sysmo.reform.shared.examples.MicroController
 import sysmo.reform.shared.containers.FLocal
@@ -8,7 +8,7 @@ import sysmo.reform.shared.runtime.{LocalRuntime, LocalRuntimeConstructor, RFObj
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
 import sysmo.reform.effects.implicits._
-import sysmo.reform.react.layouts.{NamedContent, TabbedLayout}
+import sysmo.reform.layout.form.{NamedContent, TabbedLayout}
 
 
 object RuntimeExplorerPanel extends Panel {
@@ -30,7 +30,7 @@ object RuntimeExplorerPanel extends Panel {
     .renderBackend[Backend]
     .build
 
-  def apply(app_config: Configuration): Unmounted = {
+  def apply(): Unmounted = {
     component(Props(MicroController.initializer1(LocalRuntimeConstructor).root))
   }
 }

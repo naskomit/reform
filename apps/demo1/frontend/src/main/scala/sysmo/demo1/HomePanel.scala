@@ -2,20 +2,12 @@ package sysmo.demo1
 
 import cats.MonadThrow
 import japgolly.scalajs.react.vdom.html_<^._
-import sysmo.reform.app.{Configuration, Panel}
-import sysmo.reform.shared.examples.MicroController
-import sysmo.reform.shared.runtime.{RFRuntime, RFObject}
+import sysmo.reform.app.{Panel}
 
 object HomePanel extends Panel {
 
   import japgolly.scalajs.react._
 
-//  trait Props {
-//    type F[+_]
-//    val mt: MonadThrow[F]
-//    val initialization: F[RuntimeObject[F]]
-//  }
-  //runtime: ObjectRuntime[_]
   case class Props()
   case class State()
 
@@ -44,7 +36,7 @@ object HomePanel extends Panel {
     .build
 
 
-  def apply(app_config: Configuration): Unmounted = {
+  def apply(): Unmounted = {
     component(Props())
   }
 //    val controllerF = MicroController.initializer1()

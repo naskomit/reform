@@ -1,7 +1,7 @@
 package sysmo.demo1
 
-import sysmo.reform.app.{Configuration, Layout, Page, PageCollection, Panel, SimplePage, UIApplication}
-import sysmo.reform.layout.IntuitiveLayout
+import sysmo.reform.app.{PageCollection, SimplePage, UIApplication}
+import sysmo.reform.layout.application.{ApplicationLayout, IntuitiveApplicationLayout}
 
 //case object HomePage extends Page {
 //  override val name: String = "Home"
@@ -23,9 +23,5 @@ object Application extends UIApplication {
     SimplePage("SkullInventory2", None, "fa fa-list-check", SkullInventoryPanel2),
   )
 
-  override def app_config: Configuration = new Configuration {
-
-  }
-
-  override val layout: Layout = IntuitiveLayout
+  override val layout: ApplicationLayout = IntuitiveApplicationLayout
 }

@@ -2,15 +2,16 @@ package sysmo.reform.app
 
 import japgolly.scalajs.react.extra.router.{Resolution, RouterConfigDsl, RouterCtl}
 import japgolly.scalajs.react.extra.router.SetRouteVia.HistoryReplace
+import sysmo.reform.layout.application.ApplicationLayout
 import sysmo.reform.shared.logging.Logging
 
-class RouterConfiguration(pages: PageCollection, app_config: Configuration, layout: Layout )
+class RouterConfiguration(pages: PageCollection, layout: ApplicationLayout )
   extends Logging {
   val config = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
     pages.collect.foldLeft(emptyRule)((acc, page) =>
-      acc | staticRoute(page.url, page) ~> render(page.panel.apply(app_config))
+      acc | staticRoute(page.url, page) ~> render(page.panel.apply())
     )
       .notFound(x => {
         logger.error(s"$x not found")
@@ -26,6 +27,6 @@ class RouterConfiguration(pages: PageCollection, app_config: Configuration, layo
 }
 
 object RouterConfiguration {
-  def apply(pages: PageCollection, app_config: Configuration, layout: Layout): RouterConfiguration =
-    new RouterConfiguration(pages, app_config, layout)
+  def apply(pages: PageCollection, layout: ApplicationLayout): RouterConfiguration =
+    new RouterConfiguration(pages, layout)
 }

@@ -9,6 +9,7 @@ import sysmo.reform.shared.logging.{JsonPrinter, Logging, Printer}
 import sysmo.reform.css.CssSettings._
 import sysmo.reform.shared.util.Injector
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import sysmo.reform.layout.application.ApplicationLayout
 
 import scala.concurrent.ExecutionContext
 
@@ -16,8 +17,7 @@ import scala.concurrent.ExecutionContext
 trait UIApplication extends Logging {
   val react_node: String = "mainApp"
   def pages: PageCollection
-  def app_config: Configuration
-  val layout: Layout
+  val layout: ApplicationLayout
 
   def main(args: Array[String]): Unit = {
     configure_printers()
@@ -58,7 +58,7 @@ trait UIApplication extends Logging {
     val app_node = dom.document.getElementById(react_node)
     val router = Router(
       BaseUrl.fromWindowOrigin / "",
-      RouterConfiguration(pages, app_config, layout).config
+      RouterConfiguration(pages, layout).config
     )
     ReFormCSS.addToDocument()
     router().renderIntoDOM(app_node)

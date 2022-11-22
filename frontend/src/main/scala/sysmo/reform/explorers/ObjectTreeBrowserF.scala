@@ -5,9 +5,9 @@ import cats.syntax.all._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.effects.implicits.F2Callback
-import sysmo.reform.react.ReactComponent
-import sysmo.reform.react.tree_nav.TreeNavigatorComponentF
-import sysmo.reform.react.property.PropertyGroupEditorF
+import sysmo.reform.widgets.ReactComponent
+import sysmo.reform.widgets.tree_nav.TreeNavigatorComponentF
+import sysmo.reform.widgets.property.PropertyGroupEditorF
 import sysmo.reform.shared.runtime.{ArrayInstance, RFObject, RFRuntime}
 import sysmo.reform.shared.sources.{tree => T}
 

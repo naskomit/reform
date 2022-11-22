@@ -77,7 +77,7 @@ lazy val backend = project
        "plotly.js" -> "1.47.4",
        "mermaid" -> "8.14.0",
        "react-transition-group" -> "4.4.2",
-       "react-toastify" -> "9.1.1",
+       "react-notifications" -> "1.7.4",
      ),
    )
    .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
@@ -113,7 +113,7 @@ lazy val demo1_backend = project
     dockerBaseImage := "eclipse-temurin:11-jre-alpine",
     dockerExposedPorts += 9000,
     npmAssets ++= NpmAssets.ofProject(frontend) { nodeModules =>
-      (nodeModules / "react-toastify" / "dist").allPaths
+      (nodeModules / "react-notifications" / "lib").allPaths
     }.value,
   )
   .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin, AshScriptPlugin)

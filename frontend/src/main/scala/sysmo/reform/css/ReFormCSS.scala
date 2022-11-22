@@ -1,7 +1,7 @@
 package sysmo.reform.css
 
 import CssSettings._
-import sysmo.reform.react.tree_nav.TreeNavCSS
+import sysmo.reform.widgets.tree_nav.TreeNavCSS
 
 object ReFormCSS extends StyleSheet.Inline {
   import dsl._
