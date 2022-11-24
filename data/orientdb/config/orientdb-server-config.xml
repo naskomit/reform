@@ -149,8 +149,5 @@
         <!-- PROFILER: configures the profiler as <seconds-for-snapshot>,<archive-snapshot-size>,<summary-size> -->
         <entry name="profiler.enabled" value="false"/>
         <!-- <entry name="profiler.config" value="30,10,10" /> -->
-        <!-- "Session timeout for OrientDB studio"-->
-        <entry value="9999999" name="network.http.sessionExpireTimeout"/>
-        <entry value="9999999" name="network.token.expireTimeout"/>
     </properties>
 </orient-server>

@@ -32,5 +32,7 @@ object Action {
   def apply(action: SideEffect): Action = {
     SequentialEffects(Seq(action))
   }
+
+  object None extends Action
 }
 

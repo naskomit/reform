@@ -33,7 +33,9 @@ object BrowserEffect {
     type T = BrowserEffect
     override def handle_effect(action: BrowserEffect): F[Unit] = action match {
       case CopyToClipboard(v) => {
-        v.get[String].foreach(v_text => dom.window.navigator.clipboard.writeText(v_text))
+        v.get[String].foreach(v_text =>
+          dom.window.navigator.clipboard.writeText(v_text)
+        )
         mt.pure()
       }
       case action: Notify => {

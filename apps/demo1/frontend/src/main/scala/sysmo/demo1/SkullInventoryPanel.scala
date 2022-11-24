@@ -1,14 +1,11 @@
 package sysmo.demo1
 
-import japgolly.scalajs.react.React.Context
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.app.Panel
-import sysmo.reform.effects.{CopyToClipboard, NotifySuccess}
 import sysmo.reform.shared.runtime.RemoteRuntime
 import sysmo.reform.service.RemoteHttpService
 import sysmo.reform.shared.containers.FRemote
 import sysmo.reform.explorers.RecordExplorerF
-import sysmo.reform.widgets.notifications.ToastNotifications
 import sysmo.reform.widgets.table.{LinkCellFormatter, TableOptions}
 import sysmo.reform.shared.examples.SkullInventoryBuilder
 
@@ -20,7 +17,6 @@ object SkullInventoryPanel extends Panel {
 
   final class Backend($: BScope) {
     import sysmo.reform.shared.data.Value
-    import Value.implicits._
     val modifier: TableOptions.Modifier = _
       .columns(_.sortable())
       .columns(Seq("Link Soft", "Link Bone"),

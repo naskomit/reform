@@ -4,6 +4,7 @@ import com.typesafe.sbt.packager.docker._
 ThisBuild / organization := "sysmo"
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / version      := "0.1.1"
+ThisBuild / maintainer   := "Atanas Pavlov"
 
 ThisBuild / javaOptions ++= Seq(
   "-Dpidfile.path=/dev/null",
@@ -99,24 +100,34 @@ lazy val demo1_backend = project
   .in(file("apps/demo1/backend"))
   .settings(
     scalaJSProjects := Seq(demo1_frontend),
-    libraryDependencies += guice,
-    libraryDependencies += "com.vmunier" %% "scalajs-scripts" % "1.2.0",
-//    libraryDependencies ++= Seq(
-//      "org.slf4j" % "slf4j-api" % "2.0.3",
-//      "ch.qos.logback" % "logback-classic" % "1.4.4" % Test
-//    ),
+    libraryDependencies ++= Seq(
+      guice,
+      "com.vmunier" %% "scalajs-scripts" % "1.2.0",
+      //      "org.slf4j" % "slf4j-api" % "2.0.3",
+      //      "ch.qos.logback" % "logback-classic" % "1.4.4" % Test
+    ),
+    npmAssets ++= NpmAssets.ofProject(frontend) { nodeModules =>
+      (nodeModules / "react-notifications" / "lib").allPaths
+    }.value,
     Assets / pipelineStages  := Seq(scalaJSPipeline),
     pipelineStages := Seq(digest, gzip),
     // triggers scalaJSPipeline when using compile or continuous compilation
     Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
+
+    Docker / packageName:= "smo-reform",
+    Docker / version:= (ThisBuild / version).value,
+    Docker / maintainer:= (ThisBuild / maintainer).value,
+
+    dockerRepository := Some("naskomit"),
     dockerChmodType := DockerChmodType.UserGroupWriteExecute,
     dockerBaseImage := "eclipse-temurin:11-jre-alpine",
-    dockerExposedPorts += 9000,
-    npmAssets ++= NpmAssets.ofProject(frontend) { nodeModules =>
-      (nodeModules / "react-notifications" / "lib").allPaths
-    }.value,
+    dockerCommands ++= Seq(
+      Cmd("USER", "root"),
+      ExecCmd("RUN", "apk", "add", "--no-cache", "bash"),
+      Cmd("USER", "1001"),
+    ),
   )
-  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin, AshScriptPlugin)
+  .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin)
   .dependsOn(backend)
 
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project demo1_backend" :: s} //andThen {s: State => "run" :: s}

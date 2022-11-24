@@ -47,7 +47,11 @@ object ColumnOptions {
 
     def on_click_copy(): this.type = {
       update_actions(_.copy(click = Some(
-        v => CopyToClipboard(v) + NotifySuccess(s"Selected ${v.get[String]}")
+        v => if (v.is_set) {
+          CopyToClipboard(v) + NotifySuccess(s"Copied ${v.get[String].get} to clipboard")
+        } else {
+          Action.None
+        }
       )))
     }
 
