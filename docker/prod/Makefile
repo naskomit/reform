@@ -1,5 +1,7 @@
-UID=$(shell id -u)
-GID=$(shell id -g)
+#UID=$(shell id -u)
+#GID=$(shell id -g)
+UID = 1001
+GID = 1001
 DATA_DIR:= "../../data/"
 
 down:
@@ -24,3 +26,6 @@ smo-skull/import:
 
 server/up:
 	DATA_DIR=$(DATA_DIR) docker compose up -d
+
+server/down:
+	DATA_DIR=$(DATA_DIR) docker compose down

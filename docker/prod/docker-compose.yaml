@@ -45,6 +45,7 @@ services:
       - net-1
     volumes:
       - ${DATA_DIR}/import:/data/import
+      - ${DATA_DIR}/app-server/production.conf:/opt/docker/conf/application.conf
 
 
 

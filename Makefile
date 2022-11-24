@@ -42,9 +42,11 @@ orientdb/up:
 dev-stack/setup:
 	cd docker/dev && make orientdb/setup
 
+# Configure the production server stack
 prod-stack/setup:
 	cd docker/prod && make orientdb/setup
 
+# Starts the whole server stack up
 server/up:
 	cd docker/prod && make server/up
 
@@ -52,4 +54,4 @@ smo-skull/import:
 	cd docker/prod && make smo-skull/import
 
 server1/ssh:
-	ssh naskomit@reform.sysmoltd.com
+	ssh naskomit@reform.sysmoltd.com -L 2480:localhost:2480 -L 9005:localhost:9005
