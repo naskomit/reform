@@ -13,7 +13,7 @@ orientdb/setup:
 	mkdir -p $(DATA_DIR)/orientdb/backup/
 	mkdir -p $(DATA_DIR)/orientdb/config/
 	cp -r ../build/orientdb/config $(DATA_DIR)/orientdb/
-	chown -R $(UID):$(GID) $(DATA_DIR)
+	sudo chown -R $(UID):$(GID) $(DATA_DIR)
 
 orientdb/bash:
 	docker compose exec orientdb /bin/bash
