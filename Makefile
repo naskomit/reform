@@ -53,5 +53,11 @@ server/up:
 smo-skull/import:
 	cd docker/prod && make smo-skull/import
 
+SERVER1_USER:=naskomit
+SERVER1_URL:=reform.sysmoltd.com
+
 server1/ssh:
-	ssh naskomit@reform.sysmoltd.com -L 2480:localhost:2480 -L 9005:localhost:9005
+	ssh $(SERVER1_USER)@$(SERVER1_URL)
+
+server1/ssh+ports:
+	ssh $(SERVER1_USER)@$(SERVER1_URL) -L 2480:localhost:2480 -L 9005:localhost:9005

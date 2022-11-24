@@ -37,12 +37,13 @@ class RemoteHttpService(val base_path: Option[String])
     val request_options = (new js.Object).asInstanceOf[dom.RequestInit]
     request_options.body = req.asJson.toString()
     request_options.method = HttpMethod.POST
-    FRemote.from_future(
-      dom.fetch(make_path(method_id), request_options).toFuture
-      .flatMap { x =>
-        x.text().toFuture
-      }
-    ).flatMap { x =>
+    FRemote.from_future {
+      val url = make_path(method_id)
+      dom.fetch(url, request_options).toFuture
+        .flatMap { x =>
+          x.text().toFuture
+        }
+    }.flatMap { x =>
       decode[RemoteResult[O]](x) match {
         case Left(error) => mt.raiseError(error)
         case Right(value) => mt.pure(value)

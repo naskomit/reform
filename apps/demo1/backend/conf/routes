@@ -3,9 +3,10 @@
 # ~~~~
 
 # Home page
-GET        /                             sysmo.coviddata.controllers.Application.index
-POST        /api/query       sysmo.coviddata.controllers.Application.query
-#POST        /api/chart       sysmo.coviddata.controllers.Application.chart_api
+GET         /                       sysmo.coviddata.controllers.Application.home
+GET        /:app/                    sysmo.coviddata.controllers.Application.index(app)
+POST        /:app/api/query         sysmo.coviddata.controllers.Application.query(app)
+#POST        /:app/api/chart        sysmo.coviddata.controllers.Application.chart_api
 
 # Prefix must match `play.assets.urlPrefix`
 GET        /assets/*file                 controllers.Assets.at(file)
@@ -17,4 +18,3 @@ GET     /frontend/*file           controllers.ExternalAssets.at(path="/data/Work
 GET     /shared/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/shared", file)
 
 GET     /src/main/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/apps/demo1/frontend/src/main", file)
-#GET     /reform_shared/*file           controllers.ExternalAssets.at(path="/data/Workspace/SysMo/re-form/covidhub_shared", file)

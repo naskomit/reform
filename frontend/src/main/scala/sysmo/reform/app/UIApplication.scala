@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 
 trait UIApplication extends Logging {
   val react_node: String = "mainApp"
-  def pages: PageCollection
+  def pages(app: Option[String]): PageCollection
   val layout: ApplicationLayout
 
   def main(args: Array[String]): Unit = {
@@ -56,9 +56,21 @@ trait UIApplication extends Logging {
   def init_react(e: Event): Unit = {
     logger.info("Initializing application")
     val app_node = dom.document.getElementById(react_node)
+
+    val app_name = dom.window.location.pathname
+    val app_id = if (app_name == "/") {
+      None
+    } else {
+      Some(app_name
+        .replaceFirst("^/", "")
+        .replaceFirst("/$", "")
+      )
+    }
+    println(app_id)
+
     val router = Router(
-      BaseUrl.fromWindowOrigin / "",
-      RouterConfiguration(pages, layout).config
+      BaseUrl.until_#,
+      RouterConfiguration(pages(app_id), layout).config
     )
     ReFormCSS.addToDocument()
     router().renderIntoDOM(app_node)

@@ -1,7 +1,7 @@
 #UID=$(shell id -u)
 #GID=$(shell id -g)
-UID = 1001
-GID = 1001
+UID = 2001
+GID = 2001
 DATA_DIR:= "../../data/"
 
 down:

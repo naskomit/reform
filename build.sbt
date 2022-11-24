@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.docker._
 
 ThisBuild / organization := "sysmo"
 ThisBuild / scalaVersion := "2.13.5"
-ThisBuild / version      := "0.1.1"
+ThisBuild / version      := "0.1.2"
 ThisBuild / maintainer   := "Atanas Pavlov"
 
 ThisBuild / javaOptions ++= Seq(
@@ -117,6 +117,8 @@ lazy val demo1_backend = project
     Docker / packageName:= "smo-reform",
     Docker / version:= (ThisBuild / version).value,
     Docker / maintainer:= (ThisBuild / maintainer).value,
+    Docker / daemonUserUid := Some("2001"),
+    Docker / daemonUser := "dduser",
 
     dockerRepository := Some("naskomit"),
     dockerChmodType := DockerChmodType.UserGroupWriteExecute,
@@ -124,7 +126,7 @@ lazy val demo1_backend = project
     dockerCommands ++= Seq(
       Cmd("USER", "root"),
       ExecCmd("RUN", "apk", "add", "--no-cache", "bash"),
-      Cmd("USER", "1001"),
+      Cmd("USER", "dduser"),
     ),
   )
   .enablePlugins(PlayScala, WebScalaJSBundlerPlugin, DockerPlugin)

@@ -15,9 +15,18 @@ import sysmo.reform.layout.application.{ApplicationLayout, IntuitiveApplicationL
 // "fa fa-book-medical"
 // "fa fa-shuttle-space"
 object Application extends UIApplication {
-  override def pages: PageCollection = SkullInventoryApplication.pages
+  override def pages(app: Option[String]): PageCollection = app match {
+    case Some("skull-inventory") => SkullInventoryApplication.pages
+    case _ => HomeApplication.pages
+  }
 
   override val layout: ApplicationLayout = IntuitiveApplicationLayout
+}
+
+object HomeApplication {
+  val pages: PageCollection = PageCollection(
+    SimplePage("ReframeHome", Some("ReframeHome"), "fa fa-list-check", ReframeHomePanel),
+  )
 }
 
 object SkullInventoryApplication {

@@ -50,12 +50,16 @@ class Application @Inject()(cc: ControllerComponents, config: Configuration)(imp
     }
   }
 
-  def index: Action[AnyContent] = Action {
-    Ok(views.html.index("It works"))
+  def home: Action[AnyContent] = Action {
+    Ok(views.html.index(s"Starting up the home application"))
+  }
+
+  def index(app: String): Action[AnyContent] = Action {
+    Ok(views.html.index(s"Starting up the application: ${app}"))
   }
 
 
 
-  def query: Action[AnyContent] = async_handler(rf_server.handle_query)
+  def query(app: String): Action[AnyContent] = async_handler(rf_server.handle_query)
 
 }

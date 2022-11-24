@@ -1,0 +1,11 @@
+@(apps: Seq[(String, String)])
+
+@main("Reform framework") {
+  <div>Wellcome to ReForm framework</div>
+  <div>Current applications</div>
+  <ul>
+    @for((name, url) <- apps) {
+      <li><a href="@url">@name</a></li>
+    }
+  </ul>
+}
