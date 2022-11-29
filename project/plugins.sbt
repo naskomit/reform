@@ -13,3 +13,6 @@ addDependencyTreePlugin
 libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "4.5.5"
 )
+ThisBuild / libraryDependencySchemes ++= Seq(
+    "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always,
+)

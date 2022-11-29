@@ -11,6 +11,12 @@ ThisBuild / javaOptions ++= Seq(
   "-Dplay.http.secret.key='djdsgfldfjnglkwemf;lsdfnsv lk123453lksdvnsdfvkndxcv;ldf'"
 )
 
+ThisBuild / scalacOptions ++= Seq(
+//  "-explain",
+  "-feature",
+  "-deprecation"
+)
+
 val test_libs = Seq(
   "org.scalactic" %% "scalactic" % "3.2.12",
   "org.scalatest" %% "scalatest" % "3.2.12" % "test",
@@ -68,7 +74,19 @@ lazy val backend = project
        "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0",
        "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
        "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
-     ),
+
+       "me.shadaj" %%% "slinky-web" % "0.7.2",
+       "me.shadaj" %%% "slinky-hot" % "0.7.2",
+
+    ),
+//    Compile / npmDevDependencies ++= Seq(
+//      "file-loader" -> "6.2.0",
+//      "style-loader" -> "2.0.0",
+//      "css-loader" -> "5.2.6",
+//      "html-webpack-plugin" -> "4.5.1",
+//      "copy-webpack-plugin" -> "6.4.0",
+//      "webpack-merge" -> "5.8.0",
+//    ),
      Compile / npmDependencies ++= Seq(
        "react" -> "17.0.0",
        "react-dom" -> "17.0.0",
@@ -76,7 +94,6 @@ lazy val backend = project
        "ag-grid-community" -> "26.2.0",
        "react-select" ->  "5.2.2",
        "plotly.js" -> "1.47.4",
-       "mermaid" -> "8.14.0",
        "react-transition-group" -> "4.4.2",
        "react-notifications" -> "1.7.4",
      ),
