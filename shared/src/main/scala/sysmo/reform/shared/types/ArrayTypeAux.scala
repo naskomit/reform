@@ -1,5 +1,5 @@
 package sysmo.reform.shared.types
-import sysmo.reform.shared.data.ObjectId
+import scala.language.implicitConversions
 import sysmo.reform.shared.expr.Expression
 
 trait ArrayTypeAux extends DataTypeAux[ArrayType] {

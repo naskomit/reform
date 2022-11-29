@@ -84,7 +84,7 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
       case None =>
     }
     objects.remove(id)
-    mt.pure()
+    mt.pure(())
   }
 
   override def list: MonadicIterator[F, ObjectProxy] =
@@ -115,7 +115,7 @@ class LocalRuntime(val type_system: TypeSystem) extends RFRuntime[FLocal] {
       }
       case _ => ???
     }
-    mt.pure()
+    mt.pure(())
   }
 }
 

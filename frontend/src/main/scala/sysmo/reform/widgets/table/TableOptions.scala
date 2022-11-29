@@ -95,7 +95,7 @@ object ColumnOptions {
 }
 case class TableSize(width: String, height: String)
 object TableSize {
-  def apply(): TableSize = TableSize("100%", "800px")
+  def apply(): TableSize = TableSize("100%", "600px")
 }
 case class TableOptions(size: TableSize,
                         column_options: Seq[ColumnOptions],

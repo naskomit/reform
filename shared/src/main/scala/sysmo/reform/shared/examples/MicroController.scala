@@ -23,7 +23,6 @@ object MicroController extends ModelBuilder {
     val Field = record("Field") +
       f_char("name") +
       f_char("descr")
-    Field
     //+ f_ref("type", Type)
 
 

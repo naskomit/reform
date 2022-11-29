@@ -30,7 +30,7 @@ class ActionExecutor[F[+_]](action_groups: Map[ObjectId, EffectHandler[F]])(impl
               mt.raiseError(new IllegalArgumentException(s"Unknown action group ${action.group}"))
           }
         }.map(x => ())
-      case Action.None => mt.pure()
+      case Action.None => mt.pure(())
       case _ => mt.raiseError(new IllegalArgumentException(
         s"Cannot execute action program ${program}")
       )

@@ -28,7 +28,7 @@ object LocalObjects {
       dtype.field_index(name) match {
         case Some(i) => {
           children(i) = value
-          mt.pure()
+          mt.pure(())
         }
         case None => mt.raiseError(new NoSuchFieldException(s"$name in Record ${dtype.symbol}"))
       }

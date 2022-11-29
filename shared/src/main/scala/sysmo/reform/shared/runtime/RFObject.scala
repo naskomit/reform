@@ -80,13 +80,13 @@ object RFObject {
         println(s"Dispatch $action")
         runtime.dispatch(action)
         renderer.foreach(_.rerender())
-        mt.pure()
+        mt.pure(())
       }
 
       override def select(id: ObjectId): F[Unit] = {
         _selection = Set(id)
         renderer.foreach(_.rerender())
-        mt.pure()
+        mt.pure(())
       }
     }
 
@@ -184,7 +184,7 @@ object RFObject {
         implicit val mt: MonadThrow[F] = obj.runtime.mt
         override def dispatch(action: RuntimeAction): F[Unit] =
           obj.runtime.dispatch(action)
-        override def select(id: ObjectId): F[Unit] = mt.pure()
+        override def select(id: ObjectId): F[Unit] = mt.pure(())
       }
       override def props: MonadicIterator[F, Property] =
         obj.fields
@@ -210,7 +210,7 @@ object RFObject {
       override def props: MonadicIterator[F, Property] = MonadicIterator.empty
       override def dispatcher: Dispatcher[F] = new Dispatcher[F] {
         override implicit val mt: MonadThrow[F] = obj.runtime.mt
-        override def select(id: ObjectId): F[Unit] = mt.pure()
+        override def select(id: ObjectId): F[Unit] = mt.pure(())
         override def dispatch(action: RuntimeAction): F[Unit] = ???
       }
     }

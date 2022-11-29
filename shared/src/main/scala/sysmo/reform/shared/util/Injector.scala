@@ -16,7 +16,7 @@ object Injector {
       }
       case None => {
         implementations.put(t_name, t)
-        Right()
+        Right(())
       }
     }
   }

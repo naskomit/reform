@@ -75,7 +75,7 @@ class Instantiation[F[+_]](runtime: RFRuntime[F]) {
                     mt.flatMap(child_f)(child => empty_instance.set_field(field.name, Value(child.id)))
 
                   }
-                  case _ => mt.pure()
+                  case _ => mt.pure(())
                 }
               }
             }

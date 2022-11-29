@@ -4,7 +4,7 @@ import cats.MonadThrow
 
 object MonadTesting {
   object implicits {
-    implicit class MT_testing[F[_]](x: F[_])(implicit mt: MonadThrow[F]) {
+    implicit class MT_testing[F[_], T](x: F[T])(implicit mt: MonadThrow[F]) {
       def detect_error(): Unit = {
         mt.onError(x)(e => throw e)
       }
