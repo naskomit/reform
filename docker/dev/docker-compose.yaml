@@ -16,11 +16,20 @@ services:
     command: ["server.sh"]
     environment:
       ORIENTDB_OPTS_MEMORY: "-Xms2G -Xmx2G"
-      DATA_DIR: "../../data"
     volumes:
       - ${DATA_DIR}/orientdb/databases/:/orientdb/databases
       - ${DATA_DIR}/orientdb/backup/:/orientdb/backup
       - ${DATA_DIR}/orientdb/config/:/orientdb/config
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ${DATA_DIR}/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ${DATA_DIR}/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
 #  keycloak:
 #    container_name: keycloak

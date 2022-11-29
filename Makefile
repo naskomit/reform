@@ -1,9 +1,6 @@
 sbt:
 	export JAVA_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5015" SBT_OPTS="-Xmx4G -Xms1G" && sbt
 
-#reform_back/amm:
-#	sbt "reform_back/test:runMain amm"
-
 deepclean:
 	rm -rf target/
 	rm -rf frontend/target/
@@ -14,9 +11,6 @@ deepclean:
 	rm -rf apps/demo1/frontend/target/
 	rm -rf project/target/
 	rm -rf project/project
-
-#docker/demo1:
-#	docker run -p 9005:9000 demo1_backend:0.1.1
 
 demo1/build-docker:
 	sbt "demo1_backend / Docker / publishLocal"
@@ -42,6 +36,9 @@ orientdb/up:
 dev-stack/setup:
 	cd docker/dev && make orientdb/setup
 
+dev-stack/up:
+	cd docker/dev && make stack/up
+
 # Configure the production server stack
 prod-stack/setup:
 	cd docker/prod && make orientdb/setup
@@ -61,3 +58,5 @@ server1/ssh:
 
 server1/ssh+ports:
 	ssh $(SERVER1_USER)@$(SERVER1_URL) -L 2480:localhost:2480 -L 9005:localhost:9005
+
+

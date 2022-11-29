@@ -6,14 +6,14 @@ down:
 	docker compose down
 
 orientdb/setup:
-	DATA_DIR=$(DATA_DIR) docker compose build --build-arg HOST_UID=$(UID) --build-arg HOST_GID=$(GID) orientdb
+	docker compose build --build-arg HOST_UID=$(UID) --build-arg HOST_GID=$(GID) orientdb
 	mkdir -p $(DATA_DIR)/orientdb/databases/
 	mkdir -p $(DATA_DIR)/orientdb/backup/
 	mkdir -p $(DATA_DIR)/orientdb/config/
 	cp -r ../build/orientdb/config $(DATA_DIR)/orientdb/
 
 orientdb/up:
-	DATA_DIR=$(DATA_DIR) docker compose up orientdb
+	docker compose up orientdb
 
 orientdb/bash:
 	docker compose exec orientdb /bin/bash
@@ -24,8 +24,14 @@ keycloak/up:
 keycloak/down:
 	docker compose stop keycloak
 
+rabbitmq/bash:
+	docker compose exec rabbitmq /bin/bash
+
+stack/up:
+	docker compose up orientdb rabbitmq
+
 demo1/run-docker:
-	DATA_DIR=$(DATA_DIR) docker compose up app-server
+	docker compose up app-server
 
 
 demo1/bash:
