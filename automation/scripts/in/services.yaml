@@ -1,0 +1,11 @@
+network: net-1
+
+services:
+  postgres:
+    docker:
+      image: postgres:15-alpine
+    config:
+      admin:
+        user: smoadmin
+        password: smopass
+
