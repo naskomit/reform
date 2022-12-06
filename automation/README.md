@@ -2,6 +2,7 @@
 
 ```
 make setup
+activate-global-python-argcomplete --user
 ```
 
 ## Activate virtual environment

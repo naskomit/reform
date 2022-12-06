@@ -19,8 +19,8 @@ venv/create:
 venv/add-reform:
 	/bin/bash -c "echo ${PWD}/lib > $(VENV_PATH)/lib/python$(PYTHON_VERSION)/site-packages/reform.pth"
 
+vagrant/add-key:
+	ssh-add vagrant/.vagrant/machines/default/virtualbox/private_key
+
 #venv/ln-activate:
 #	ln -s $(VENV_PATH)/bin/activate start
-
-
-
