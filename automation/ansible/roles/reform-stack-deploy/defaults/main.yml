@@ -1,0 +1,4 @@
+---
+# defaults file for reform-stack-deploy
+rf_config_build_profile: default
+rf_config_build_path: target/{{rf_config_build_profile}}

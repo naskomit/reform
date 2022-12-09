@@ -1,61 +1,14 @@
 ---
-- name: Setup docker compose stack
-  vars_files:
-    - config/reform.yaml
+- name: Deploy docker compose stack
   hosts: vagrant
-  become: yes
-  become_user: "{{ docker_stack.user.name }}"
 
   tasks:
-    - name: Remove configuration
-      ansible.builtin.file:
-        state: absent
-        path: "{{ rfpaths.config }}"
+    - name: Configure variables
+      include_tasks: 
+        file: 10_configure_variables.yaml
 
-    - name: Ensure various folders
-      ansible.builtin.file:
-        state: directory
-        path: "{{ item }}"        
-      loop: 
-        - "{{rfpaths.config}}/nginx"
-        - "{{rfpaths.data}}/nginx"
-        - "{{rfpaths.data}}/orientdb"
-        - "{{rfpaths.backup}}/orientdb"
-        - "{{rfpaths.compose}}"
-
-    - name: Ensure various files
-      ansible.builtin.copy:
-        content: ""
-        dest: "{{ item }}"
-        force: no
-      loop: 
-        - "{{rfpaths.data}}/nginx/access.log"
-        - "{{rfpaths.data}}/nginx/error.log"
-
-    - name: Copy nginx configuration
-      ansible.posix.synchronize:
-        src: config-gen/nginx/
-        dest: "{{ rfpaths.config }}/nginx"
-        recursive: true
-
-    - name: Copy OrientDB configuration
-      ansible.posix.synchronize:
-        src: config-gen/orientdb/
-        dest: "{{ rfpaths.config }}/orientdb"
-        recursive: true
-
-    - name: Copy docker compose configuration
-      ansible.posix.synchronize:
-        src: config-gen/compose/
-        dest: "{{ rfpaths.compose }}"
-        rsync_opts: "--mkpath"
-
-    - name: Stop docker compose
-      ansible.builtin.command: docker compose down
-      args:
-        chdir: "{{ rfpaths.compose }}"
-
-    - name: Restart docker compose
-      ansible.builtin.command: docker compose up -d
-      args:
-        chdir: "{{ rfpaths.compose }}"
+    - name: Deploy stack
+      import_role: 
+        name: reform-stack-deploy
+      become: yes
+      become_user: "{{ rf_stack.os.username }}"

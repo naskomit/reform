@@ -1,0 +1,6 @@
+rf_home: /home/{{ rf_stack.os.username }}/reform
+rf_paths:
+  config: "{{ rf_home }}/config"
+  data: "{{ rf_home }}/data"
+  backup: "{{ rf_home }}/backup"
+  compose: "{{ rf_home }}/compose"

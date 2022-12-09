@@ -1,0 +1,20 @@
+- name: create folder
+  file:
+      state: directory
+      path: "{{ rf_config_build_path }}/compose"
+
+- name: Generate a composer file
+  ansible.builtin.template:
+    src: compose/docker-compose.yaml
+    dest: "{{ rf_config_build_path }}/compose/docker-compose.yaml"
+
+- name: Generate .env file
+  ansible.builtin.template:
+    src: compose/env.template
+    dest: "{{ rf_config_build_path }}/compose/.env"
+
+
+- name: Generate Makefile
+  ansible.builtin.template:
+    src: compose/Makefile
+    dest: "{{ rf_config_build_path }}/compose/Makefile"

@@ -1,0 +1,38 @@
+- name: create folders
+  ansible.builtin.file:
+      state: directory
+      path: "{{ rf_config_build_path }}/{{ item }}"
+  loop: ["nginx", "nginx/conf.d"]
+
+- name: Generate top-level file
+  ansible.builtin.template:
+    src: nginx/nginx.conf
+    dest: "{{ rf_config_build_path }}/nginx/nginx.conf"
+
+- name: Forward http -> https if https enabled
+  ansible.builtin.template:
+    src: nginx/conf.d/http.conf
+    dest: "{{ rf_config_build_path }}/nginx/conf.d/http.conf"
+  when: rf_stack.nginx.https
+
+- name: Create app configuration
+  ansible.builtin.template:
+    src: nginx/conf.d/app.conf
+    dest: "{{ rf_config_build_path }}/nginx/conf.d/{{ item.name }}.conf"
+  vars:
+    app: "{{ item }}"
+  loop: "{{ rf_stack.nginx.apps }}"
+
+- name: Create service configuration
+  ansible.builtin.template:
+    src: nginx/conf.d/service.conf
+    dest: "{{ rf_config_build_path }}/nginx/conf.d/{{ item.name }}.conf"
+  vars:
+    service: "{{ item }}"
+  loop: "{{ rf_stack.nginx.services }}"
+
+
+# - name: Copy certificate files
+#   copy:
+#     src: nginx/ssl/
+#     dest: "{{ rf_config_build_path }}/ssl/"

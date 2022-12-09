@@ -1,15 +1,17 @@
 - name: Setup authentication
-  vars_files:
-    - config/reform.yaml
   hosts: localhost
 
   tasks:
+    - name: Configure variables
+      include_tasks: 
+        file: 10_configure_variables.yaml
+    
     - name: Setup keycloak realm
       community.general.keycloak_realm:
         auth_client_id: admin-cli
-        auth_keycloak_url: https://localhost/auth
+        auth_keycloak_url: http://demo1.local/auth
         auth_realm: master
-        auth_username: "{{ docker_stack.keycloak.admin.user }}"
-        auth_password: "{{ docker_stack.keycloak.admin.password }}"
+        auth_username: "{{ rf_stack.keycloak.admin.username }}"
+        auth_password: "{{ rf_stack.keycloak.admin.password }}"
         id: reform
         state: present

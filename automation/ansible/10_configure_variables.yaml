@@ -1,0 +1,16 @@
+- ansible.builtin.include_vars:
+    file: "config/credentials.yaml"
+    name: rf_credentials
+
+- ansible.builtin.include_vars:
+    file: "config/reform.yaml"
+    name: rf_general
+
+- ansible.builtin.set_fact:
+    rf_config: "{{ rf_credentials | combine(rf_general, recursive = True) }}"
+
+- ansible.builtin.set_fact:
+    rf_stack: "{{ rf_config.rf_stack }}"
+
+- ansible.builtin.include_vars:
+    file: "config/derived.yaml"

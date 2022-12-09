@@ -1,0 +1,19 @@
+- name: Clean up
+  file:
+    state: absent
+    path: "{{ rf_config_build_path }}"
+
+- name: Recreate dir
+  file:
+    state: directory
+    path: "{{ rf_config_build_path }}"
+
+- name: Generate Compose files
+  include_tasks: compose.yaml
+
+- name: Generate Nginx files
+  include_tasks: nginx.yaml
+
+- name: Generate OrientDB files
+  include_tasks: orientdb.yaml
+

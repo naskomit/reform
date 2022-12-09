@@ -1,0 +1,55 @@
+---
+# tasks file for reform-stack-deploy
+- name: Remove configuration
+  ansible.builtin.file:
+    state: absent
+    path: "{{ rf_paths.config }}"
+
+- name: Ensure various folders
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}"        
+  loop: 
+    - "{{rf_paths.config}}/ssl"
+    - "{{rf_paths.config}}/nginx"
+    - "{{rf_paths.data}}/nginx"
+    - "{{rf_paths.data}}/orientdb"
+    - "{{rf_paths.backup}}/orientdb"
+    - "{{rf_paths.compose}}"
+
+- name: Ensure various files
+  ansible.builtin.copy:
+    content: ""
+    dest: "{{ item }}"
+    force: no
+  loop: 
+    - "{{ rf_paths.data }}/nginx/access.log"
+    - "{{ rf_paths.data }}/nginx/error.log"
+
+- name: Copy nginx configuration
+  ansible.posix.synchronize:
+    src: "{{ rf_config_build_path }}/nginx/"
+    dest: "{{ rf_paths.config }}/nginx"
+    recursive: true
+
+- name: Copy OrientDB configuration
+  ansible.posix.synchronize:
+    src: "{{ rf_config_build_path }}/orientdb/"
+    dest: "{{ rf_paths.config }}/orientdb"
+    recursive: true
+
+- name: Copy docker compose configuration
+  ansible.posix.synchronize:
+    src: "{{ rf_config_build_path }}/compose/"
+    dest: "{{ rf_paths.compose }}"
+    rsync_opts: "--mkpath"
+
+- name: Stop docker compose
+  ansible.builtin.command: docker compose down
+  args:
+    chdir: "{{ rf_paths.compose }}"
+
+- name: Restart docker compose
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: "{{ rf_paths.compose }}"

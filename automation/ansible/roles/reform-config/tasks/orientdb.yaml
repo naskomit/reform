@@ -1,0 +1,9 @@
+- name: create folders
+  ansible.builtin.file:
+      state: directory
+      path: "{{ rf_config_build_path }}/orientdb"
+
+- name: copy config files
+  copy:
+    src: orientdb/
+    dest: "{{ rf_config_build_path }}/orientdb"

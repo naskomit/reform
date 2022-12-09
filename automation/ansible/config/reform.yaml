@@ -1,0 +1,30 @@
+---
+rf_stack:
+  net: reform-net
+  orientdb:
+    use: true
+  keycloak:
+    use: true
+  nginx:
+    use: true
+    https: false
+    log: debug
+    root_vhost: localhost
+    services:
+      - name: keycloak
+        ext_url: keycloak.local
+        forward_url: keycloak:8080
+      - name: orient-studio
+        ext_url: orient-studio.local
+        forward_url: orientdb:2480
+    apps:
+      - name: demo1
+        ext_url: demo1.local
+        # forward_url: localhost: 8080
+        forward_url: 10.0.2.2:9000
+  
+
+
+
+
+
