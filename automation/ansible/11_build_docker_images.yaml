@@ -1,0 +1,12 @@
+- name: Build and push docker images
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Build and tag orientdb image
+      community.docker.docker_image:
+        name: naskomit/orientdb:3.2
+        push: true
+        source: build
+        build:
+          path: docker-build/orientdb

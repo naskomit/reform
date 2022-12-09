@@ -1,0 +1,53 @@
+version: '3.4'
+
+services:
+  nginx:
+    image: nginx:1.23-alpine
+    container_name: nginx
+    networks:
+      - {{docker_stack.net}}
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - {{rfpaths.config}}/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - {{rfpaths.config}}/nginx/conf.d:/etc/nginx/conf.d
+      - {{rfpaths.config}}/nginx/ssl:/etc/ssl
+      - {{rfpaths.data}}/nginx/access.log:/var/log/nginx/access.log
+      - {{rfpaths.data}}/nginx/error.log:/var/log/nginx/error.log
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:20.0.1
+    networks:
+      - {{docker_stack.net}}
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      PROXY_ADDRESS_FORWARDING: true  #important for reverse proxy
+    ports:
+      - 9010:8080
+    command:
+      - start-dev
+
+  orientdb:
+    image: naskomit/orientdb:3.2
+    container_name: orientdb
+    user: reform
+    ports:
+      - 8182:8182 # Gremlin server
+      - 2480:2480 # OrientDb studio
+      - 2424:2424 # OrientDb binary
+    networks:
+      - {{docker_stack.net}}
+    command: ["server.sh"]
+    environment:
+      ORIENTDB_ROOT_PASSWORD: ${ORIENTDB_ROOT_PASSWORD}
+      ORIENTDB_OPTS_MEMORY: "-Xms2G -Xmx2G"
+    volumes:
+      - {{rfpaths.data}}/orientdb:/orientdb/databases
+      - {{rfpaths.backup}}/orientdb:/orientdb/backup
+      - {{rfpaths.config}}/orientdb:/orientdb/config
+
+networks:
+  {{docker_stack.net}}: null

@@ -1,0 +1,13 @@
+---
+- name: Start docker compose services
+  vars_files:
+    - config/reform.yaml
+  hosts: vagrant
+  become: yes
+  become_user: "{{ docker_stack.user.name }}"
+
+  tasks:
+    - name: Start docker compose
+      ansible.builtin.command: docker compose up -d
+      args:
+        chdir: "{{ rfpaths.compose }}"

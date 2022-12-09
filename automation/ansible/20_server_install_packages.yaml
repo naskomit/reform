@@ -1,0 +1,90 @@
+---
+
+- name: Install packages
+  hosts: vagrant
+  become: yes
+
+  tasks:
+    # - name: Print all available facts
+    #   ansible.builtin.debug:
+    #     var: ansible_facts
+
+    - name: Intall dev dependencies
+      ansible.builtin.apt:
+        state: latest
+        update_cache: true
+        pkg:
+          - git
+          - tree
+
+    - name: Intall docker prerequisites
+      ansible.builtin.apt:
+        state: latest
+        update_cache: true
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - pip
+          - acl
+
+    - name: Add Docker GPG apt Key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Get ubuntu version
+      ansible.builtin.command: lsb_release -cs
+      register: ubuntu_version
+    
+    # - name: Print ubuntu version
+    #   ansible.builtin.debug:
+    #     var: ubuntu_version
+      
+    - name: Add Docker Repository
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu {{ubuntu_version.stdout}} stable
+        state: present
+
+    - name: Update apt and install docker
+      apt:
+        pkg: 
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io 
+          - docker-compose-plugin
+        state: latest
+        update_cache: true
+
+    - name: Install docker python libraries
+      ansible.builtin.pip:
+        name:
+          - PyYAML==6.0
+          - docker==6.0.1
+
+
+- name: Setup user
+  hosts: vagrant
+  become: yes
+  tasks:
+    - name: Add the user 'reform' that will be used for docker containers
+      ansible.builtin.user:
+        name: reform
+        uid: 2001
+        shell: /bin/bash
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+        groups: [docker]
+
+
+# - name: Docker containers
+#   hosts: vagrant
+#   gather_facts: no
+#   become: true
+#   become_user: reform
+
+#   tasks:
+
+

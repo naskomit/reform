@@ -1,0 +1,34 @@
+- name: Setup local development environment
+  hosts: localhost
+  connection: local
+
+  # tasks:
+  #   - name: Setup Nginx reverse proxy
+  #     become: yes
+  #     block:
+  #     - name: Install
+  #       ansible.builtin.apt:
+  #         state: latest
+  #         update_cache: true
+  #         pkg:
+  #           - nginx
+
+  #     - name: Certificate
+  #       ansible.builtin.copy:
+  #         src: templates/nginx/ssl/certs/localhost.crt
+  #         dest: /etc/ssl/certs/localhost-dev.crt
+
+  #     - name: Key
+  #       ansible.builtin.copy:
+  #         src: templates/nginx/ssl/private/localhost.key
+  #         dest: /etc/ssl/private/localhost-dev.key
+
+  #     - name: Configuration
+  #       ansible.builtin.copy:
+  #         src: templates/nginx-dev/conf.d/localhost.reform.dev.conf
+  #         dest: /etc/nginx/conf.d/localhost.reform.dev.conf
+
+  #     - name: Restart
+  #       ansible.builtin.service:
+  #         name: nginx
+  #         state: restarted

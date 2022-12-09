@@ -1,0 +1,76 @@
+- name: Generate configuration files
+  hosts: localhost
+  connection: local
+  
+  vars_files:
+    - config/reform.yaml
+  vars:
+    build_path: target/default
+
+  tasks:
+    - name: Clean up
+      file:
+        state: absent
+        path: "{{ build_path }}"
+
+
+    - name: Generate composer files
+      block:
+      - name: create folder
+        file:
+            state: directory
+            path: "{{ build_path }}/compose"
+
+      - name: Generate a composer file
+        ansible.builtin.template:
+          src: templates/compose/docker-compose.yaml
+          dest: "{{ build_path }}/compose/docker-compose.yaml"
+
+      - name: Generate .env file
+        ansible.builtin.template:
+          src: templates/compose/env.template
+          dest: "{{ build_path }}/compose/.env"
+
+
+      - name: Generate Makefile
+        ansible.builtin.copy:
+          src: templates/compose/Makefile
+          dest: "{{ build_path }}/compose/Makefile"
+
+
+    # - name: Generate nginx files
+    #   block:
+    #     - name: empty folder
+    #       file:
+    #         state: "{{ item }}"
+    #         path: config-gen/nginx
+    #       loop: ["absent", "directory"]
+
+    #     - name: copy config files
+    #       copy:
+    #         src: templates/nginx/nginx.conf
+    #         dest: config-gen/nginx/nginx.conf
+
+    #     - name: copy config files
+    #       copy:
+    #         src: templates/nginx/conf.d/
+    #         dest: config-gen/nginx/conf.d
+
+    #     - name: copy certificate files
+    #       copy:
+    #         src: templates/nginx/ssl/
+    #         dest: config-gen/nginx/ssl
+    
+    # - name: Generate OrientDB files
+    #   block:
+    #     - name: empty folder
+    #       file:
+    #         state: "{{ item }}"
+    #         path: config-gen/orientdb
+    #       loop: ["absent", "directory"]
+
+    #     - name: copy config files
+    #       copy:
+    #         src: templates/orientdb/
+    #         dest: config-gen/orientdb
+      
