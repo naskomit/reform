@@ -9,16 +9,21 @@ object SkullInventoryBuilder extends ModelBuilder {
     /** Data structures */
     val SkullSample = record("SkullSample").label_expr(E.field("code")) +
       f_char("code") +
-      f_char("image_type") +
+      f_char("Image type") +
+      f_char("Scanned region/object") +
       f_char("sex") +
       f_int("age") +
       f_int("stature") +
+      f_int("weight") +
       f_real("BMI") +
       f_char("BMI category") +
       f_char("Filter 1") +
       f_char("Filter 2") +
       f_char("Link Soft") +
-      f_char("Link Bone")
+      f_char("Link Bone") +
+      f_char("Link Body") +
+      f_char("Link obj/stl") +
+      f_char("Link vgl")
 
 
     val SkullInventory = record("SkullInventory") +

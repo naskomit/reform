@@ -38,7 +38,7 @@ object SmoSkullApp {
       SkullSampleType,
       rfc.withHeader
     ).map_field(
-      "image_type" -> "Image type"
+//      "image_type" -> "Image type"
     )
 
     input_reader.read { row_obj: input_reader.RowObj =>

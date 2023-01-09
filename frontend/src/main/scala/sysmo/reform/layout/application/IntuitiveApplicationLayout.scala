@@ -12,7 +12,7 @@ import sysmo.reform.widgets.tooltip.TooltipViewer
 object IntuitiveApplicationLayout extends ApplicationLayout {
   case class State
   (
-    menu_expanded: Boolean = false,
+    menu_expanded: Boolean = true,
     active_item: String = "Root"
   )
 
@@ -23,7 +23,7 @@ object IntuitiveApplicationLayout extends ApplicationLayout {
       <.div(^.className := "dev-page-header",
         //<.a(^.href:= p.router.urlFor(p.pages.home).value,
         <.div(^.className := "dph-logo",
-          <.a(^.href := p.router.urlFor(p.pages.home).value),
+          <.a(^.href := "http://www.sysmoltd.com"),
           <.a(^.className := "dev-page-sidebar-collapse",
             <.div(^.className := "dev-page-sidebar-collapse-icon",
               ^.onClick --> $.modState(s => s.copy(menu_expanded = !s.menu_expanded)),

@@ -5,12 +5,11 @@ import sysmo.reform.app.Panel
 import sysmo.reform.shared.runtime.RemoteRuntime
 import sysmo.reform.service.RemoteHttpService
 import sysmo.reform.shared.containers.FRemote
-import sysmo.reform.explorers.{RecordExplorerF}
+import sysmo.reform.explorers.RecordExplorerF
 import sysmo.reform.widgets.table.{LinkCellFormatter, TableOptions}
 import sysmo.reform.shared.examples.SkullInventoryBuilder
-//import sysmo.reform.util.react.Converters._
 
-object SkullInventoryPanel extends Panel {
+object InventoryMetadata extends Panel {
   object RecordExlorer extends RecordExplorerF[FRemote]
 
   case class Props()
@@ -27,7 +26,7 @@ object SkullInventoryPanel extends Panel {
     def render(p: Props, s: State): VdomElement = {
       <.div(
         <.div(^.cls := "page-title",
-          <.h1("Skull Inventory")
+          <.h1("Virtual Anatomy Collection Metadata")
         ),
         <.div(^.cls := "wrapper wrapper-white",
           s.runtime match {

@@ -4,7 +4,7 @@ import cats.MonadThrow
 import japgolly.scalajs.react.vdom.html_<^._
 import sysmo.reform.app.{Panel}
 
-object ReframeHomePanel extends Panel {
+object VACHomePanel extends Panel {
 
   import japgolly.scalajs.react._
 
@@ -14,13 +14,13 @@ object ReframeHomePanel extends Panel {
   final class Backend($: BackendScope[Props, State]) {
     def render(p: Props, s: State): VdomElement = {
       val apps = Seq(
-        ("Skull Inventory", "skull-inventory/")
+        ("Virtual Anatomy Collection Metadata", "metadata/")
       )
 
 
       <.div(
         <.div(^.cls:= "page-title",
-          <.h1("Reframe Home")
+          <.h1("Virtual Anatomy Collection Applications")
         ),
         <.div(^.cls:= "wrapper wrapper-white",
           <.h3("Existing applications"),

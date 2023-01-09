@@ -3,20 +3,9 @@ package sysmo.demo1
 import sysmo.reform.app.{PageCollection, SimplePage, UIApplication}
 import sysmo.reform.layout.application.{ApplicationLayout, IntuitiveApplicationLayout}
 
-//case object HomePage extends Page {
-//  override val name: String = "Home"
-//  override val icon: String = "fa fa-desktop"
-//  override val panel: Panel = HomePanel
-//}
-
-// "fa fa-list-check"
-// "fa fa-building"
-// "fa fa-bong"
-// "fa fa-book-medical"
-// "fa fa-shuttle-space"
 object Application extends UIApplication {
   override def pages(app: Option[String]): PageCollection = app match {
-    case Some("skull-inventory") => SkullInventoryApplication.pages
+    case Some("metadata") => SkullInventoryApplication.pages
     case _ => HomeApplication.pages
   }
 
@@ -25,21 +14,13 @@ object Application extends UIApplication {
 
 object HomeApplication {
   val pages: PageCollection = PageCollection(
-    SimplePage("ReframeHome", Some("ReframeHome"), "fa fa-list-check", ReframeHomePanel),
+    SimplePage("Home", Some("Home"), "fa fa-list-check", VACHomePanel),
   )
 }
 
 object SkullInventoryApplication {
   val pages: PageCollection = PageCollection(
-    SimplePage("SkullInventory", Some("Skull Inventory"), "fa fa-list-check", SkullInventoryPanel),
-  )
-}
-
-object AllApplications {
-  val pages: PageCollection = PageCollection(
-    //    HomePage,
-    SimplePage("RuntimeExplorer", None, "fa fa-list-check", RuntimeExplorerPanel),
-    SimplePage("BioReactorController", None, "fa fa-list-check", BioReactorControllerPanel),
-    SimplePage("Skull Inventory", Some("Skull Inventory"), "fa fa-list-check", SkullInventoryPanel),
+    SimplePage("inventory_metadata", Some("Inventory Metadata"), "fa fa-list-check", InventoryMetadata),
+    SimplePage("project_info", Some("Project Information"), "fa fa-list-check", InventoryProjectInfoPanel),
   )
 }
