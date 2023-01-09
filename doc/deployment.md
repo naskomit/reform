@@ -38,19 +38,12 @@ sudo useradd -u 2001 -m -g docker reform
 
 ```shell
 git clone git@github.com:naskomit/reform.git
+git checkout reform2
 cd reform
 cd docker/prod
 make orientdb/setup 
 cd ../..
 ```
-
-### Configure user for file access
-```shell
-sudo adduser -u 1001 dduser
-sudo usermod -a -G dduser naskomit
-sudo chown -R dduser:dduser data/
-```
-
 
 ### Configure nginx
 
