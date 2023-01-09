@@ -9,7 +9,7 @@
     - name: Setup keycloak realm
       community.general.keycloak_realm:
         auth_client_id: admin-cli
-        auth_keycloak_url: http://demo1.local/auth
+        auth_keycloak_url: http://keycloak.local
         auth_realm: master
         auth_username: "{{ rf_stack.keycloak.admin.username }}"
         auth_password: "{{ rf_stack.keycloak.admin.password }}"

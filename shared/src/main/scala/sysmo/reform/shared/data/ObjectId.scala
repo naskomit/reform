@@ -20,6 +20,12 @@ object ObjectId {
     val v = ()
     def show: String = "<N/A>"
   }
+
+  def uuid_supplier: UUIDSupplier = new UUIDSupplier
+  def sequential_id_supplier(start: Long = 1): SequentialIdSupplier =
+    new SequentialIdSupplier(start: Long)
+
+  type Supplier = ObjectIdSupplier
 }
 
 trait ObjectIdSupplier {
@@ -47,7 +53,16 @@ class UUIDSupplier() extends ObjectIdSupplier {
 }
 
 
-case class NumbericObjectId(v: Long) extends ObjectId {
+case class NumericObjectId(v: Long) extends ObjectId {
   type Id = Long
   def show: String = v.toString
+}
+
+class SequentialIdSupplier(val start: Long) extends ObjectIdSupplier {
+  var last_uuid: Long = start - 1
+  override def new_id: ObjectId = {
+    val id = last_uuid + 1
+    last_uuid = id
+    NumericObjectId(id)
+  }
 }

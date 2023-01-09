@@ -5,10 +5,10 @@ import sysmo.reform.app.Panel
 import sysmo.reform.shared.runtime.RemoteRuntime
 import sysmo.reform.service.RemoteHttpService
 import sysmo.reform.shared.containers.FRemote
-import sysmo.reform.explorers.{RecordExplorerF, SlinkiTest}
+import sysmo.reform.explorers.{RecordExplorerF}
 import sysmo.reform.widgets.table.{LinkCellFormatter, TableOptions}
 import sysmo.reform.shared.examples.SkullInventoryBuilder
-import sysmo.reform.util.react.Converters._
+//import sysmo.reform.util.react.Converters._
 
 object SkullInventoryPanel extends Panel {
   object RecordExlorer extends RecordExplorerF[FRemote]
@@ -36,7 +36,6 @@ object SkullInventoryPanel extends Panel {
             case _ => <.div("Initializing runtime ...")
           }
         ),
-        <.div(^.marginTop:="100px", SlinkiTest().toScalaJSReact)
       )
     }
 

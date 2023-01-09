@@ -9,13 +9,14 @@ import sysmo.reform.shared.storage.{SchemaService, Storage, StorageSession}
 import sysmo.reform.shared.types.{TypeSystem}
 
 class StorageImpl[F[+_]](config: Config)(implicit val mt: MonadThrow[F])
-  extends Storage[F] {
+  extends Storage[F] with Logging {
     override def session: SessionImpl[F] = {
       val dbname = config.getString("dbname")
       val user = config.getString("user")
       val password = config.getString("password")
       val uri = config.getString("uri")
       val db = new OrientDB(uri, OrientDBConfig.defaultConfig())
+      logger.info(s"Connecting to ${uri}/${dbname} with user ${user}")
       val session: ODatabaseSession = db.open(dbname, user, password)
       new SessionImpl(session)
     }

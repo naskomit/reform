@@ -75,8 +75,8 @@ lazy val backend = project
        "com.github.japgolly.scalajs-react" %%% "extra" % "2.0.0",
        "com.github.japgolly.scalacss" %%% "ext-react" % "1.0.0",
 
-       "me.shadaj" %%% "slinky-web" % "0.7.2",
-       "me.shadaj" %%% "slinky-hot" % "0.7.2",
+//       "me.shadaj" %%% "slinky-web" % "0.7.2",
+//       "me.shadaj" %%% "slinky-hot" % "0.7.2",
 
     ),
 //    Compile / npmDevDependencies ++= Seq(
@@ -96,6 +96,7 @@ lazy val backend = project
        "plotly.js" -> "1.47.4",
        "react-transition-group" -> "4.4.2",
        "react-notifications" -> "1.7.4",
+       "mqtt" -> "4.3.7",
      ),
    )
    .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
