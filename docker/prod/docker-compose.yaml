@@ -41,7 +41,7 @@ services:
     image: naskomit/smo-reform:0.1.4
     user: dduser
     ports:
-      - 9005:9000
+      - 9000:9000
     networks:
       - net-1
     volumes:
