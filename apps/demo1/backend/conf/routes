@@ -5,10 +5,12 @@
 #GET     /metadata           sysmo.reform.AppRouter
 
 # Home page
-GET     /           sysmo.reform.AppController.home
-GET        /:app    sysmo.reform.AppController.redirect_index(app)
-GET        /:app/               sysmo.reform.AppController.index(app)
-POST       /:app/api/query      sysmo.reform.AppController.query(app)
+GET         /                   sysmo.reform.AppController.home
+# Will be redirected from the browser
+GET         /:app               sysmo.reform.AppController.index(app)
+# The home page for the app
+GET         /:app/              sysmo.reform.AppController.index(app)
+POST        /:app/api/query     sysmo.reform.AppController.query(app)
 
 #POST        /:app/api/chart    sysmo.reform.Application.chart_api
 #

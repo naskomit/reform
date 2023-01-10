@@ -1,5 +1,22 @@
-@(message: String)
+@(message: String)(app: String)
 
 @main("Reform framework") {
   <div id="mainApp"><em>@message</em></div>
+  <script>
+    __reform_config = {app_id: "@app"}
+    {
+      let loc = document.location.pathname
+      console.log("Path is: ", loc)
+      if (loc.length > 1 && loc[loc.length - 1] != "/") {
+        console.log("Missing trailing /")
+        let url = new URL(document.location)
+        url.pathname = url.pathname + "/"
+        console.log(url)
+        setTimeout(function() {
+          document.location = url
+        }, 200)
+      }
+    }
+
+  </script>
 }

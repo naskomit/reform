@@ -12,7 +12,14 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import sysmo.reform.layout.application.ApplicationLayout
 
 import scala.concurrent.ExecutionContext
+import scala.scalajs.js
+import scala.scalajs.js.annotation.{JSGlobal, JSGlobalScope}
 
+@js.native
+@JSGlobal("__reform_config")
+object ReformConfig extends js.Object {
+  val app_id: String = js.native
+}
 
 trait UIApplication extends Logging {
   val react_node: String = "mainApp"
@@ -57,16 +64,20 @@ trait UIApplication extends Logging {
     logger.info("Initializing application")
     val app_node = dom.document.getElementById(react_node)
 
-    val app_name = dom.window.location.pathname
-    val app_id = if (app_name == "/") {
-      None
-    } else {
-      Some(app_name
-        .replaceFirst("^/", "")
-        .replaceFirst("/$", "")
-      )
-    }
-    println(app_id)
+//    val app_name = dom.window.location.pathname
+//    val app_id = if (app_name == "/") {
+//      None
+//    } else {
+//      Some(app_name
+//        .replaceFirst("^/", "")
+//        .replaceFirst("/$", "")
+//      )
+//    }
+    val base_url = BaseUrl.until_#
+    println(s"Base url: ${base_url}")
+
+    val app_id = if (ReformConfig.app_id == "home") None else Some(ReformConfig.app_id)
+    println(s"Running application: ${ReformConfig.app_id}")
 
     val router = Router(
       BaseUrl.until_#,
