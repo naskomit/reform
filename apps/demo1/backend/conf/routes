@@ -2,15 +2,21 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET         /                       sysmo.coviddata.controllers.Application.home
-GET        /:app/                    sysmo.coviddata.controllers.Application.index(app)
-POST        /:app/api/query         sysmo.coviddata.controllers.Application.query(app)
-#POST        /:app/api/chart        sysmo.coviddata.controllers.Application.chart_api
+#GET     /metadata           sysmo.reform.AppRouter
 
-# Prefix must match `play.assets.urlPrefix`
-GET        /assets/*file                 controllers.Assets.at(file)
-GET        /versionedAssets/*file        controllers.Assets.versioned(path="/public", file: Asset)
+# Home page
+GET     /           sysmo.reform.AppController.home
+GET        /:app    sysmo.reform.AppController.redirect_index(app)
+GET        /:app/               sysmo.reform.AppController.index(app)
+POST       /:app/api/query      sysmo.reform.AppController.query(app)
+
+#POST        /:app/api/chart    sysmo.reform.Application.chart_api
+#
+## Prefix must match `play.assets.urlPrefix`
+GET        /metadata/assets/*file               controllers.Assets.at(path="/public", file)
+GET        /metadata/versionedAssets/*file      controllers.Assets.versioned(path="/public", file: Asset)
+#GET        /[^/]+/assets/*file                 controllers.Assets.at(path="/public", file)
+#GET        /[^/]+/versionedAssets/*file        controllers.Assets.versioned(path="/public", file: Asset)
 
 # Source files
 # TODO Remove in production

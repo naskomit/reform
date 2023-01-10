@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.docker._
 
 ThisBuild / organization := "sysmo"
 ThisBuild / scalaVersion := "2.13.5"
-ThisBuild / version      := "0.1.3"
+ThisBuild / version      := "0.1.4"
 ThisBuild / maintainer   := "Atanas Pavlov"
 
 ThisBuild / javaOptions ++= Seq(
