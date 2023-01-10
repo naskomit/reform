@@ -13,10 +13,9 @@ services:
       - 2424:2424 # OrientDb binary
     networks:
       - net-1
-#    environment:
-#      - ORIENTDB_OPTS_MEMORY=-Xms2G -Xmx2G
     command: ["server.sh"]
     environment:
+      ORIENTDB_OPTS_MEMORY: -Xms2G -Xmx2G
       DATA_DIR: "../../data"
     volumes:
       - ${DATA_DIR}/orientdb/databases/:/orientdb/databases
@@ -38,7 +37,7 @@ services:
 #
   app-server:
     container_name: app-server
-    image: naskomit/smo-reform:0.1.4
+    image: naskomit/smo-reform:0.1.5
     user: dduser
     ports:
       - 9000:9000
