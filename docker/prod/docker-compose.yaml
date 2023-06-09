@@ -3,9 +3,7 @@ version: '3.4'
 services:
   orientdb:
     container_name: orientdb
-    build:
-      context: ../build/orientdb
-      dockerfile: Dockerfile
+    image: naskomit/orientdb:3.2
     user: docker
     ports:
       - 8182:8182 # Gremlin server
@@ -15,7 +13,7 @@ services:
       - net-1
     command: ["server.sh"]
     environment:
-      ORIENTDB_OPTS_MEMORY: -Xms2G -Xmx2G
+      ORIENTDB_OPTS_MEMORY: -Xms500M -Xmx500M -Dstorage.diskCache.bufferSize=1000
       DATA_DIR: "../../data"
     volumes:
       - ${DATA_DIR}/orientdb/databases/:/orientdb/databases
