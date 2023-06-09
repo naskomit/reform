@@ -4,7 +4,7 @@ services:
   orientdb:
     container_name: orientdb
     image: naskomit/orientdb:skull-inventory
-    user: reform
+    user: docker
     ports:
       - 8182:8182 # Gremlin server
       - 2480:2480 # OrientDb http
