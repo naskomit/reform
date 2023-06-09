@@ -13,7 +13,7 @@ services:
       - net-1
     command: ["server.sh"]
     environment:
-      ORIENTDB_OPTS_MEMORY: -Xms500M -Xmx500M -Dstorage.diskCache.bufferSize=1000
+      ORIENTDB_OPTS_MEMORY: -Xms1G -Xmx1G -Dstorage.diskCache.bufferSize=1000
       DATA_DIR: "../../data"
     volumes:
       - ${DATA_DIR}/orientdb/databases/:/orientdb/databases
