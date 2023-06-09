@@ -3,7 +3,7 @@ version: '3.4'
 services:
   orientdb:
     container_name: orientdb
-    image: naskomit/orientdb:3.2
+    image: naskomit/orientdb:skull-inventory:
     user: reform
     ports:
       - 8182:8182 # Gremlin server
