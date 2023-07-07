@@ -23,7 +23,7 @@ demo1/bash:
 
 # The smo-skull-app probably comes from the name sysmo.smoskull.SmoSkullApp
 smo-skull/import:
-	docker compose exec app-server /opt/docker/bin/smo-skull-app import /data/import/skull_inventory/Metadata_v3_20221130.csv
+	docker compose exec app-server /opt/docker/bin/smo-skull-app import /data/import/skull_inventory/Metadata_v4_202306_.csv
 
 server/up:
 	DATA_DIR=$(DATA_DIR) docker compose up -d
