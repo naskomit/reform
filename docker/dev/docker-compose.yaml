@@ -84,7 +84,7 @@ services:
 
   app-server:
     container_name: app-server
-    image: naskomit/smo-reform:0.1.1
+    image: naskomit/smo-reform:0.1.7
     ports:
       - 9005:9000
     networks:

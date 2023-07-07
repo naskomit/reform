@@ -19,7 +19,7 @@ object InventoryMetadata extends Panel {
     import sysmo.reform.shared.data.Value
     val modifier: TableOptions.Modifier = _
       .columns(_.sortable())
-      .columns(Seq("Link Soft", "Link Bone"),
+      .columns(Seq("Link Soft", "Link Bone", "Link Body", "Link obj/stl", "Link vgl"),
           _.cell_formatter(LinkCellFormatter)
             .tooltip().on_click_copy()
       )
