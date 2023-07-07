@@ -31,9 +31,12 @@ object InventoryProjectInfoPanel extends Panel {
 
               <.div(^.marginTop:= 10.px,
                 """
-                  |The organization of the Virtual Anatomy Collection is supported by the Bulgarian National Science Fund
+                  |The organization of the Virtual Anatomy Collection was initially supported by the Bulgarian National Science Fund
                   |[Grant number ДН11/9 – 15.12.2017; “Investigation of human anatomic variations on three-dimensional models
-                  |using innovative and interdisciplinary approaches and organization of a Virtual Anatomy Collection”]"""
+                  |using innovative and interdisciplinary approaches and organization of a Virtual Anatomy Collection”]
+                  |The expansion of the Virtual Anatomy Collection is further supported by the Bulgarian National Science Fund
+                  |[Grant number  КП-06-Н51/4  –  11.11.2021 ; “ Research on skeletal system applying morphometrics and
+                  | artificial intelligence approaches (ReSyMorAI) ”]"""
                   .stripMargin)
 
             )

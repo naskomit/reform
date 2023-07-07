@@ -35,7 +35,7 @@ services:
 #
   app-server:
     container_name: app-server
-    image: naskomit/smo-reform:0.1.5
+    image: naskomit/smo-reform:0.1.6
     user: dduser
     ports:
       - 9000:9000
